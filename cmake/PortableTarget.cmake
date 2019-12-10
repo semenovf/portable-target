@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.10.2)
 include(CMakeParseArguments)
 #
 # Usage:
@@ -397,10 +397,10 @@ function (portable_target TARGET)
             _portable_target_status("Android toolchain       : ${_arg_ANDROID_TOOLCHAIN}")
             _portable_target_status("Android STL             : ${_arg_ANDROID_STL}")
 
+            _portable_target_status("*** Begin process Android specification")
             execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/Android")
             execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}"
                     -DANDROID_85de0b22-2f4a-4aeb-beba-265a793aad00=ON
-#                    -UCMAKE_CXX_COMPILER
                     -DCMAKE_TOOLCHAIN_FILE=${ANDROID_TOOLCHAIN_FILE}
                     -DANDROID_NDK=${ANDROID_NDK}
                     -DANDROID_PLATFORM=${_arg_ANDROID_PLATFORM}
@@ -411,6 +411,7 @@ function (portable_target TARGET)
                     ${CMAKE_SOURCE_DIR}
 
                     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/Android")
+            _portable_target_status("*** Finished process Android specification")
             return()
         endif() # ! ANDROID_85de0b22-2f4a-4aeb-beba-265a793aad00
     endif(ANDROID)
@@ -503,7 +504,6 @@ function (portable_target TARGET)
     endif()
 
     if (ANDROID)
-        message(TRACE "*** _arg_SOURCES=[${_arg_SOURCES}]")
         add_library(${TARGET} SHARED ${_arg_SOURCES})
         target_compile_definitions(${TARGET} PRIVATE ANDROID)
 
