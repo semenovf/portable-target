@@ -1,27 +1,49 @@
+################################################################################
+# Copyright (c) 2019 Vladislav Trifochkin
+#
+# This file is part of [portable-target](https://github.com/semenovf/portable-target).
+#
+# Changelog:
+#      2019.12.10 Initial version
+################################################################################
 cmake_minimum_required(VERSION 3.10.2)
 include(CMakeParseArguments)
+
+# TODO Check `android-source` directory existance (_portable_apk)
+# TODO Add support build for Windows
+# TODO Add support KEYSTORE_PASSWORD for Android (_portable_apk)
+# TODO Add support KEYSTORE for Android (_portable_apk)
+# TODO Add support DEPENDS for Android (_portable_apk)
+
 #
 # Usage:
 #
 # portable_target(MyApp
-#       [ANDROID]
-#       [STATIC]                               # Target is static library (ignored by Android version)
-#       [SHARED]                               # Target is shared library (ignored by Android version)
 #       [AUTOMOC_OFF]                          # Default is ON
 #       [AUTOUIC_OFF]                          # Default is ON
 #       [AUTORCC_OFF]                          # Default is ON
+#       [STATIC]                               # Target is static library (ignored by Android version)
+#       [SHARED]                               # Target is shared library (ignored by Android version)
 #       [Qt5_ROOT <dir>]                       # Must point to Qt5 official distribution directory
 #       [Qt5_PLATFORM <qt5-platform>]
 #       [Qt5_COMPONENTS <qt5-components>]
+#
+#       # Android specific options
 #       [ANDROID_PLATFORM <android-platform>]  # Default is 'android-21' (affects compiler/linker option `--target`)
+#       [ANDROID_PLATFORM_LEVEL <level>]       # Android platform level, overrides toolchain's value
 #       [ANDROID_ABI <android-abi>]            # Mandatory for Android
 #       [ANDROID_TOOLCHAIN <toolchain>]        # Default is 'clang'
 #       [ANDROID_STL <stl-library>]            # Default is 'c++_shared'
 #       [ANDROID_STL_PREFIX <stl-prefix>]      # Used as a component of STL library path ('llvm-libc++' for c++_shared)
+#       [ANDROID_PACKAGE_NAME <package-name>]  # Android package name
+#       [ANDROID_APP_NAME <app-name>]          # Android application name (label)
+#       [ANDROID_APP_VERSION <app-version>]    # Android application version
+#
+#       [ANDROID_INSTALL]                      # Install Android APK on device
 #       SOURCES <source1> <source2> ...
 #
 # By default, if not specifed STATIC and/or SHARED target is shared library
-# on Android platform or executable on Linux/Windows
+# on Android platform (always SHARED) or executable on Linux/Windows
 #
 # Set AUTOMOC_OFF if not required to autogenerate moc sources:
 #       - project has custom signals/slots
@@ -36,9 +58,8 @@ include(CMakeParseArguments)
 #       - android_armv7
 #       - android_arm64_v8a
 #
-# ANDROID_PLATFORM:
-#       - android-21
-#       - ... (TODO Extend list)
+# ANDROID_PLATFORM is equivalent to one of the directories from list:
+#       `ls -1 ${ANDROID_NDK}/platforms` (android-21, android-22, etc)
 #
 # ANDROID_ABI:
 #       - armeabi                - ARMv5TE based CPU with software floating point operations
@@ -93,7 +114,7 @@ endfunction()
 cmake_policy(SET CMP0026 OLD) # allow use of the LOCATION target property
 
 function (_portable_apk TARGET SOURCE_TARGET)
-#     set(boolparm INSTALL)
+    set(boolparm)
 
     set(singleparm
         ANDROID_SDK
@@ -231,11 +252,8 @@ function (_portable_apk TARGET SOURCE_TARGET)
     else()
         string(REGEX MATCH "${ANDROID_NDK}/toolchains/llvm/prebuilt/.*" ANDROID_TOOLCHAIN_PARSED ${ANDROID_TOOLCHAIN_ROOT})
         if(ANDROID_TOOLCHAIN_PARSED)
-#             if(NOT _arg_ANDROID_COMPILER_VERSION)
-#                 _portable_apk_error("ANDROID_COMPILER_VERSION must be specifiedcmake variable required")
-#             endif()
             set(QT_ANDROID_TOOLCHAIN_PREFIX llvm)
-            set(QT_ANDROID_TOOLCHAIN_VERSION)# ${ANDROID_COMPILER_VERSION})
+            set(QT_ANDROID_TOOLCHAIN_VERSION)
             set(QT_ANDROID_USE_LLVM "true")
         else()
             _portable_apk_error("Failed to parse ANDROID_TOOLCHAIN_ROOT (${ANDROID_TOOLCHAIN_ROOT}) to get toolchain prefix and version")
@@ -301,7 +319,6 @@ function (portable_target TARGET)
         ANDROID_PLATFORM
         ANDROID_PLATFORM_LEVEL
         ANDROID_ABI
-        ANDROID_COMPILER_VERSION
         ANDROID_TOOLCHAIN
         ANDROID_STL
         ANDROID_STL_PREFIX
@@ -520,8 +537,7 @@ function (portable_target TARGET)
         endif()
 
         if (NOT _arg_ANDROID_STL_PREFIX)
-            string(REGEX MATCH "^[ ]*c\\+\\+_shared[ ]*$" ANDROID_STL_MATCHED ${ANDROID_STL})
-            if (NOT ANDROID_STL_MATCHED)
+            if (${ANDROID_STL} MATCHES "^[ ]*c\\+\\+_shared[ ]*$")
                 _portable_apk_error("Unable to deduce ANDROID_STL_PREFIX, ANDROID_STL_PREFIX must be specified")
             else()
                 set(_arg_ANDROID_STL_PREFIX "llvm-libc++")
@@ -548,9 +564,9 @@ function (portable_target TARGET)
             endif()
 
             if (_arg_ANDROID_INSTALL)
-                set(ANDROID_INSTALL ON)
+                set(ANDROID_INSTALL_YESNO ON)
             else()
-                set(ANDROID_INSTALL OFF)
+                set(ANDROID_INSTALL_YESNO OFF)
             endif()
 
             _portable_apk(${TARGET}_apk ${TARGET}
@@ -566,8 +582,7 @@ function (portable_target TARGET)
                     APP_VERSION  ${_arg_ANDROID_APP_VERSION}
                     #KEYSTORE ${CMAKE_CURRENT_SOURCE_DIR}/pad.keystore pad
 #                    DEPENDS ${TARGET}
-                    INSTALL ${ANDROID_INSTALL}
-            )
+                    INSTALL ${ANDROID_INSTALL_YESNO})
         else()
             # TODO Settings for building non-Qt application
         endif()
