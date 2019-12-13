@@ -132,11 +132,29 @@ function (_portable_apk TARGET SOURCE_TARGET)
     )
 
     set(multiparm
-        DEPENDS)
+        DEPENDS
+        USES_PERMISSIONS)
         #KEYSTORE)
 
     # parse the macro arguments
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
+
+    # [<uses-sdk>](https://developer.android.com/guide/topics/manifest/uses-sdk-element)
+    # The minimum API Level required for the application to run.
+    # Associated with attribute 'android:minSdkVersion' of <uses-sdk> tag.
+    if (NOT DEFINED PT_ANDROID_MIN_SDK_VERSION)
+        set(PT_ANDROID_MIN_SDK_VERSION 21)
+    endif()
+
+    # The API Level that the application targets.
+    # If not set, the default value equals that given to minSdkVersion.
+    # Associated with attribute 'android:targetSdkVersion' of <uses-sdk> tag.
+    if (NOT DEFINED PT_ANDROID_TARGET_SDK_VERSION)
+        set(PT_ANDROID_TARGET_SDK_VERSION 28)
+    endif()
+
+    _portable_apk_status("Android Min SDK version: ${PT_ANDROID_MIN_SDK_VERSION} (controls by 'PT_ANDROID_MIN_SDK_VERSION' variable)")
+    _portable_apk_status("Android Target SDK version: ${PT_ANDROID_TARGET_SDK_VERSION}. (controls by 'PT_ANDROID_TARGET_SDK_VERSION' variable")
 
     #
     # Check arguments
@@ -187,48 +205,56 @@ function (_portable_apk TARGET SOURCE_TARGET)
 
     set(_ANDROID_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/android-sources")
     # create a subdirectory for the extra package sources
-    set(QT_ANDROID_APP_PACKAGE_SOURCE_ROOT "${CMAKE_CURRENT_BINARY_DIR}/android-sources")
+    set(PT_ANDROID_APP_PACKAGE_SOURCE_ROOT "${CMAKE_CURRENT_BINARY_DIR}/android-sources")
 
     # extract the full path of the source target binary
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        get_property(QT_ANDROID_APP_PATH TARGET ${SOURCE_TARGET} PROPERTY DEBUG_LOCATION)
+        get_property(PT_ANDROID_APP_PATH TARGET ${SOURCE_TARGET} PROPERTY DEBUG_LOCATION)
     else()
-        get_property(QT_ANDROID_APP_PATH TARGET ${SOURCE_TARGET} PROPERTY LOCATION)
+        get_property(PT_ANDROID_APP_PATH TARGET ${SOURCE_TARGET} PROPERTY LOCATION)
     endif()
 
-    get_filename_component(QT_ANDROID_QT_ROOT "${_arg_ANDROIDDEPLOYQT_EXECUTABLE}/../.." ABSOLUTE)
-    set(QT_ANDROID_SDK_ROOT ${_arg_ANDROID_SDK})
-    set(QT_ANDROID_NDK_ROOT ${_arg_ANDROID_NDK})
-    set(QT_ANDROID_STL_PATH "${_arg_ANDROID_NDK}/sources/cxx-stl/${_arg_ANDROID_STL_PREFIX}/libs/${_arg_ANDROID_ABI}/lib${_arg_ANDROID_STL}.so")
-    set(QT_ANDROID_APP_PACKAGE_NAME ${_arg_PACKAGE_NAME})
-    set(QT_ANDROID_APP_NAME ${_arg_APP_NAME})
-    set(QT_ANDROID_APP_VERSION_CODE ${_arg_APP_VERSION})
+    get_filename_component(PT_ANDROID_QT_ROOT "${_arg_ANDROIDDEPLOYQT_EXECUTABLE}/../.." ABSOLUTE)
+    set(PT_ANDROID_SDK_ROOT ${_arg_ANDROID_SDK})
+    set(PT_ANDROID_NDK_ROOT ${_arg_ANDROID_NDK})
+    set(PT_ANDROID_STL_PATH "${_arg_ANDROID_NDK}/sources/cxx-stl/${_arg_ANDROID_STL_PREFIX}/libs/${_arg_ANDROID_ABI}/lib${_arg_ANDROID_STL}.so")
+    set(PT_ANDROID_APP_PACKAGE_NAME ${_arg_PACKAGE_NAME})
+    set(PT_ANDROID_APP_NAME ${_arg_APP_NAME})
+    set(PT_ANDROID_APP_VERSION_CODE ${_arg_APP_VERSION})
 
     # androiddeployqt doesn't like backslashes in paths
-    string(REPLACE "\\" "/" QT_ANDROID_SDK_ROOT ${QT_ANDROID_SDK_ROOT})
-    string(REPLACE "\\" "/" QT_ANDROID_NDK_ROOT ${QT_ANDROID_NDK_ROOT})
+    string(REPLACE "\\" "/" PT_ANDROID_SDK_ROOT ${PT_ANDROID_SDK_ROOT})
+    string(REPLACE "\\" "/" PT_ANDROID_NDK_ROOT ${PT_ANDROID_NDK_ROOT})
 
     #
     # Detect latest Android SDK build-tools revision
     #
-    set(QT_ANDROID_SDK_BUILDTOOLS_REVISION "0.0.0")
-    file(GLOB ALL_BUILD_TOOLS_VERSIONS RELATIVE ${QT_ANDROID_SDK_ROOT}/build-tools ${QT_ANDROID_SDK_ROOT}/build-tools/*)
+    set(PT_ANDROID_SDK_BUILDTOOLS_REVISION "0.0.0")
+    file(GLOB ALL_BUILD_TOOLS_VERSIONS RELATIVE ${PT_ANDROID_SDK_ROOT}/build-tools ${PT_ANDROID_SDK_ROOT}/build-tools/*)
+
     foreach(BUILD_TOOLS_VERSION ${ALL_BUILD_TOOLS_VERSIONS})
         # find subfolder with greatest version
-        if (${BUILD_TOOLS_VERSION} VERSION_GREATER ${QT_ANDROID_SDK_BUILDTOOLS_REVISION})
-            set(QT_ANDROID_SDK_BUILDTOOLS_REVISION ${BUILD_TOOLS_VERSION})
+        if (${BUILD_TOOLS_VERSION} VERSION_GREATER ${PT_ANDROID_SDK_BUILDTOOLS_REVISION})
+            set(PT_ANDROID_SDK_BUILDTOOLS_REVISION ${BUILD_TOOLS_VERSION})
         endif()
     endforeach()
 
-    _portable_apk_status("Android SDK build tools version detected: ${QT_ANDROID_SDK_BUILDTOOLS_REVISION}")
-    _portable_apk_status("Android STL path      : ${QT_ANDROID_STL_PATH}")
-    _portable_apk_status("Android platform level: ${_arg_ANDROID_PLATFORM_LEVEL}")
-    _portable_apk_status("Android Qt root       : ${QT_ANDROID_QT_ROOT}")
-    _portable_apk_status("androiddeployqt       : ${_arg_ANDROIDDEPLOYQT_EXECUTABLE}")
-    _portable_apk_status("Target path           : ${QT_ANDROID_APP_PATH}")
-    _portable_apk_status("Package name          : ${QT_ANDROID_APP_PACKAGE_NAME}")
-    _portable_apk_status("Application name      : \"${QT_ANDROID_APP_NAME}\"")
-    _portable_apk_status("Application version   : ${QT_ANDROID_APP_VERSION}")
+    set(PT_ANDROID_USES_PERMISSION)
+
+    foreach (_permission ${_arg_USES_PERMISSIONS})
+        set(PT_ANDROID_USES_PERMISSION "${PT_ANDROID_USES_PERMISSION}\t<uses-permission android:name=\"android.permission.${_permission}\" />\n")
+    endforeach()
+
+    _portable_apk_status("Android SDK build tools version detected: ${PT_ANDROID_SDK_BUILDTOOLS_REVISION}")
+    _portable_apk_status("Android STL path       : ${PT_ANDROID_STL_PATH}")
+    _portable_apk_status("Android platform level : ${_arg_ANDROID_PLATFORM_LEVEL}")
+    _portable_apk_status("Android Qt root        : ${PT_ANDROID_QT_ROOT}")
+    _portable_apk_status("androiddeployqt        : ${_arg_ANDROIDDEPLOYQT_EXECUTABLE}")
+    _portable_apk_status("Target path            : ${PT_ANDROID_APP_PATH}")
+    _portable_apk_status("Package name           : ${PT_ANDROID_APP_PACKAGE_NAME}")
+    _portable_apk_status("Application name       : \"${PT_ANDROID_APP_NAME}\"")
+    _portable_apk_status("Application version    : ${PT_ANDROID_APP_VERSION}")
+    _portable_apk_status("Application permissions: ${_arg_USES_PERMISSIONS}")
 
     if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/AndroidManifest.xml.in)
         _portable_apk_error("AndroidManifest.xml.in not found at: ${CMAKE_CURRENT_LIST_DIR}")
@@ -237,24 +263,24 @@ function (_portable_apk TARGET SOURCE_TARGET)
     endif()
 
     # generate a manifest from the template
-    configure_file(${CMAKE_CURRENT_LIST_DIR}/AndroidManifest.xml.in ${QT_ANDROID_APP_PACKAGE_SOURCE_ROOT}/AndroidManifest.xml @ONLY)
+    configure_file(${CMAKE_CURRENT_LIST_DIR}/AndroidManifest.xml.in ${PT_ANDROID_APP_PACKAGE_SOURCE_ROOT}/AndroidManifest.xml @ONLY)
 
     # Set "useLLVM" parameter in qtdeploy.json to 'false'
-    set(QT_ANDROID_USE_LLVM "false")
+    set(PT_ANDROID_USE_LLVM "false")
 
     # set some toolchain variables used by androiddeployqt;
     # unfortunately, Qt tries to build paths from these variables although these full paths
     # are already available in the toochain file, so we have to parse them
     string(REGEX MATCH "${ANDROID_NDK}/toolchains/(.*)-(.*)/prebuilt/.*" ANDROID_TOOLCHAIN_PARSED ${ANDROID_TOOLCHAIN_ROOT})
     if(ANDROID_TOOLCHAIN_PARSED)
-        set(QT_ANDROID_TOOLCHAIN_PREFIX ${CMAKE_MATCH_1})
-        set(QT_ANDROID_TOOLCHAIN_VERSION ${CMAKE_MATCH_2})
+        set(PT_ANDROID_TOOLCHAIN_PREFIX ${CMAKE_MATCH_1})
+        set(PT_ANDROID_TOOLCHAIN_VERSION ${CMAKE_MATCH_2})
     else()
         string(REGEX MATCH "${ANDROID_NDK}/toolchains/llvm/prebuilt/.*" ANDROID_TOOLCHAIN_PARSED ${ANDROID_TOOLCHAIN_ROOT})
         if(ANDROID_TOOLCHAIN_PARSED)
-            set(QT_ANDROID_TOOLCHAIN_PREFIX llvm)
-            set(QT_ANDROID_TOOLCHAIN_VERSION)
-            set(QT_ANDROID_USE_LLVM "true")
+            set(PT_ANDROID_TOOLCHAIN_PREFIX llvm)
+            set(PT_ANDROID_TOOLCHAIN_VERSION)
+            set(PT_ANDROID_USE_LLVM "true")
         else()
             _portable_apk_error("Failed to parse ANDROID_TOOLCHAIN_ROOT (${ANDROID_TOOLCHAIN_ROOT}) to get toolchain prefix and version")
         endif()
@@ -290,8 +316,8 @@ function (_portable_apk TARGET SOURCE_TARGET)
         DEPENDS ${SOURCE_TARGET}
         COMMAND ${CMAKE_COMMAND} -E remove_directory ${OUTPUT_DIR} # it seems that recompiled libraries are not copied if we don't remove them first
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
-        COMMAND ${CMAKE_COMMAND} -E copy ${QT_ANDROID_APP_PATH} ${OUTPUT_DIR}
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/android-sources ${QT_ANDROID_APP_PACKAGE_SOURCE_ROOT}
+        COMMAND ${CMAKE_COMMAND} -E copy ${PT_ANDROID_APP_PATH} ${OUTPUT_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/android-sources ${PT_ANDROID_APP_PACKAGE_SOURCE_ROOT}
         COMMAND ${_arg_ANDROIDDEPLOYQT_EXECUTABLE}
                 --verbose
                 --output ${CMAKE_CURRENT_BINARY_DIR}/android-build
@@ -329,6 +355,7 @@ function (portable_target TARGET)
 
     set(multiparm
         Qt5_COMPONENTS
+        ANDROID_PERMISSIONS
         SOURCES)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
@@ -538,9 +565,9 @@ function (portable_target TARGET)
 
         if (NOT _arg_ANDROID_STL_PREFIX)
             if (${ANDROID_STL} MATCHES "^[ ]*c\\+\\+_shared[ ]*$")
-                _portable_apk_error("Unable to deduce ANDROID_STL_PREFIX, ANDROID_STL_PREFIX must be specified")
-            else()
                 set(_arg_ANDROID_STL_PREFIX "llvm-libc++")
+            else()
+                _portable_apk_error("Unable to deduce ANDROID_STL_PREFIX, ANDROID_STL_PREFIX must be specified")
             endif()
         endif()
 
@@ -569,6 +596,10 @@ function (portable_target TARGET)
                 set(ANDROID_INSTALL_YESNO OFF)
             endif()
 
+            if (NOT _arg_ANDROID_PERMISSIONS)
+                set(_arg_ANDROID_PERMISSIONS WAKE_LOCK)
+            endif()
+
             _portable_apk(${TARGET}_apk ${TARGET}
                     ANDROID_SDK $ENV{ANDROID_SDK}
                     ANDROID_NDK ${ANDROID_NDK}
@@ -580,6 +611,7 @@ function (portable_target TARGET)
                     PACKAGE_NAME ${_arg_ANDROID_PACKAGE_NAME}
                     APP_NAME ${_arg_ANDROID_APP_NAME}
                     APP_VERSION  ${_arg_ANDROID_APP_VERSION}
+                    USES_PERMISSIONS ${_arg_ANDROID_PERMISSIONS}
                     #KEYSTORE ${CMAKE_CURRENT_SOURCE_DIR}/pad.keystore pad
 #                    DEPENDS ${TARGET}
                     INSTALL ${ANDROID_INSTALL_YESNO})

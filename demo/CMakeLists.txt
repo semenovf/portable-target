@@ -43,6 +43,15 @@ portable_target(FileDialog
     ANDROID_PACKAGE_NAME "ru.jobquest.FileDialog"
     ANDROID_APP_NAME "File Dialog"
     ANDROID_APP_VERSION 2
+    ANDROID_PERMISSIONS
+        INTERNET
+        ACCESS_NETWORK_STATE
+        RECORD_AUDIO
+        WAKE_LOCK
+        ACCESS_FINE_LOCATION
+        WRITE_EXTERNAL_STORAGE
+        READ_EXTERNAL_STORAGE
+        CAMERA
     ANDROID_INSTALL)
 
 
