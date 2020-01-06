@@ -631,17 +631,16 @@ function (portable_target TARGET)
             set_property(TARGET ${TARGET}_OBJLIB PROPERTY POSITION_INDEPENDENT_CODE 1)
             target_include_directories(${TARGET}_OBJLIB PRIVATE ${_include_directories})
 
-            # Shared libraries need PIC
-            set_property(TARGET ${TARGET} PROPERTY POSITION_INDEPENDENT_CODE 1)
-
             add_library(${TARGET} SHARED $<TARGET_OBJECTS:${TARGET}_OBJLIB>)
             add_library(${TARGET}-static STATIC $<TARGET_OBJECTS:${TARGET}_OBJLIB>)
+            # Shared libraries need PIC
+            set_property(TARGET ${TARGET} PROPERTY POSITION_INDEPENDENT_CODE 1)
         elseif(_arg_STATIC)
             add_library(${TARGET}-static STATIC ${_arg_SOURCES})
         elseif(_arg_SHARED)
+            add_library(${TARGET} SHARED ${_arg_SOURCES})
             # Shared libraries need PIC
             set_property(TARGET ${TARGET} PROPERTY POSITION_INDEPENDENT_CODE 1)
-            add_library(${TARGET} SHARED ${_arg_SOURCES})
         else()
             add_executable(${TARGET} ${_arg_SOURCES})
         endif()
