@@ -636,7 +636,8 @@ function (portable_target TARGET)
             # Shared libraries need PIC
             set_property(TARGET ${TARGET} PROPERTY POSITION_INDEPENDENT_CODE 1)
         elseif(_arg_STATIC)
-            add_library(${TARGET}-static STATIC ${_arg_SOURCES})
+#             add_library(${TARGET}-static STATIC ${_arg_SOURCES})
+            add_library(${TARGET} STATIC ${_arg_SOURCES})
         elseif(_arg_SHARED)
             add_library(${TARGET} SHARED ${_arg_SOURCES})
             # Shared libraries need PIC
