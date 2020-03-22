@@ -24,8 +24,8 @@ include(CMakeParseArguments)
 #       [AUTORCC_OFF]                          # Default is ON
 #       [STATIC]                               # Target is static library (ignored by Android version)
 #       [SHARED]                               # Target is shared library (ignored by Android version)
-#       [Qt5_ROOT <dir>]                       # Must point to Qt5 official distribution directory
-#       [Qt5_PLATFORM <qt5-platform>]
+#       [Qt5_ROOT <dir>]                       # Must point to Qt5 official distribution directory. If not specified set to PORTABLE_TARGET_Qt5_ROOT or uses system platform
+#       [Qt5_PLATFORM <qt5-platform>]          # If not specified set to PORTABLE_TARGET_Qt5_PLATFORM or uses system platform
 #       [Qt5_COMPONENTS <qt5-components>]
 #
 #       # Android specific options
@@ -142,19 +142,19 @@ function (_portable_apk TARGET SOURCE_TARGET)
     # [<uses-sdk>](https://developer.android.com/guide/topics/manifest/uses-sdk-element)
     # The minimum API Level required for the application to run.
     # Associated with attribute 'android:minSdkVersion' of <uses-sdk> tag.
-    if (NOT DEFINED PT_ANDROID_MIN_SDK_VERSION)
-        set(PT_ANDROID_MIN_SDK_VERSION 21)
+    if (NOT DEFINED PORTABLE_TARGET_ANDROID_MIN_SDK_VERSION)
+        set(PORTABLE_TARGET_ANDROID_MIN_SDK_VERSION 21)
     endif()
 
     # The API Level that the application targets.
     # If not set, the default value equals that given to minSdkVersion.
     # Associated with attribute 'android:targetSdkVersion' of <uses-sdk> tag.
-    if (NOT DEFINED PT_ANDROID_TARGET_SDK_VERSION)
-        set(PT_ANDROID_TARGET_SDK_VERSION 28)
+    if (NOT DEFINED PORTABLE_TARGET_ANDROID_TARGET_SDK_VERSION)
+        set(PORTABLE_TARGET_ANDROID_TARGET_SDK_VERSION 28)
     endif()
 
-    _portable_apk_status("Android Min SDK version: ${PT_ANDROID_MIN_SDK_VERSION} (controls by 'PT_ANDROID_MIN_SDK_VERSION' variable)")
-    _portable_apk_status("Android Target SDK version: ${PT_ANDROID_TARGET_SDK_VERSION}. (controls by 'PT_ANDROID_TARGET_SDK_VERSION' variable")
+    _portable_apk_status("Android Min SDK version: ${PORTABLE_TARGET_ANDROID_MIN_SDK_VERSION} (controls by 'PORTABLE_TARGET_ANDROID_MIN_SDK_VERSION' variable)")
+    _portable_apk_status("Android Target SDK version: ${PORTABLE_TARGET_ANDROID_TARGET_SDK_VERSION}. (controls by 'PORTABLE_TARGET_ANDROID_TARGET_SDK_VERSION' variable")
 
     #
     # Check arguments
@@ -272,6 +272,7 @@ function (_portable_apk TARGET SOURCE_TARGET)
     # unfortunately, Qt tries to build paths from these variables although these full paths
     # are already available in the toochain file, so we have to parse them
     string(REGEX MATCH "${ANDROID_NDK}/toolchains/(.*)-(.*)/prebuilt/.*" ANDROID_TOOLCHAIN_PARSED ${ANDROID_TOOLCHAIN_ROOT})
+
     if(ANDROID_TOOLCHAIN_PARSED)
         set(PT_ANDROID_TOOLCHAIN_PREFIX ${CMAKE_MATCH_1})
         set(PT_ANDROID_TOOLCHAIN_VERSION ${CMAKE_MATCH_2})
@@ -367,17 +368,17 @@ function (portable_target TARGET)
     if (ANDROID)
         # Touch variables to suppress "unused variable" warning.
         # This happens if CMake is invoked with the same command line the second time.
-        if(CMAKE_TOOLCHAIN_FILE)
+        if (CMAKE_TOOLCHAIN_FILE)
         endif()
-        if(ANDROID_ABI)
+        if (ANDROID_ABI)
         endif()
-        if(ANDROID_NDK)
+        if (ANDROID_NDK)
         endif()
-        if(ANDROID_PLATFORM)
+        if (ANDROID_PLATFORM)
         endif()
-        if(ANDROID_STL)
+        if (ANDROID_STL)
         endif()
-        if(ANDROID_TOOLCHAIN)
+        if (ANDROID_TOOLCHAIN)
         endif()
 
         if (NOT ANDROID_85de0b22-2f4a-4aeb-beba-265a793aad00)
@@ -489,6 +490,18 @@ function (portable_target TARGET)
 
     if (NOT _arg_SOURCES)
         _portable_target_error("No sources specified")
+    endif()
+
+    if (NOT _arg_Qt5_ROOT)
+        if (DEFINED PORTABLE_TARGET_Qt5_ROOT)
+            set(_arg_Qt5_ROOT "${PORTABLE_TARGET_Qt5_ROOT}")
+        endif()
+    endif()
+
+    if (NOT _arg_Qt5_PLATFORM)
+        if (DEFINED PORTABLE_TARGET_Qt5_PLATFORM)
+            set(_arg_Qt5_PLATFORM "${PORTABLE_TARGET_Qt5_PLATFORM}")
+        endif()
     endif()
 
     if (_arg_Qt5_ROOT)
