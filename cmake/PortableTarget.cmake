@@ -665,7 +665,7 @@ function (portable_target TARGET)
             add_executable(${TARGET} ${_arg_SOURCES})
         endif()
 
-        if (NOT DEFINED _arg_AGGRESSIVE_COMPILER_CHECK)
+        if (NOT _arg_AGGRESSIVE_COMPILER_CHECK)
             if (${PORTABLE_TARGET_AGGRESSIVE_COMPILER_CHECK})
                 set(_arg_AGGRESSIVE_COMPILER_CHECK ON)
             endif()

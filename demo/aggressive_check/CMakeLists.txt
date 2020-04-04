@@ -9,7 +9,7 @@
 ################################################################################
 include(${CMAKE_SOURCE_DIR}/cmake/PortableTarget.cmake)
 
-option(PORTABLE_TARGET_AGGRESSIVE_COMPILER_CHECK OFF)
+set(PORTABLE_TARGET_AGGRESSIVE_COMPILER_CHECK ON)
 
 if (NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 11)
@@ -19,7 +19,7 @@ endif()
 set(SOURCES main.cpp)
 
 portable_target(aggressive_check
-    AGGRESSIVE_COMPILER_CHECK
+#     AGGRESSIVE_COMPILER_CHECK
     SOURCES ${SOURCES})
 
 
