@@ -19,6 +19,7 @@ include(CMakeParseArguments)
 # Usage:
 #
 # portable_target(MyApp
+#       [AGGRESSIVE_COMPILER_CHECK]            # Default is OFF (Global variable PORTABLE_TARGET_AGGRESSIVE_COMPILER_CHECK)
 #       [AUTOMOC_OFF]                          # Default is ON
 #       [AUTOUIC_OFF]                          # Default is ON
 #       [AUTORCC_OFF]                          # Default is ON
@@ -44,6 +45,10 @@ include(CMakeParseArguments)
 #
 # By default, if not specifed STATIC and/or SHARED target is shared library
 # on Android platform (always SHARED) or executable on Linux/Windows
+#
+# Set AGGRESSIVE_COMPILER_CHECK if want the compiler more pedantic. This option
+# activate specific compiler flags for concrete compiler (NOTE now supports
+# only `gcc`)
 #
 # Set AUTOMOC_OFF if not required to autogenerate moc sources:
 #       - project has custom signals/slots
@@ -80,29 +85,29 @@ include(CMakeParseArguments)
 ################################################################################
 # _portable_target_error
 ################################################################################
-function (_portable_target_error TEXT)
-    message(FATAL_ERROR "*** ERROR: portable_target: ${TEXT}")
+function (_portable_target_error TARGET TEXT)
+    message(FATAL_ERROR "*** ERROR: portable_target [${TARGET}]: ${TEXT}")
 endfunction()
 
 ################################################################################
 # _portable_target_status
 ################################################################################
-function (_portable_target_status TEXT)
-    message(STATUS "portable_target: ${TEXT}")
+function (_portable_target_status TARGET TEXT)
+    message(STATUS "portable_target [${TARGET}]: ${TEXT}")
 endfunction()
 
 ################################################################################
 # _portable_apk_error
 ################################################################################
-function (_portable_apk_error TEXT)
-    message(FATAL_ERROR "*** ERROR: portable_apk: ${TEXT}")
+function (_portable_apk_error TARGET TEXT)
+    message(FATAL_ERROR "*** ERROR: portable_apk [${TARGET}]: ${TEXT}")
 endfunction()
 
 ################################################################################
 # _portable_apk_status
 ################################################################################
-function (_portable_apk_status TEXT)
-    message(STATUS "portable_apk: ${TEXT}")
+function (_portable_apk_status TARGET TEXT)
+    message(STATUS "portable_apk [${TARGET}]: ${TEXT}")
 endfunction()
 
 ################################################################################
@@ -153,54 +158,54 @@ function (_portable_apk TARGET SOURCE_TARGET)
         set(PT_ANDROID_TARGET_SDK_VERSION 28)
     endif()
 
-    _portable_apk_status("Android Min SDK version: ${PT_ANDROID_MIN_SDK_VERSION} (controls by 'PT_ANDROID_MIN_SDK_VERSION' variable)")
-    _portable_apk_status("Android Target SDK version: ${PT_ANDROID_TARGET_SDK_VERSION}. (controls by 'PT_ANDROID_TARGET_SDK_VERSION' variable")
+    _portable_apk_status(${TARGET} "Android Min SDK version: ${PT_ANDROID_MIN_SDK_VERSION} (controls by 'PT_ANDROID_MIN_SDK_VERSION' variable)")
+    _portable_apk_status(${TARGET} "Android Target SDK version: ${PT_ANDROID_TARGET_SDK_VERSION}. (controls by 'PT_ANDROID_TARGET_SDK_VERSION' variable")
 
     #
     # Check arguments
     #
     if (NOT _arg_ANDROID_SDK)
-        _portable_apk_error("ANDROID_SDK must be specified")
+        _portable_apk_error(${TARGET} "ANDROID_SDK must be specified")
     endif()
 
     if (NOT _arg_ANDROID_NDK)
-        _portable_apk_error("ANDROID_NDK must be specified")
+        _portable_apk_error(${TARGET} "ANDROID_NDK must be specified")
     endif()
 
     if (NOT _arg_ANDROID_ABI)
-        _portable_apk_error("ANDROID_ABI must be specified")
+        _portable_apk_error(${TARGET} "ANDROID_ABI must be specified")
     endif()
 
     if (NOT _arg_ANDROID_PLATFORM_LEVEL)
-        _portable_apk_error("ANDROID_PLATFORM_LEVEL must be specified")
+        _portable_apk_error(${TARGET} "ANDROID_PLATFORM_LEVEL must be specified")
     endif()
 
     if (NOT _arg_ANDROID_STL)
-        _portable_apk_error("ANDROID_STL must be specified")
+        _portable_apk_error(${TARGET} "ANDROID_STL must be specified")
     endif()
 
     if (NOT _arg_ANDROID_STL_PREFIX)
-        _portable_apk_error("ANDROID_STL_PREFIX must be specified")
+        _portable_apk_error(${TARGET} "ANDROID_STL_PREFIX must be specified")
     endif()
 
     if (NOT _arg_ANDROIDDEPLOYQT_EXECUTABLE)
-        _portable_apk_error("ANDROIDDEPLOYQT_EXECUTABLE must be specified")
+        _portable_apk_error(${TARGET} "ANDROIDDEPLOYQT_EXECUTABLE must be specified")
     endif()
 
     if (NOT _arg_PACKAGE_NAME)
-        _portable_apk_error("PACKAGE_NAME must be specified")
+        _portable_apk_error(${TARGET} "PACKAGE_NAME must be specified")
     endif()
 
     if (NOT _arg_APP_NAME)
-        _portable_apk_error("APP_NAME must be specified")
+        _portable_apk_error(${TARGET} "APP_NAME must be specified")
     endif()
 
     if (NOT _arg_APP_VERSION)
-        _portable_apk_error("APP_VERSION must be specified")
+        _portable_apk_error(${TARGET} "APP_VERSION must be specified")
     endif()
 
     if (NOT _arg_INSTALL)
-        _portable_apk_error("INSTALL must be specified")
+        _portable_apk_error(${TARGET} "INSTALL must be specified")
     endif()
 
     set(_ANDROID_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/android-sources")
@@ -245,21 +250,21 @@ function (_portable_apk TARGET SOURCE_TARGET)
         set(PT_ANDROID_USES_PERMISSION "${PT_ANDROID_USES_PERMISSION}\t<uses-permission android:name=\"android.permission.${_permission}\" />\n")
     endforeach()
 
-    _portable_apk_status("Android SDK build tools version detected: ${PT_ANDROID_SDK_BUILDTOOLS_REVISION}")
-    _portable_apk_status("Android STL path       : ${PT_ANDROID_STL_PATH}")
-    _portable_apk_status("Android platform level : ${_arg_ANDROID_PLATFORM_LEVEL}")
-    _portable_apk_status("Android Qt root        : ${PT_ANDROID_QT_ROOT}")
-    _portable_apk_status("androiddeployqt        : ${_arg_ANDROIDDEPLOYQT_EXECUTABLE}")
-    _portable_apk_status("Target path            : ${PT_ANDROID_APP_PATH}")
-    _portable_apk_status("Package name           : ${PT_ANDROID_APP_PACKAGE_NAME}")
-    _portable_apk_status("Application name       : \"${PT_ANDROID_APP_NAME}\"")
-    _portable_apk_status("Application version    : ${PT_ANDROID_APP_VERSION}")
-    _portable_apk_status("Application permissions: ${_arg_USES_PERMISSIONS}")
+    _portable_apk_status(${TARGET} "Android SDK build tools version detected: ${PT_ANDROID_SDK_BUILDTOOLS_REVISION}")
+    _portable_apk_status(${TARGET} "Android STL path       : ${PT_ANDROID_STL_PATH}")
+    _portable_apk_status(${TARGET} "Android platform level : ${_arg_ANDROID_PLATFORM_LEVEL}")
+    _portable_apk_status(${TARGET} "Android Qt root        : ${PT_ANDROID_QT_ROOT}")
+    _portable_apk_status(${TARGET} "androiddeployqt        : ${_arg_ANDROIDDEPLOYQT_EXECUTABLE}")
+    _portable_apk_status(${TARGET} "Target path            : ${PT_ANDROID_APP_PATH}")
+    _portable_apk_status(${TARGET} "Package name           : ${PT_ANDROID_APP_PACKAGE_NAME}")
+    _portable_apk_status(${TARGET} "Application name       : \"${PT_ANDROID_APP_NAME}\"")
+    _portable_apk_status(${TARGET} "Application version    : ${PT_ANDROID_APP_VERSION}")
+    _portable_apk_status(${TARGET} "Application permissions: ${_arg_USES_PERMISSIONS}")
 
     if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/AndroidManifest.xml.in)
-        _portable_apk_error("AndroidManifest.xml.in not found at: ${CMAKE_CURRENT_LIST_DIR}")
+        _portable_apk_error(${TARGET} "AndroidManifest.xml.in not found at: ${CMAKE_CURRENT_LIST_DIR}")
     else()
-        _portable_apk_status("AndroidManifest.xml.in found at: ${CMAKE_CURRENT_LIST_DIR}")
+        _portable_apk_status(${TARGET} "AndroidManifest.xml.in found at: ${CMAKE_CURRENT_LIST_DIR}")
     endif()
 
     # generate a manifest from the template
@@ -282,7 +287,7 @@ function (_portable_apk TARGET SOURCE_TARGET)
             set(PT_ANDROID_TOOLCHAIN_VERSION)
             set(PT_ANDROID_USE_LLVM "true")
         else()
-            _portable_apk_error("Failed to parse ANDROID_TOOLCHAIN_ROOT (${ANDROID_TOOLCHAIN_ROOT}) to get toolchain prefix and version")
+            _portable_apk_error(${TARGET} "Failed to parse ANDROID_TOOLCHAIN_ROOT (${ANDROID_TOOLCHAIN_ROOT}) to get toolchain prefix and version")
         endif()
     endif()
 
@@ -332,6 +337,7 @@ endfunction()
 ################################################################################
 function (portable_target TARGET)
     set(boolparm
+        AGGRESSIVE_COMPILER_CHECK
         AUTOMOC_OFF
         AUTOUIC_OFF
         AUTORCC_OFF
@@ -382,32 +388,32 @@ function (portable_target TARGET)
 
         if (NOT ANDROID_85de0b22-2f4a-4aeb-beba-265a793aad00)
             if (NOT DEFINED ENV{JAVA_HOME})
-                _portable_target_error("JAVA_HOME variable must be set and point to Java home directory")
+                _portable_target_error(${TARGET} "JAVA_HOME variable must be set and point to Java home directory")
             endif()
 
             if (NOT EXISTS $ENV{JAVA_HOME})
-                _portable_target_error("JAVA_HOME directory not found: $ENV{JAVA_HOME}")
+                _portable_target_error(${TARGET} "JAVA_HOME directory not found: $ENV{JAVA_HOME}")
             endif()
 
             if (NOT DEFINED ENV{ANDROID_SDK})
-                _portable_target_error("ANDROID_SDK variable must be set and point to Android SDK home directory")
+                _portable_target_error(${TARGET} "ANDROID_SDK variable must be set and point to Android SDK home directory")
             endif()
 
             if (NOT EXISTS $ENV{ANDROID_SDK})
-                _portable_target_error("Android SDK directory not found: $ENV{ANDROID_SDK}")
+                _portable_target_error(${TARGET} "Android SDK directory not found: $ENV{ANDROID_SDK}")
             endif()
 
             # Set variable affects Android toolchain
             set(ANDROID_NDK "$ENV{ANDROID_SDK}/ndk-bundle")
 
             if (NOT EXISTS ${ANDROID_NDK})
-                _portable_target_error("Android NDK directory not found: ${ANDROID_NDK}")
+                _portable_target_error(${TARGET} "Android NDK directory not found: ${ANDROID_NDK}")
             endif()
 
             set(ANDROID_TOOLCHAIN_FILE "${ANDROID_NDK}/build/cmake/android.toolchain.cmake")
 
             if (NOT EXISTS ${ANDROID_TOOLCHAIN_FILE})
-                _portable_target_error("Android toolchain file not found: ${ANDROID_TOOLCHAIN_FILE}")
+                _portable_target_error(${TARGET} "Android toolchain file not found: ${ANDROID_TOOLCHAIN_FILE}")
             endif()
 
             if (NOT _arg_ANDROID_PLATFORM)
@@ -415,11 +421,11 @@ function (portable_target TARGET)
             endif()
 
             if (NOT _arg_ANDROID_PLATFORM_LEVEL)
-                _portable_target_error("ANDROID_PLATFORM_LEVEL must be specified")
+                _portable_target_error(${TARGET} "ANDROID_PLATFORM_LEVEL must be specified")
             endif()
 
             if (NOT _arg_ANDROID_ABI)
-                _portable_target_error("ANDROID_ABI must be specified")
+                _portable_target_error(${TARGET} "ANDROID_ABI must be specified")
             endif()
 
             if (NOT _arg_ANDROID_TOOLCHAIN)
@@ -430,18 +436,18 @@ function (portable_target TARGET)
                 set(_arg_ANDROID_STL "c++_shared")
             endif()
 
-            _portable_target_status("CMAKE command           : ${CMAKE_COMMAND}")
-            _portable_target_status("CMAKE version           : ${CMAKE_VERSION}")
-            _portable_target_status("Java HOME directory     : $ENV{JAVA_HOME}")
-            _portable_target_status("Android SDK directory   : $ENV{ANDROID_SDK}")
-            _portable_target_status("Android NDK directory   : ${ANDROID_NDK}")
-            _portable_target_status("Android toolchain file  : ${ANDROID_TOOLCHAIN_FILE}")
-            _portable_target_status("Android platform        : ${_arg_ANDROID_PLATFORM}")
-            _portable_target_status("Android ABI             : ${_arg_ANDROID_ABI}")
-            _portable_target_status("Android toolchain       : ${_arg_ANDROID_TOOLCHAIN}")
-            _portable_target_status("Android STL             : ${_arg_ANDROID_STL}")
+            _portable_target_status(${TARGET} "CMAKE command           : ${CMAKE_COMMAND}")
+            _portable_target_status(${TARGET} "CMAKE version           : ${CMAKE_VERSION}")
+            _portable_target_status(${TARGET} "Java HOME directory     : $ENV{JAVA_HOME}")
+            _portable_target_status(${TARGET} "Android SDK directory   : $ENV{ANDROID_SDK}")
+            _portable_target_status(${TARGET} "Android NDK directory   : ${ANDROID_NDK}")
+            _portable_target_status(${TARGET} "Android toolchain file  : ${ANDROID_TOOLCHAIN_FILE}")
+            _portable_target_status(${TARGET} "Android platform        : ${_arg_ANDROID_PLATFORM}")
+            _portable_target_status(${TARGET} "Android ABI             : ${_arg_ANDROID_ABI}")
+            _portable_target_status(${TARGET} "Android toolchain       : ${_arg_ANDROID_TOOLCHAIN}")
+            _portable_target_status(${TARGET} "Android STL             : ${_arg_ANDROID_STL}")
 
-            _portable_target_status("*** Begin process Android specification")
+            _portable_target_status(${TARGET} "*** Begin process Android specification")
             execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/Android")
             execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}"
                     -DANDROID_85de0b22-2f4a-4aeb-beba-265a793aad00=ON
@@ -455,72 +461,72 @@ function (portable_target TARGET)
                     ${CMAKE_SOURCE_DIR}
 
                     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/Android")
-            _portable_target_status("*** Finished process Android specification")
+            _portable_target_status(${TARGET} "*** Finished process Android specification")
             return()
         endif() # ! ANDROID_85de0b22-2f4a-4aeb-beba-265a793aad00
     endif(ANDROID)
 
-    _portable_target_status("CMAKE_CXX_COMPILER  : ${CMAKE_CXX_COMPILER}")
-    _portable_target_status("CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}")
+    _portable_target_status(${TARGET} "CMAKE_CXX_COMPILER  : ${CMAKE_CXX_COMPILER}")
+    _portable_target_status(${TARGET} "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}")
 
     if (_arg_AUTOMOC_OFF)
-        _portable_target_status("AUTOMOC is OFF")
+        _portable_target_status(${TARGET} "AUTOMOC is OFF")
         set(CMAKE_AUTOMOC OFF)
     else()
-        _portable_target_status("AUTOMOC is ON")
+        _portable_target_status(${TARGET} "AUTOMOC is ON")
         set(CMAKE_AUTOMOC ON)
     endif()
 
     if (_arg_AUTOUIC_OFF)
-        _portable_target_status("AUTOUIC is OFF")
+        _portable_target_status(${TARGET} "AUTOUIC is OFF")
         set(CMAKE_AUTOUIC OFF)
     else()
-        _portable_target_status("AUTOUIC is ON")
+        _portable_target_status(${TARGET} "AUTOUIC is ON")
         set(CMAKE_AUTOUIC ON)
     endif()
 
     if (_arg_AUTORCC_OFF)
-        _portable_target_status("AUTORCC is OFF")
+        _portable_target_status(${TARGET} "AUTORCC is OFF")
         set(CMAKE_AUTORCC OFF)
     else()
-        _portable_target_status("AUTORCC is ON")
+        _portable_target_status(${TARGET} "AUTORCC is ON")
         set(CMAKE_AUTORCC ON)
     endif()
 
     if (NOT _arg_SOURCES)
-        _portable_target_error("No sources specified")
+        _portable_target_error(${TARGET} "No sources specified")
     endif()
 
     if (_arg_Qt5_ROOT)
         if(NOT _arg_Qt5_PLATFORM)
-            _portable_target_error("Qt5 platform must be specified")
+            _portable_target_error(${TARGET} "Qt5 platform must be specified")
         endif()
 
         if (NOT EXISTS ${_arg_Qt5_ROOT})
-            _portable_target_error("Bad Qt5 location: '${_arg_Qt5_ROOT}', check Qt5_ROOT parameter")
+            _portable_target_error(${TARGET} "Bad Qt5 location: '${_arg_Qt5_ROOT}', check Qt5_ROOT parameter")
         endif()
 
         set(Qt5_DIR "${_arg_Qt5_ROOT}/${_arg_Qt5_PLATFORM}/lib/cmake/Qt5")
 
         if (NOT EXISTS ${Qt5_DIR})
-            _portable_target_error("Bad Qt5_DIR location: '${Qt5_DIR}', check Qt5_PLATFORM parameter or mey be need modification of this function")
+            _portable_target_error(${TARGET} "Bad Qt5_DIR location: '${Qt5_DIR}', check Qt5_PLATFORM parameter or mey be need modification of this function")
         endif()
 
         set(Qt5Core_DIR "${_arg_Qt5_ROOT}/${_arg_Qt5_PLATFORM}/lib/cmake/Qt5Core")
 
         if (NOT EXISTS ${Qt5Core_DIR})
-            _portable_target_error("Bad Qt5Core location: '${Qt5Core_DIR}', need modification of this function")
+            _portable_target_error(${TARGET} "Bad Qt5Core location: '${Qt5Core_DIR}', need modification of this function")
         endif()
 
-        _portable_target_status("Qt5 location: ${_arg_Qt5_ROOT}")
+        _portable_target_status(${TARGET} "Qt5 location: ${_arg_Qt5_ROOT}")
 
         set(QT_QMAKE_EXECUTABLE "${_arg_Qt5_ROOT}/${_arg_Qt5_PLATFORM}/bin/qmake${CMAKE_EXECUTABLE_SUFFIX}")
 
         if (NOT EXISTS ${QT_QMAKE_EXECUTABLE})
-            _portable_target_error("Bad qmake location: '${QT_QMAKE_EXECUTABLE}', need modification of this function")
+            _portable_target_error(${TARGET} "Bad qmake location: '${QT_QMAKE_EXECUTABLE}', need modification of this function")
         endif()
 
-        _portable_target_status("Qt5 qmake location: ${QT_QMAKE_EXECUTABLE}")
+        _portable_target_status(${TARGET} "Qt5 qmake location: ${QT_QMAKE_EXECUTABLE}")
     endif()
 
     set(_link_libraries)
@@ -535,12 +541,12 @@ function (portable_target TARGET)
         foreach(_item IN LISTS _arg_Qt5_COMPONENTS)
             if (_arg_Qt5_ROOT)
                 set(Qt5${_item}_DIR "${_arg_Qt5_ROOT}/${_arg_Qt5_PLATFORM}/lib/cmake/Qt5${_item}")
-                _portable_target_status("Qt5::${_item} location: ${Qt5${_item}_DIR}")
+                _portable_target_status(${TARGET} "Qt5::${_item} location: ${Qt5${_item}_DIR}")
             endif()
         endforeach()
 
         find_package(Qt5 COMPONENTS ${_arg_Qt5_COMPONENTS} REQUIRED)
-        _portable_target_status("Qt5 version found: ${Qt5Core_VERSION} (compare with required)")
+        _portable_target_status(${TARGET} "Qt5 version found: ${Qt5Core_VERSION} (compare with required)")
 
         foreach(_item IN LISTS _arg_Qt5_COMPONENTS)
             list(APPEND _link_libraries "Qt5::${_item}")
@@ -559,7 +565,7 @@ function (portable_target TARGET)
             set(_arg_ANDROID_PLATFORM_LEVEL ${ANDROID_PLATFORM_LEVEL})
 
             if (NOT _arg_ANDROID_PLATFORM_LEVEL)
-                _portable_target_error("ANDROID_PLATFORM_LEVEL is not provided by toolchain")
+                _portable_target_error(${TARGET} "ANDROID_PLATFORM_LEVEL is not provided by toolchain")
             endif()
         endif()
 
@@ -567,12 +573,12 @@ function (portable_target TARGET)
             if (${ANDROID_STL} MATCHES "^[ ]*c\\+\\+_shared[ ]*$")
                 set(_arg_ANDROID_STL_PREFIX "llvm-libc++")
             else()
-                _portable_apk_error("Unable to deduce ANDROID_STL_PREFIX, ANDROID_STL_PREFIX must be specified")
+                _portable_apk_error(${TARGET} "Unable to deduce ANDROID_STL_PREFIX, ANDROID_STL_PREFIX must be specified")
             endif()
         endif()
 
         if (NOT _arg_ANDROID_PACKAGE_NAME)
-            _portable_apk_error("ANDROID_PACKAGE_NAME must be specified")
+            _portable_apk_error(${TARGET} "ANDROID_PACKAGE_NAME must be specified")
         endif()
 
         if (NOT _arg_ANDROID_APP_NAME)
@@ -587,7 +593,7 @@ function (portable_target TARGET)
             get_filename_component(ANDROIDDEPLOYQT_EXECUTABLE "${Qt5_DIR}/../../../bin/androiddeployqt" ABSOLUTE)
 
             if (NOT EXISTS ${ANDROIDDEPLOYQT_EXECUTABLE})
-                _portable_apk_error("androiddeployqt not found at: ${ANDROIDDEPLOYQT_EXECUTABLE}")
+                _portable_apk_error(${TARGET} "androiddeployqt not found at: ${ANDROIDDEPLOYQT_EXECUTABLE}")
             endif()
 
             if (_arg_ANDROID_INSTALL)
@@ -618,7 +624,7 @@ function (portable_target TARGET)
         else()
             # TODO Settings for building non-Qt application
         endif()
-    else(ANDROID)
+    else(ANDROID) # NOT ANDROID
         if(_arg_STATIC AND _arg_SHARED)
             # Prepare OBJECT target
             if (_arg_Qt5_COMPONENTS)
@@ -645,13 +651,71 @@ function (portable_target TARGET)
         else()
             add_executable(${TARGET} ${_arg_SOURCES})
         endif()
+
+        if (NOT DEFINED _arg_AGGRESSIVE_COMPILER_CHECK)
+            if (${PORTABLE_TARGET_AGGRESSIVE_COMPILER_CHECK})
+                set(_arg_AGGRESSIVE_COMPILER_CHECK ON)
+            endif()
+        endif()
+
+        set(_link_flags)
+
+        if (_arg_AGGRESSIVE_COMPILER_CHECK)
+            if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+                #
+                # See [https://codeforces.com/blog/entry/15547](https://codeforces.com/blog/entry/15547)
+                #
+                _portable_target_status(${TARGET} "Aggressive compiler check is ON")
+                list(APPEND _aggressive_check_flags
+                    "-D_GLIBCXX_DEBUG=1"
+                    "-D_GLIBCXX_DEBUG_PEDANTIC=1"
+                    "-D_FORTIFY_SOURCE=2"
+                    "-pedantic"
+                    "-O2"
+                    "-Wall"
+                    "-Wextra"
+                    "-Wshadow"
+                    "-Wformat=2"
+                    "-Wfloat-equal"
+                    "-Wconversion"
+                    "-Wlogical-op"
+                    "-Wshift-overflow=2"
+                    "-Wduplicated-cond"
+                    "-Wcast-qual"
+                    "-Wcast-align"
+                    "-fsanitize=address"   # <-- The option cannot be combined with -fsanitize=thread and/or -fcheck-pointer-bounds.
+                    "-fsanitize=undefined"
+                    "-fsanitize=leak"      # <-- The option cannot be combined with -fsanitize=thread
+                    "-fno-sanitize-recover"
+                    "-fstack-protector"
+
+                    # gcc: error: -fsanitize=address and -fsanitize=kernel-address are incompatible with -fsanitize=thread
+                    # "-fsanitize=thread"
+                )
+
+                list(APPEND _link_flags
+                    "-fsanitize=address"
+                    "-fsanitize=undefined"
+                    "-fsanitize=leak"
+                )
+
+                list(APPEND _link_libraries
+                    "-lasan"  # <-- need for -fsanitize=address
+                    "-lubsan" # <-- need for -fsanitize=undefined
+#                     "-ltsan"  # <-- need for -fsanitize=thread
+                )
+
+                target_compile_options(${TARGET} PRIVATE ${_aggressive_check_flags})
+            endif()
+        endif()
+
     endif(ANDROID)
 
     if(_arg_STATIC AND _arg_SHARED AND NOT ANDROID)
-        target_link_libraries(${TARGET} ${_link_libraries})
-        target_link_libraries(${TARGET}-static ${_link_libraries})
+        target_link_libraries(${TARGET} ${_link_flags} ${_link_libraries})
+        target_link_libraries(${TARGET}-static ${_link_flags} ${_link_libraries})
     else()
-        target_link_libraries(${TARGET} ${_link_libraries})
+        target_link_libraries(${TARGET} ${_link_flags} ${_link_libraries})
     endif()
 
 endfunction()
