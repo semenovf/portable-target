@@ -690,7 +690,7 @@ function (portable_target TARGET)
                     "-Wshadow"
                     "-Wformat=2"
                     "-Wfloat-equal"
-                    "-Wconversion"
+                    # "-Wconversion" # <-- Annoying message, may be need separate option for this
                     "-Wlogical-op"
                     "-Wshift-overflow=2"
                     "-Wduplicated-cond"
