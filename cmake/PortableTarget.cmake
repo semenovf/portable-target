@@ -561,6 +561,14 @@ function (portable_target TARGET)
         find_package(Qt5 COMPONENTS ${_arg_Qt5_COMPONENTS} REQUIRED)
         _portable_target_status(${TARGET} "Qt5 version found: ${Qt5Core_VERSION} (compare with required)")
 
+        # See https://gitlab.kitware.com/cmake/cmake/issues/19167
+        # Since 3.14 (--wladt-- remark: since 13.4) CMake requires valid
+        # QT_VERSION_MAJOR/MINOR (Qt4),
+        # Qt5Core_VERSION_MAJOR/MINOR or
+        # Qt6Core_VERSION_MAJOR/MINOR
+        set_property(DIRECTORY PROPERTY Qt5Core_VERSION_MAJOR ${Qt5Core_VERSION_MAJOR})
+        set_property(DIRECTORY PROPERTY Qt5Core_VERSION_MINOR ${Qt5Core_VERSION_MINOR})
+
         foreach(_item IN LISTS _arg_Qt5_COMPONENTS)
             list(APPEND _link_libraries "Qt5::${_item}")
         endforeach()
