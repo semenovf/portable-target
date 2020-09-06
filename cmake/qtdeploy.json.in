@@ -1,21 +1,21 @@
 {
  "description": "This file is to be read by androiddeployqt",
- "application-binary": "@PT_ANDROID_APP_PATH@",
- "ndk": "@PT_ANDROID_NDK_ROOT@",
+ "application-binary": "@ANDROID_APP_PATH@",
+ "ndk": "@ANDROID_NDK@",
  "ndk-host": "@ANDROID_NDK_HOST_SYSTEM_NAME@",
  "qml-root-path": "@CMAKE_SOURCE_DIR@",
- "qt": "@PT_ANDROID_QT_ROOT@",
- "sdk": "@PT_ANDROID_SDK_ROOT@",
- "sdkBuildToolsRevision": "@PT_ANDROID_SDK_BUILDTOOLS_REVISION@",
- "stdcpp-path": "@PT_ANDROID_STL_PATH@",
+ "qt": "@ANDROID_QT_ROOT@",
+ "sdk": "@ANDROID_SDK@",
+ "sdkBuildToolsRevision": "@ANDROID_SDK_BUILDTOOLS_REVISION@",
+ "stdcpp-path": "@ANDROID_STL_PATH@",
  "target-architecture": "@ANDROID_ABI@",
- "tool-prefix": "@PT_ANDROID_TOOLCHAIN_PREFIX@",
- "toolchain-prefix": "@PT_ANDROID_TOOLCHAIN_PREFIX@",
- @PT_ANDROID_APP_EXTRA_LIBS@
- "useLLVM": @PT_ANDROID_USE_LLVM@,
+ "tool-prefix": "@ANDROID_TOOLCHAIN_PREFIX@",
+ "toolchain-prefix": "@ANDROID_TOOLCHAIN_PREFIX@",
+ @ANDROID_APP_EXTRA_LIBS@
+ "useLLVM": @ANDROID_USE_LLVM@,
 
- "--toolchain-version": "@PT_ANDROID_TOOLCHAIN_VERSION@",
- "android-package": "@PT_ANDROID_APP_PACKAGE_NAME@",
- "android-app-name": "@PT_ANDROID_APP_NAME@",
- "android-package-source-directory": "@PT_ANDROID_APP_PACKAGE_SOURCE_ROOT@"
+ "--toolchain-version": "@ANDROID_TOOLCHAIN_VERSION@",
+ "android-package": "@ANDROID_APP_PACKAGE_NAME@",
+ "android-app-name": "@ANDROID_APP_NAME@",
+ "android-package-source-directory": "@ANDROID_APP_PACKAGE_SOURCE_ROOT@"
 }

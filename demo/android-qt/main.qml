@@ -1,7 +1,7 @@
 import QtQuick 2.1 // import QtQuick 2.5
 import QtQuick.Controls 1.4
-import QtQuick.Window 2.13
-import Qt.labs.platform 1.1
+import QtQuick.Window 2.2 //2.13
+import Qt.labs.platform 1.0 //1.1
 
 // ApplicationWindow {
 Window {
