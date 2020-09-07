@@ -18,6 +18,7 @@ set(QTDEPLOY_JSON_IN_FILE ${CMAKE_CURRENT_LIST_DIR}/qtdeploy.json.in)
 # TODO Add support KEYSTORE_PASSWORD for Android (_portable_apk)
 # TODO Add support KEYSTORE for Android (_portable_apk)
 # TODO Add support DEPENDS for Android (_portable_apk)
+# TODO Check ANDROID_APP_PATH is valid according to https://developer.android.com/studio/build/application-id
 
 #
 # Usage:
@@ -72,7 +73,7 @@ set(QTDEPLOY_JSON_IN_FILE ${CMAKE_CURRENT_LIST_DIR}/qtdeploy.json.in)
 # Inspired from:
 #       [Qt Android CMake utility](https://github.com/LaurentGomila/qt-android-cmake)
 ################################################################################
-cmake_policy(SET CMP0026 OLD) # allow use of the LOCATION target property
+#cmake_policy(SET CMP0026 OLD) # allow use of the LOCATION target property
 
 function (_portable_apk TARGET SOURCE_TARGET)
     set(boolparm)
@@ -94,15 +95,7 @@ function (_portable_apk TARGET SOURCE_TARGET)
     # Parse the macro arguments
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
-    # FIXME
-#     set(ANDROID_APP_PATH "$<TARGET_FILE:${SOURCE_TARGET}>")
-
-    # extract the full path of the source target binary
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        get_property(ANDROID_APP_PATH TARGET ${SOURCE_TARGET} PROPERTY DEBUG_LOCATION)
-    else()
-        get_property(ANDROID_APP_PATH TARGET ${SOURCE_TARGET} PROPERTY LOCATION)
-    endif()
+    set(ANDROID_APP_PATH "$<TARGET_FILE:${SOURCE_TARGET}>")
 
     # Used by `qtdeploy.json.in`
     get_filename_component(ANDROID_QT_ROOT "${_arg_ANDROIDDEPLOYQT_EXECUTABLE}/../.." ABSOLUTE)
@@ -173,13 +166,17 @@ function (_portable_apk TARGET SOURCE_TARGET)
         endif()
     endif()
 
-    # Make sure that the output directory for the Android package exists
-    set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/android-build/libs/${ANDROID_ABI})
-    file(MAKE_DIRECTORY ${OUTPUT_DIR})
-
     # Create the configuration file that will feed androiddeployqt
     # NOTE ANDROID_NDK_HOST_SYSTEM_NAME not set yet
-    configure_file(${QTDEPLOY_JSON_IN_FILE} ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json @ONLY)
+    # configure_file(${QTDEPLOY_JSON_IN_FILE} ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json @ONLY)
+
+    # Create the configuration file that will feed androiddeployqt
+    # Replace placeholder variables at generation time
+    configure_file(${QTDEPLOY_JSON_IN_FILE} ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json.in @ONLY)
+    # Evaluate generator expressions at build time
+    file(GENERATE
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json
+        INPUT ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json.in)
 
     set(SIGN_OPTIONS)
 
@@ -196,6 +193,9 @@ function (_portable_apk TARGET SOURCE_TARGET)
         set(INSTALL_OPTIONS --reinstall)
     endif()
 
+    set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/android-build/libs/${ANDROID_ABI})
+#     file(MAKE_DIRECTORY ${OUTPUT_DIR})
+
     _portable_apk_status(${TARGET} "Android Min SDK version: ${ANDROID_MIN_SDK_VERSION}")
     _portable_apk_status(${TARGET} "Android Target SDK version: ${ANDROID_TARGET_SDK_VERSION}")
     _portable_apk_status(${TARGET} "Android SDK build tools revision: ${ANDROID_SDK_BUILDTOOLS_REVISION}")
@@ -205,6 +205,7 @@ function (_portable_apk TARGET SOURCE_TARGET)
     _portable_apk_status(${TARGET} "Package name           : ${ANDROID_APP_PACKAGE_NAME}")
     _portable_apk_status(${TARGET} "Application name       : \"${ANDROID_APP_NAME}\"")
     _portable_apk_status(${TARGET} "Application version    : ${ANDROID_APP_VERSION}")
+    _portable_apk_status(${TARGET} "Install APK            : ${_arg_INSTALL}")
 
     #---------------------------------------------------------------------------
     # Create a custom command that will run the androiddeployqt utility
@@ -376,45 +377,49 @@ function (portable_target TARGET)
             endif()
         endif()
 
-        if (_arg_Qt5_COMPONENTS AND _arg_ANDROID_PACKAGE_NAME)
-            get_filename_component(ANDROIDDEPLOYQT_EXECUTABLE "${Qt5_DIR}/../../../bin/androiddeployqt" ABSOLUTE)
+        if (_arg_Qt5_COMPONENTS)
+            if (_arg_ANDROID_PACKAGE_NAME)
+                get_filename_component(ANDROIDDEPLOYQT_EXECUTABLE "${Qt5_DIR}/../../../bin/androiddeployqt" ABSOLUTE)
 
-            if (NOT EXISTS ${ANDROIDDEPLOYQT_EXECUTABLE})
-                _portable_target_error(${TARGET} "androiddeployqt not found at: ${ANDROIDDEPLOYQT_EXECUTABLE}")
-            endif()
+                if (NOT EXISTS ${ANDROIDDEPLOYQT_EXECUTABLE})
+                    _portable_target_error(${TARGET} "androiddeployqt not found at: ${ANDROIDDEPLOYQT_EXECUTABLE}")
+                endif()
 
-            if (NOT _arg_ANDROID_APP_NAME)
-                set(_arg_ANDROID_APP_NAME ${TARGET})
-            endif()
+                if (NOT _arg_ANDROID_APP_NAME)
+                    set(_arg_ANDROID_APP_NAME ${TARGET})
+                endif()
 
-            if (NOT _arg_ANDROID_APP_VERSION)
-                set(_arg_ANDROID_APP_VERSION 1)
-            endif()
+                if (NOT _arg_ANDROID_APP_VERSION)
+                    set(_arg_ANDROID_APP_VERSION 1)
+                endif()
 
-            if (_arg_ANDROID_INSTALL)
-                set(ANDROID_INSTALL_YESNO ON)
-            else()
-                set(ANDROID_INSTALL_YESNO OFF)
-            endif()
+                if (_arg_ANDROID_INSTALL)
+                    set(ANDROID_INSTALL_YESNO ON)
+                else()
+                    _mandatory_var_env(ANDROID_INSTALL_YESNO
+                        ANDROID_INSTALL
+                        "Install APK"
+                        OFF)
+                endif()
 
-            if (NOT _arg_ANDROID_PERMISSIONS)
-                set(_arg_ANDROID_PERMISSIONS WAKE_LOCK)
-                message(WARNING "Android permissions are not defined, only 'WAKE_LOCK' set by default")
-            endif()
+                if (NOT _arg_ANDROID_PERMISSIONS)
+                    set(_arg_ANDROID_PERMISSIONS WAKE_LOCK)
+                    message(WARNING "Android permissions are not defined, only 'WAKE_LOCK' set by default")
+                endif()
 
-            _portable_apk(${TARGET}_apk ${TARGET}
-                ANDROIDDEPLOYQT_EXECUTABLE ${ANDROIDDEPLOYQT_EXECUTABLE}
-                PACKAGE_NAME "${_arg_ANDROID_PACKAGE_NAME}"
-                APP_NAME "${_arg_ANDROID_APP_NAME}"
-                APP_VERSION  "${_arg_ANDROID_APP_VERSION}"
-                PERMISSIONS ${_arg_ANDROID_PERMISSIONS}
-                #KEYSTORE ${CMAKE_CURRENT_SOURCE_DIR}/pad.keystore pad
-                INSTALL ${ANDROID_INSTALL_YESNO}
-            )
-        else()
+                _portable_apk(${TARGET}_apk ${TARGET}
+                    ANDROIDDEPLOYQT_EXECUTABLE ${ANDROIDDEPLOYQT_EXECUTABLE}
+                    PACKAGE_NAME "${_arg_ANDROID_PACKAGE_NAME}"
+                    APP_NAME "${_arg_ANDROID_APP_NAME}"
+                    APP_VERSION  "${_arg_ANDROID_APP_VERSION}"
+                    PERMISSIONS ${_arg_ANDROID_PERMISSIONS}
+                    #KEYSTORE ${CMAKE_CURRENT_SOURCE_DIR}/pad.keystore pad
+                    INSTALL ${ANDROID_INSTALL_YESNO})
+            endif(_arg_ANDROID_PACKAGE_NAME)
+        else(_arg_Qt5_COMPONENTS)
             # TODO Settings for building non-Qt application
             message(FATAL_ERROR "Only Android application based on Qt supported")
-        endif()
+        endif(_arg_Qt5_COMPONENTS)
     else() # NOT ANDROID
         if(_arg_STATIC AND _arg_SHARED)
             # Prepare OBJECT target

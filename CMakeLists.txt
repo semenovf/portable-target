@@ -1,3 +1,6 @@
-cmake_minimum_required (VERSION 3.10)
+cmake_minimum_required (VERSION 3.5)
 add_subdirectory(demo/android-qt)
-add_subdirectory(demo/aggressive_check)
+
+if (NOT ANDROID)
+    add_subdirectory(demo/aggressive_check)
+endif()

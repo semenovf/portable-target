@@ -46,5 +46,5 @@ portable_target(FileDialog
         WRITE_EXTERNAL_STORAGE
         READ_EXTERNAL_STORAGE
         CAMERA
-    ANDROID_INSTALL
+    #ANDROID_INSTALL
 )

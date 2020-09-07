@@ -27,6 +27,9 @@
 # Install APK
 # $ adb install -r <PATH_TO_APK>
 #
+# Dump a log of system messages
+# $ adb logcat
+#
 # Stop ADB server (optional):
 # $ adb kill-server
 #
