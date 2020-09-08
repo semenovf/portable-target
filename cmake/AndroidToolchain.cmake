@@ -9,7 +9,7 @@
 #-------------------------------------------------------------------------------
 # [Start the emulator from the command line](https://developer.android.com/studio/run/emulator-commandline)
 #
-# Some usefull commands for installation APK into Android devices/emulators and testing
+# Some useful commands for installation APK into Android devices/emulators and testing
 #
 # Start ADB server
 # $ adb start-server

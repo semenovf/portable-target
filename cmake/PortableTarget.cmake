@@ -83,12 +83,13 @@ function (_portable_apk TARGET SOURCE_TARGET)
         PACKAGE_NAME
         APP_NAME
         APP_VERSION
-        #KEYSTORE_PASSWORD
         INSTALL
+        #KEYSTORE_PASSWORD
     )
 
     set(multiparm
         PERMISSIONS
+        DEPENDS
         #KEYSTORE
     )
 
@@ -106,6 +107,24 @@ function (_portable_apk TARGET SOURCE_TARGET)
 
     # Used by `AndroidManifest.xml.in`
     set(ANDROID_APP_VERSION ${_arg_APP_VERSION})
+
+    # Set the list of dependant libraries
+    if (_arg_DEPENDS)
+        foreach (_lib ${_arg_DEPENDS})
+            if (TARGET ${_lib})
+                # item is a CMake target, extract the library path
+                set(_lib "$<TARGET_FILE:${_lib}>")
+            endif()
+
+            if (_extra_libs)
+                set(_extra_libs "${_extra_libs},${_lib}")
+            else()
+                set(_extra_libs "${_lib}")
+            endif()
+        endforeach()
+
+        set(ANDROID_APP_EXTRA_LIBS "\"android-extra-libs\": \"${_extra_libs}\",")
+    endif()
 
     #---------------------------------------------------------------------------
     # Detect latest Android SDK build-tools revision
@@ -252,7 +271,8 @@ function (portable_target TARGET)
     set(multiparm
         Qt5_COMPONENTS
         ANDROID_PERMISSIONS
-        SOURCES)
+        SOURCES
+        DEPENDS)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
@@ -414,7 +434,8 @@ function (portable_target TARGET)
                     APP_VERSION  "${_arg_ANDROID_APP_VERSION}"
                     PERMISSIONS ${_arg_ANDROID_PERMISSIONS}
                     #KEYSTORE ${CMAKE_CURRENT_SOURCE_DIR}/pad.keystore pad
-                    INSTALL ${ANDROID_INSTALL_YESNO})
+                    INSTALL ${ANDROID_INSTALL_YESNO}
+                    DEPENDS ${_arg_DEPENDS})
             endif(_arg_ANDROID_PACKAGE_NAME)
         else(_arg_Qt5_COMPONENTS)
             # TODO Settings for building non-Qt application
