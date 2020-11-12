@@ -272,7 +272,8 @@ function (portable_target TARGET)
         Qt5_COMPONENTS
         ANDROID_PERMISSIONS
         SOURCES
-        DEPENDS)
+        DEPENDS
+        CATEGORIES)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
@@ -525,6 +526,14 @@ function (portable_target TARGET)
                 target_compile_options(${TARGET} PRIVATE ${_aggressive_check_flags})
             endif()
         endif()
+    endif()
+
+    if (_arg_CATEGORIES)
+        foreach(_cat IN LISTS _arg_CATEGORIES)
+            get_property(_prop GLOBAL PROPERTY ${_cat})
+            list(APPEND _prop ${TARGET})
+            set_property(GLOBAL PROPERTY ${_cat} ${_prop})
+        endforeach()
     endif()
 
     if(_arg_STATIC AND _arg_SHARED AND NOT ANDROID)
