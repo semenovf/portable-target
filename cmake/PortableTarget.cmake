@@ -35,10 +35,24 @@ set(QTDEPLOY_JSON_IN_FILE ${CMAKE_CURRENT_LIST_DIR}/qtdeploy.json.in)
 #       [Qt5_COMPONENTS <qt5-components>]
 #
 #       # Android specific options
+#       # see https://developer.android.com/guide/topics/manifest/manifest-element
 #       [ANDROID_PACKAGE_NAME <package-name>]  # Android package name
 #       [ANDROID_APP_NAME <app-name>]          # Android application name (label)
-#       [ANDROID_APP_VERSION <app-version>]    # Android application version
-#
+#       [ANDROID_APP_VERSION_MAJOR <app-version>]    # Android application major version number
+#       [ANDROID_APP_VERSION_MINOR <app-version>]    # Android application minor version number
+#       # see https://developer.android.com/guide/topics/manifest/activity-element#screen
+#       [ANDROID_APP_SCREEN_ORIENTATION "unspecified"
+#               | "behind" | "landscape" | "portrait"
+#               | "reverseLandscape" | "reversePortrait"
+#               | "sensorLandscape" | "sensorPortrait"
+#               | "userLandscape" | "userPortrait"
+#               | "sensor" | "fullSensor" | "nosensor"
+#               | "user" | "fullUser" | "locked"]
+#       # see https://developer.android.com/guide/topics/manifest/activity-element#config
+#       [ANDROID_APP_CONFIG_CHANGES "mcc", "mnc", "locale", "touchscreen"
+#               , "keyboard" , "keyboardHidden", "navigation", "screenLayout"
+#               , "fontScale" , "uiMode", "orientation", "density", "screenSize"
+#               , "smallestScreenSize"]
 #       [ANDROID_INSTALL]                      # Install Android APK on device
 #       SOURCES <source1> <source2> ...
 #
@@ -83,6 +97,10 @@ function (_portable_apk TARGET SOURCE_TARGET)
         PACKAGE_NAME
         APP_NAME
         APP_VERSION
+        APP_VERSION_MAJOR
+        APP_VERSION_MINOR
+        APP_SCREEN_ORIENTATION
+        APP_CONFIG_CHANGES
         INSTALL
         #KEYSTORE_PASSWORD
     )
@@ -102,11 +120,22 @@ function (_portable_apk TARGET SOURCE_TARGET)
     get_filename_component(ANDROID_QT_ROOT "${_arg_ANDROIDDEPLOYQT_EXECUTABLE}/../.." ABSOLUTE)
 
     # Used by `qtdeploy.json.in` and `AndroidManifest.xml.in`
-    set(ANDROID_APP_PACKAGE_NAME ${_arg_PACKAGE_NAME})
+    set(ANDROID_PACKAGE_NAME ${_arg_PACKAGE_NAME})
     set(ANDROID_APP_NAME ${_arg_APP_NAME})
 
     # Used by `AndroidManifest.xml.in`
-    set(ANDROID_APP_VERSION ${_arg_APP_VERSION})
+    set(ANDROID_APP_VERSION "${_arg_APP_VERSION_MAJOR}.${_arg_APP_VERSION_MINOR}")
+    math(EXPR ANDROID_APP_VERSION_CODE "${_arg_APP_VERSION_MAJOR} * 1000 + ${_arg_APP_VERSION_MINOR}")
+    # Whether your application's processes should be created with a large Dalvik
+    # heap (see https://developer.android.com/guide/topics/manifest/application-element#largeHeap for details).
+    set(ANDROID_APP_LARGE_HEAP "true")
+    set(ANDROID_APP_SCREEN_ORIENTATION "${_arg_APP_SCREEN_ORIENTATION}")
+    set(ANDROID_APP_CONFIG_CHANGES "${_arg_APP_CONFIG_CHANGES}")
+
+    if (${CMAKE_BUILD_TYPE} MATCHES "[Dd][Ee][Bb][Uu][Gg]"
+            OR ${CMAKE_BUILD_TYPE} MATCHES "[Rr][Ee][Ll][Ww][Ii][Tt][Hh][Dd][Ee][Bb][Ii][Nn][Ff][Oo]")
+        set(ANDROID_APP_IS_DEBUGGABLE "true")
+    endif()
 
     # Set the list of dependant libraries
     if (_arg_DEPENDS)
@@ -147,7 +176,8 @@ function (_portable_apk TARGET SOURCE_TARGET)
     endforeach()
 
     if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/AndroidManifest.xml.in)
-        _portable_apk_error(${TARGET} "AndroidManifest.xml.in not found at: ${CMAKE_CURRENT_SOURCE_DIR}")
+        _portable_apk_error(${TARGET} "AndroidManifest.xml.in not found at: ${CMAKE_CURRENT_SOURCE_DIR}"
+            "\n\tAndroidManifest.xml.in can be copied from portable_target/android directory")
     else()
         _portable_apk_status(${TARGET} "AndroidManifest.xml.in found at: ${CMAKE_CURRENT_SOURCE_DIR}")
     endif()
@@ -218,13 +248,14 @@ function (_portable_apk TARGET SOURCE_TARGET)
     _portable_apk_status(${TARGET} "Android Min SDK version: ${ANDROID_MIN_SDK_VERSION}")
     _portable_apk_status(${TARGET} "Android Target SDK version: ${ANDROID_TARGET_SDK_VERSION}")
     _portable_apk_status(${TARGET} "Android SDK build tools revision: ${ANDROID_SDK_BUILDTOOLS_REVISION}")
-    _portable_apk_status(${TARGET} "Android Qt root        : ${ANDROID_QT_ROOT}")
-    _portable_apk_status(${TARGET} "androiddeployqt path   : ${_arg_ANDROIDDEPLOYQT_EXECUTABLE}")
-    _portable_apk_status(${TARGET} "Target path            : ${ANDROID_APP_PATH}")
-    _portable_apk_status(${TARGET} "Package name           : ${ANDROID_APP_PACKAGE_NAME}")
-    _portable_apk_status(${TARGET} "Application name       : \"${ANDROID_APP_NAME}\"")
-    _portable_apk_status(${TARGET} "Application version    : ${ANDROID_APP_VERSION}")
-    _portable_apk_status(${TARGET} "Install APK            : ${_arg_INSTALL}")
+    _portable_apk_status(${TARGET} "Android Qt root         : ${ANDROID_QT_ROOT}")
+    _portable_apk_status(${TARGET} "androiddeployqt path    : ${_arg_ANDROIDDEPLOYQT_EXECUTABLE}")
+    _portable_apk_status(${TARGET} "Target path             : ${ANDROID_APP_PATH}")
+    _portable_apk_status(${TARGET} "Package name            : ${ANDROID_PACKAGE_NAME}")
+    _portable_apk_status(${TARGET} "Application name        : \"${ANDROID_APP_NAME}\"")
+    _portable_apk_status(${TARGET} "Application version     : ${ANDROID_APP_VERSION}")
+    _portable_apk_status(${TARGET} "Application version code: ${ANDROID_APP_VERSION_CODE}")
+    _portable_apk_status(${TARGET} "Install APK             : ${_arg_INSTALL}")
 
     #---------------------------------------------------------------------------
     # Create a custom command that will run the androiddeployqt utility
@@ -266,7 +297,10 @@ function (portable_target TARGET)
         Qt5_PLATFORM
         ANDROID_PACKAGE_NAME
         ANDROID_APP_NAME
-        ANDROID_APP_VERSION)
+        ANDROID_APP_VERSION_MAJOR
+        ANDROID_APP_VERSION_MINOR
+        ANDROID_APP_SCREEN_ORIENTATION
+        ANDROID_APP_CONFIG_CHANGES)
 
     set(multiparm
         Qt5_COMPONENTS
@@ -392,7 +426,7 @@ function (portable_target TARGET)
         # Shared libraries need PIC
         set_property(TARGET ${TARGET} PROPERTY POSITION_INDEPENDENT_CODE 1)
 
-        if (_arg_ANDROID_APP_NAME OR _arg_ANDROID_APP_VERSION)
+        if (_arg_ANDROID_APP_NAME OR _arg_ANDROID_APP_VERSION_MAJOR OR _arg_ANDROID_APP_VERSION_MINOR)
             if (NOT _arg_ANDROID_PACKAGE_NAME)
                 _portable_target_error(${TARGET} "ANDROID_PACKAGE_NAME must be specified")
             endif()
@@ -410,8 +444,20 @@ function (portable_target TARGET)
                     set(_arg_ANDROID_APP_NAME ${TARGET})
                 endif()
 
-                if (NOT _arg_ANDROID_APP_VERSION)
-                    set(_arg_ANDROID_APP_VERSION 1)
+                if (NOT _arg_ANDROID_APP_VERSION_MAJOR)
+                    set(_arg_ANDROID_APP_VERSION_MAJOR 1)
+                endif()
+
+                if (NOT _arg_ANDROID_APP_VERSION_MINOR)
+                    set(_arg_ANDROID_APP_VERSION_MINOR 0)
+                endif()
+
+                if (NOT _arg_ANDROID_APP_SCREEN_ORIENTATION)
+                    set(_arg_ANDROID_APP_SCREEN_ORIENTATION "unspecified")
+                endif()
+
+                if (NOT _arg_ANDROID_APP_CONFIG_CHANGES)
+                    set(_arg_ANDROID_APP_CONFIG_CHANGES "")
                 endif()
 
                 if (_arg_ANDROID_INSTALL)
@@ -432,7 +478,10 @@ function (portable_target TARGET)
                     ANDROIDDEPLOYQT_EXECUTABLE ${ANDROIDDEPLOYQT_EXECUTABLE}
                     PACKAGE_NAME "${_arg_ANDROID_PACKAGE_NAME}"
                     APP_NAME "${_arg_ANDROID_APP_NAME}"
-                    APP_VERSION  "${_arg_ANDROID_APP_VERSION}"
+                    APP_VERSION_MAJOR "${_arg_ANDROID_APP_VERSION_MAJOR}"
+                    APP_VERSION_MINOR "${_arg_ANDROID_APP_VERSION_MINOR}"
+                    APP_SCREEN_ORIENTATION "${_arg_ANDROID_APP_SCREEN_ORIENTATION}"
+                    APP_CONFIG_CHANGES "${_arg_ANDROID_APP_CONFIG_CHANGES}"
                     PERMISSIONS ${_arg_ANDROID_PERMISSIONS}
                     #KEYSTORE ${CMAKE_CURRENT_SOURCE_DIR}/pad.keystore pad
                     INSTALL ${ANDROID_INSTALL_YESNO}

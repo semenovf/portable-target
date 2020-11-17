@@ -15,7 +15,7 @@
  "useLLVM": @ANDROID_USE_LLVM@,
 
  "--toolchain-version": "@ANDROID_TOOLCHAIN_VERSION@",
- "android-package": "@ANDROID_APP_PACKAGE_NAME@",
+ "android-package": "@ANDROID_PACKAGE_NAME@",
  "android-app-name": "@ANDROID_APP_NAME@",
  "android-package-source-directory": "@ANDROID_APP_PACKAGE_SOURCE_ROOT@"
 }
