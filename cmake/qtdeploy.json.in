@@ -11,7 +11,8 @@
  "target-architecture": "@ANDROID_ABI@",
  "tool-prefix": "@ANDROID_TOOLCHAIN_PREFIX@",
  "toolchain-prefix": "@ANDROID_TOOLCHAIN_PREFIX@",
- @ANDROID_APP_EXTRA_LIBS@
+
+ "android-extra-libs": "@ANDROID_APP_EXTRA_LIBS@",
  "useLLVM": @ANDROID_USE_LLVM@,
 
  "--toolchain-version": "@ANDROID_TOOLCHAIN_VERSION@",

@@ -135,6 +135,8 @@ function (_portable_apk TARGET SOURCE_TARGET)
     if (${CMAKE_BUILD_TYPE} MATCHES "[Dd][Ee][Bb][Uu][Gg]"
             OR ${CMAKE_BUILD_TYPE} MATCHES "[Rr][Ee][Ll][Ww][Ii][Tt][Hh][Dd][Ee][Bb][Ii][Nn][Ff][Oo]")
         set(ANDROID_APP_IS_DEBUGGABLE "true")
+    else()
+        set(ANDROID_APP_IS_DEBUGGABLE "false")
     endif()
 
     # Set the list of dependant libraries
@@ -152,7 +154,8 @@ function (_portable_apk TARGET SOURCE_TARGET)
             endif()
         endforeach()
 
-        set(ANDROID_APP_EXTRA_LIBS "\"android-extra-libs\": \"${_extra_libs}\",")
+        #set(ANDROID_APP_EXTRA_LIBS "\"android-extra-libs\": \"${_extra_libs}\",")
+        set(ANDROID_APP_EXTRA_LIBS ${_extra_libs})
     endif()
 
     #---------------------------------------------------------------------------

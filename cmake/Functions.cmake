@@ -89,6 +89,7 @@ function (_mandatory_var_env _var _var_base_name _var_desc)
         endif()
 
         set(${_var} ${_local_var} PARENT_SCOPE)
+        set(PORTABLE_TARGET_${_var_base_name} ${_local_var} CACHE STRING "PORTABLE_TARGET_${_var_base_name}")
    endif()
 endfunction()
 
@@ -111,5 +112,6 @@ function (_optional_var_env _var _var_base_name)
         endif()
 
         set(${_var} ${_local_var} PARENT_SCOPE)
+        set(PORTABLE_TARGET_${_var_base_name} ${_local_var} CACHE STRING "PORTABLE_TARGET_${_var_base_name}")
    endif()
 endfunction()
