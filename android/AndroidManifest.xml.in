@@ -60,7 +60,8 @@
             android:screenOrientation="@ANDROID_APP_SCREEN_ORIENTATION@"
             android:name="org.qtproject.qt5.android.bindings.QtActivity"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
-            android:configChanges="@ANDROID_APP_CONFIG_CHANGES@">
+            android:configChanges="@ANDROID_APP_CONFIG_CHANGES@"
+            android:launchMode="standard">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

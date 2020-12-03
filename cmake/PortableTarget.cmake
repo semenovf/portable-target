@@ -595,4 +595,8 @@ function (portable_target TARGET)
         target_link_libraries(${TARGET} ${_link_flags} ${_link_libraries})
     endif()
 
+    if (_arg_DEPENDS)
+        add_dependencies(${TARGET} ${_arg_DEPENDS})
+    endif()
+
 endfunction()
