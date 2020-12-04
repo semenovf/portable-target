@@ -43,8 +43,8 @@ function (portable_translation BASENAME)
         set(_arg_RELEASE_DIR "${CMAKE_BINARY_DIR}/Translation")
     endif()
 
-    set(_lupdate_target ${BASENAME}_translation_update)
-    set(_lrelease_target ${BASENAME}_translation_release)
+    set(_lupdate_target ${BASENAME}_${TARGET_LANG}_translation_update)
+    set(_lrelease_target ${BASENAME}_${TARGET_LANG}_translation_release)
 
     if (_lupdate_program)
         add_custom_target(${_lupdate_target}
@@ -66,12 +66,19 @@ function (portable_translation BASENAME)
     endif()
 
     if (_lrelease_program)
+        set(_source "${CMAKE_CURRENT_SOURCE_DIR}/${BASENAME}_${_arg_TARGET_LANG}.ts")
+        set(_dest "${_arg_RELEASE_DIR}/${BASENAME}_${_arg_TARGET_LANG}.qm")
+
         add_custom_target(${_lrelease_target}
             DEPENDS ${_lupdate_target}
             COMMAND ${CMAKE_COMMAND} -E make_directory ${_arg_RELEASE_DIR}
-            COMMAND ${_lrelease_program}
-                    ${CMAKE_CURRENT_SOURCE_DIR}/${BASENAME}_${_arg_TARGET_LANG}.ts
-                    -qm ${_arg_RELEASE_DIR}/${BASENAME}_${_arg_TARGET_LANG}.qm)
+            COMMAND ${_lrelease_program} ${_source} -qm ${_dest})
+
+        # Push destination file to list to use by amalgamation process
+        set(_prop _PORTABLE_TARGET_TRANSLATION_${TARGET_LANG})
+        get_property(_list GLOBAL PROPERTY ${_prop})
+        list(APPEND _list ${_dest})
+        set_property(GLOBAL PROPERTY ${_prop} ${_list})
     else()
         add_custom_target(${_lrelease_target}
             COMMAND ${CMAKE_COMMAND} -E echo "`lrelease` command/program not found"
@@ -122,14 +129,18 @@ function (portable_translation_amalgamate BASENAME)
 
     if (_lconvert_program)
         set(_target ${BASENAME}_${_arg_TARGET_LANG})
+        set(_dest "${_arg_OUTPUT_DIR}/${_target}.qm")
+
+        # Get files from list
+        set(_prop _PORTABLE_TARGET_TRANSLATION_${TARGET_LANG})
+        get_property(_sources GLOBAL PROPERTY ${_prop})
 
         add_custom_target(${_target}
-            COMMAND ${_lconvert_program}
-                -o ${_arg_OUTPUT_DIR}/${_target}.qm
-                ${_arg_RELEASE_DIR}/*_${_arg_TARGET_LANG}.qm)
+            WORKING_DIRECTORY ${_arg_RELEASE_DIR}
+            COMMAND ${_lconvert_program} -o ${_dest} ${_sources})
 
         if (_arg_OUTPUT_FILE)
-            set(${_arg_OUTPUT_FILE} "${_arg_OUTPUT_DIR}/${_target}.qm" PARENT_SCOPE)
+            set(${_arg_OUTPUT_FILE} ${_dest} PARENT_SCOPE)
         endif()
 
         if (_arg_DEPENDS)
