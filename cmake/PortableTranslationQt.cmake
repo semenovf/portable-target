@@ -49,8 +49,8 @@ function (portable_translation BASENAME)
     if (_lupdate_program)
         add_custom_target(${_lupdate_target}
             DEPENDS ${_arg_SOURCES}
-            COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_CURRENT_SOURCE_DIR}
-                ${_lupdate_program}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMAND ${_lupdate_program}
                     -source-language ${_arg_SOURCE_LANG}
                     -target-language ${_arg_TARGET_LANG}
                     -no-recursive
