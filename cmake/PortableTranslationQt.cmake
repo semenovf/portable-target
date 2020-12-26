@@ -23,7 +23,9 @@ function (portable_translation BASENAME)
         TARGET_LANG
         RELEASE_DIR)
 
-    set(multiparm SOURCES)
+    set(multiparm
+        SOURCES
+        DEPENDS)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
@@ -43,12 +45,12 @@ function (portable_translation BASENAME)
         set(_arg_RELEASE_DIR "${CMAKE_BINARY_DIR}/Translation")
     endif()
 
-    set(_lupdate_target ${BASENAME}_${TARGET_LANG}_translation_update)
-    set(_lrelease_target ${BASENAME}_${TARGET_LANG}_translation_release)
+    set(_lupdate_target ${BASENAME}_${_arg_TARGET_LANG}_translation_update)
+    set(_lrelease_target ${BASENAME}_${_arg_TARGET_LANG}_translation_release)
 
     if (_lupdate_program)
         add_custom_target(${_lupdate_target}
-            DEPENDS ${_arg_SOURCES}
+            #DEPENDS ${_arg_SOURCES}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             COMMAND ${_lupdate_program}
                     -source-language ${_arg_SOURCE_LANG}
@@ -59,6 +61,10 @@ function (portable_translation BASENAME)
                     -silent
                     ${_arg_SOURCES}
                     -ts ${BASENAME}_${_arg_TARGET_LANG}.ts)
+
+        if (_arg_DEPENDS)
+            add_dependencies(${_lupdate_target} ${_arg_DEPENDS})
+        endif()
     else()
         add_custom_target(${_lupdate_target}
             COMMAND ${CMAKE_COMMAND} -E echo "`lupdate` command/program not found"
@@ -75,7 +81,7 @@ function (portable_translation BASENAME)
             COMMAND ${_lrelease_program} ${_source} -qm ${_dest})
 
         # Push destination file to list to use by amalgamation process
-        set(_prop _PORTABLE_TARGET_TRANSLATION_${TARGET_LANG})
+        set(_prop _PORTABLE_TARGET_TRANSLATION_${_arg_TARGET_LANG})
         get_property(_list GLOBAL PROPERTY ${_prop})
         list(APPEND _list ${_dest})
         set_property(GLOBAL PROPERTY ${_prop} ${_list})
@@ -132,7 +138,7 @@ function (portable_translation_amalgamate BASENAME)
         set(_dest "${_arg_OUTPUT_DIR}/${_target}.qm")
 
         # Get files from list
-        set(_prop _PORTABLE_TARGET_TRANSLATION_${TARGET_LANG})
+        set(_prop _PORTABLE_TARGET_TRANSLATION_${_arg_TARGET_LANG})
         get_property(_sources GLOBAL PROPERTY ${_prop})
 
         add_custom_target(${_target}
