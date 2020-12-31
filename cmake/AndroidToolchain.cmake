@@ -102,11 +102,28 @@ _mandatory_var_env(ANDROID_ABI
     ANDROID_ABI
     "Android ABI")
 
+# [<uses-sdk>](https://developer.android.com/guide/topics/manifest/uses-sdk-element)
+# The minimum API Level required for the application to run.
+# Associated with attribute 'android:minSdkVersion' of <uses-sdk> tag.
+_mandatory_var_env(ANDROID_MIN_SDK_VERSION
+    ANDROID_MIN_SDK_VERSION
+    "Android min SDK version"
+    21)
+
+# The API Level that the application targets.
+# If not set, the default value equals that given to minSdkVersion.
+# Associated with attribute 'android:targetSdkVersion' of <uses-sdk> tag.
+_mandatory_var_env(ANDROID_TARGET_SDK_VERSION
+    ANDROID_TARGET_SDK_VERSION
+    "Android target SDK version"
+    28)
+
 # ANDROID_PLATFORM is equivalent to one of the directories from list:
 #       `ls -1 ${ANDROID_NDK}/platforms` (android-16, .. , android-21, android-22, .. , android-30 etc)
 _mandatory_var_env(ANDROID_PLATFORM
     ANDROID_PLATFORM
-    "Android platform")
+    "Android platform"
+    "android-${ANDROID_MIN_SDK_VERSION}")
 
 _mandatory_var_env(ANDROID_STL
     ANDROID_STL
@@ -132,22 +149,6 @@ set(ANDROID_STL_PATH
 if (NOT EXISTS ${ANDROID_STL_PATH})
     _portable_target_error("Android STL path not found: ${ANDROID_STL_PATH}")
 endif()
-
-# [<uses-sdk>](https://developer.android.com/guide/topics/manifest/uses-sdk-element)
-# The minimum API Level required for the application to run.
-# Associated with attribute 'android:minSdkVersion' of <uses-sdk> tag.
-_mandatory_var_env(ANDROID_MIN_SDK_VERSION
-    ANDROID_MIN_SDK_VERSION
-    "Android min SDK version"
-    21)
-
-# The API Level that the application targets.
-# If not set, the default value equals that given to minSdkVersion.
-# Associated with attribute 'android:targetSdkVersion' of <uses-sdk> tag.
-_mandatory_var_env(ANDROID_TARGET_SDK_VERSION
-    ANDROID_TARGET_SDK_VERSION
-    "Android target SDK version"
-    28)
 
 _portable_target_status("CMAKE command         : ${CMAKE_COMMAND}")
 _portable_target_status("CMAKE version         : ${CMAKE_VERSION}")

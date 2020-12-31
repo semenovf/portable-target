@@ -178,11 +178,24 @@ function (_portable_apk TARGET SOURCE_TARGET)
         set(ANDROID_USES_PERMISSION "${ANDROID_USES_PERMISSION}\t<uses-permission android:name=\"android.permission.${_permission}\" />\n")
     endforeach()
 
-    if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/AndroidManifest.xml.in)
-        _portable_apk_error(${TARGET} "AndroidManifest.xml.in not found at: ${CMAKE_CURRENT_SOURCE_DIR}"
+    # Find suitable AndroidManifest.xml.in
+    set(_AndroidManifest_xml_in "AndroidManifest.xml.in")
+
+    foreach(_sdk_version 21;22;23;24;25;26;27;28;29;30;31;32)
+        if (${_sdk_version} GREATER ${ANDROID_MIN_SDK_VERSION})
+            break()
+        endif()
+
+        if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/AndroidManifest-${_sdk_version}.xml.in")
+            set(_AndroidManifest_xml_in "AndroidManifest-${_sdk_version}.xml.in")
+        endif()
+    endforeach()
+
+    if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${_AndroidManifest_xml_in})
+        _portable_apk_error(${TARGET} "${_AndroidManifest_xml_in} not found at: ${CMAKE_CURRENT_SOURCE_DIR}"
             "\n\tAndroidManifest.xml.in can be copied from portable_target/android directory")
     else()
-        _portable_apk_status(${TARGET} "AndroidManifest.xml.in found at: ${CMAKE_CURRENT_SOURCE_DIR}")
+        _portable_apk_status(${TARGET} "${_AndroidManifest_xml_in} found at: ${CMAKE_CURRENT_SOURCE_DIR}")
     endif()
 
     # Create a subdirectory for the extra package sources
@@ -190,7 +203,7 @@ function (_portable_apk TARGET SOURCE_TARGET)
     set(ANDROID_APP_PACKAGE_SOURCE_ROOT "${CMAKE_CURRENT_BINARY_DIR}/android-sources")
 
     # Generate a manifest from the template
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/AndroidManifest.xml.in ${ANDROID_APP_PACKAGE_SOURCE_ROOT}/AndroidManifest.xml @ONLY)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${_AndroidManifest_xml_in} ${ANDROID_APP_PACKAGE_SOURCE_ROOT}/AndroidManifest.xml @ONLY)
 
     # Set "useLLVM" parameter in qtdeploy.json to 'false'
     set(ANDROID_USE_LLVM "false")
