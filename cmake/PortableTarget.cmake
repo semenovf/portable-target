@@ -6,10 +6,12 @@
 # Changelog:
 #      2019.12.10 Initial version
 #      2020.09.03 Splitted into Functions.cmake, AndroidToolchain.cmake and PortableTarget.cmake
+#      2021.03.06 Added support for extra Android SSL libraries
 ################################################################################
 cmake_minimum_required(VERSION 3.5)
 include(CMakeParseArguments)
 include(${CMAKE_CURRENT_LIST_DIR}/Functions.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/AndroidExtraOpenSSL.cmake)
 
 set(QTDEPLOY_JSON_IN_FILE ${CMAKE_CURRENT_LIST_DIR}/qtdeploy.json.in)
 
@@ -17,7 +19,6 @@ set(QTDEPLOY_JSON_IN_FILE ${CMAKE_CURRENT_LIST_DIR}/qtdeploy.json.in)
 # TODO Add support build for Windows
 # TODO Add support KEYSTORE_PASSWORD for Android (_portable_apk)
 # TODO Add support KEYSTORE for Android (_portable_apk)
-# TODO Add support DEPENDS for Android (_portable_apk)
 # TODO Check ANDROID_APP_PATH is valid according to https://developer.android.com/studio/build/application-id
 
 #
@@ -79,6 +80,7 @@ set(QTDEPLOY_JSON_IN_FILE ${CMAKE_CURRENT_LIST_DIR}/qtdeploy.json.in)
 # Recomendations:
 # Build for Android properly (successfull tested) with:
 #       - Qt5.13.2 + ANDROID NDK r20
+#       - Qt5.13.2 + ANDROID NDK r22
 #
 
 ################################################################################
@@ -108,6 +110,7 @@ function (_portable_apk TARGET SOURCE_TARGET)
     set(multiparm
         PERMISSIONS
         DEPENDS
+        SSL_EXTRA_LIBS
         #KEYSTORE
     )
 
@@ -140,8 +143,8 @@ function (_portable_apk TARGET SOURCE_TARGET)
     endif()
 
     # Set the list of dependant libraries
-    if (_arg_DEPENDS)
-        foreach (_lib ${_arg_DEPENDS})
+    if (_arg_DEPENDS OR _arg_SSL_EXTRA_LIBS)
+        foreach (_lib ${_arg_DEPENDS} ${_arg_SSL_EXTRA_LIBS})
             if (TARGET ${_lib})
                 # item is a CMake target, extract the library path
                 set(_lib "$<TARGET_FILE:${_lib}>")
@@ -316,7 +319,8 @@ function (portable_target TARGET)
         ANDROID_APP_VERSION_MAJOR
         ANDROID_APP_VERSION_MINOR
         ANDROID_APP_SCREEN_ORIENTATION
-        ANDROID_APP_CONFIG_CHANGES)
+        ANDROID_APP_CONFIG_CHANGES
+        ANDROID_SSL_ROOT)
 
     set(multiparm
         Qt5_COMPONENTS
@@ -490,6 +494,17 @@ function (portable_target TARGET)
                     message(WARNING "Android permissions are not defined, only 'WAKE_LOCK' set by default")
                 endif()
 
+                if (_arg_ANDROID_SSL_ROOT)
+                    _portable_target_status(${TARGET} "Android SSL extra libraries root: ${_arg_ANDROID_SSL_ROOT}")
+                    _portable_android_openssl(
+                        ${_arg_ANDROID_SSL_ROOT}
+                        ${Qt5Core_VERSION}
+                        ${ANDROID_ABI}
+                        _android_ssl_extra_libs)
+
+                    _portable_target_status("Android SSL extra libraries: ${_android_ssl_extra_libs}")
+                endif()
+
                 _portable_apk(${TARGET}_apk ${TARGET}
                     ANDROIDDEPLOYQT_EXECUTABLE ${ANDROIDDEPLOYQT_EXECUTABLE}
                     PACKAGE_NAME "${_arg_ANDROID_PACKAGE_NAME}"
@@ -501,6 +516,7 @@ function (portable_target TARGET)
                     PERMISSIONS ${_arg_ANDROID_PERMISSIONS}
                     #KEYSTORE ${CMAKE_CURRENT_SOURCE_DIR}/pad.keystore pad
                     INSTALL ${ANDROID_INSTALL_YESNO}
+                    SSL_EXTRA_LIBS ${_android_ssl_extra_libs}
                     DEPENDS ${_arg_DEPENDS})
             endif(_arg_ANDROID_PACKAGE_NAME)
         else(_arg_Qt5_COMPONENTS)
@@ -508,28 +524,33 @@ function (portable_target TARGET)
             message(FATAL_ERROR "Only Android application based on Qt supported")
         endif(_arg_Qt5_COMPONENTS)
     else() # NOT ANDROID
+        if (_arg_Qt5_COMPONENTS)
+            foreach(_item IN LISTS _arg_Qt5_COMPONENTS)
+                list(APPEND _include_directories "${Qt5${_item}_INCLUDE_DIRS}")
+            endforeach()
+        endif()
+
         if(_arg_STATIC AND _arg_SHARED)
             # Prepare OBJECT target
-            if (_arg_Qt5_COMPONENTS)
-                foreach(_item IN LISTS _arg_Qt5_COMPONENTS)
-                    list(APPEND _include_directories "${Qt5${_item}_INCLUDE_DIRS}")
-                endforeach()
-            endif()
 
             add_library(${TARGET}_OBJLIB OBJECT ${_arg_SOURCES})
             set_property(TARGET ${TARGET}_OBJLIB PROPERTY POSITION_INDEPENDENT_CODE 1)
-            target_include_directories(${TARGET}_OBJLIB PRIVATE ${_include_directories})
+            # target_include_directories(${TARGET}_OBJLIB PUBLIC ${_include_directories})
 
             add_library(${TARGET} SHARED $<TARGET_OBJECTS:${TARGET}_OBJLIB>)
             add_library(${TARGET}-static STATIC $<TARGET_OBJECTS:${TARGET}_OBJLIB>)
+            target_include_directories(${TARGET} PUBLIC ${_include_directories})
+            target_include_directories(${TARGET}-static PUBLIC ${_include_directories})
 
             # Shared libraries need PIC
             set_property(TARGET ${TARGET} PROPERTY POSITION_INDEPENDENT_CODE 1)
         elseif(_arg_STATIC)
 #             add_library(${TARGET}-static STATIC ${_arg_SOURCES})
             add_library(${TARGET} STATIC ${_arg_SOURCES})
+            target_include_directories(${TARGET} PUBLIC ${_include_directories})
         elseif(_arg_SHARED)
             add_library(${TARGET} SHARED ${_arg_SOURCES})
+            target_include_directories(${TARGET} PUBLIC ${_include_directories})
 
             # Shared libraries need PIC
             set_property(TARGET ${TARGET} PROPERTY POSITION_INDEPENDENT_CODE 1)
@@ -602,10 +623,10 @@ function (portable_target TARGET)
     endif()
 
     if(_arg_STATIC AND _arg_SHARED AND NOT ANDROID)
-        target_link_libraries(${TARGET} ${_link_flags} ${_link_libraries})
-        target_link_libraries(${TARGET}-static ${_link_flags} ${_link_libraries})
+        target_link_libraries(${TARGET} PUBLIC ${_link_flags} ${_link_libraries})
+        target_link_libraries(${TARGET}-static PUBLIC ${_link_flags} ${_link_libraries})
     else()
-        target_link_libraries(${TARGET} ${_link_flags} ${_link_libraries})
+        target_link_libraries(${TARGET} PRIVATE ${_link_flags} ${_link_libraries})
     endif()
 
     if (_arg_DEPENDS)
