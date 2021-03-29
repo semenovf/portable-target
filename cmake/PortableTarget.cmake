@@ -31,6 +31,7 @@ set(QTDEPLOY_JSON_IN_FILE ${CMAKE_CURRENT_LIST_DIR}/qtdeploy.json.in)
 #       [AUTORCC_OFF]                          # Default is ON
 #       [STATIC]                               # Target is static library (ignored by Android version)
 #       [SHARED]                               # Target is shared library (ignored by Android version)
+#       [VERBOSE]                              # Output of diagnostic messages verbosity
 #       [Qt5_ROOT <dir>]                       # Must point to Qt5 official distribution directory. If not specified set to PORTABLE_TARGET_Qt5_ROOT or uses system platform
 #       [Qt5_PLATFORM <qt5-platform>]          # If not specified set to PORTABLE_TARGET_Qt5_PLATFORM or uses system platform
 #       [Qt5_COMPONENTS <qt5-components>]
@@ -92,7 +93,7 @@ set(QTDEPLOY_JSON_IN_FILE ${CMAKE_CURRENT_LIST_DIR}/qtdeploy.json.in)
 #cmake_policy(SET CMP0026 OLD) # allow use of the LOCATION target property
 
 function (_portable_apk TARGET SOURCE_TARGET)
-    set(boolparm)
+    set(boolparm VERBOSE)
 
     set(singleparm
         ANDROIDDEPLOYQT_EXECUTABLE
@@ -261,6 +262,13 @@ function (_portable_apk TARGET SOURCE_TARGET)
         set(INSTALL_OPTIONS --reinstall)
     endif()
 
+    if (_arg_VERBOSE)
+        set(VERBOSE "--verbose")
+        set(VERBOSITY "YES")
+    else()
+        set(VERBOSITY "NO")
+    endif()
+
     set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/android-build/libs/${ANDROID_ABI})
 #     file(MAKE_DIRECTORY ${OUTPUT_DIR})
 
@@ -274,6 +282,7 @@ function (_portable_apk TARGET SOURCE_TARGET)
     _portable_apk_status(${TARGET} "Application name        : \"${ANDROID_APP_NAME}\"")
     _portable_apk_status(${TARGET} "Application version     : ${ANDROID_APP_VERSION}")
     _portable_apk_status(${TARGET} "Application version code: ${ANDROID_APP_VERSION_CODE}")
+    _portable_apk_status(${TARGET} "Verbosity output        : ${VERBOSITY} ")
     _portable_apk_status(${TARGET} "Install APK             : ${_arg_INSTALL}")
 
     #---------------------------------------------------------------------------
@@ -289,7 +298,7 @@ function (_portable_apk TARGET SOURCE_TARGET)
         COMMAND ${CMAKE_COMMAND} -E copy ${ANDROID_APP_PATH} ${OUTPUT_DIR}
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/android-sources ${ANDROID_APP_PACKAGE_SOURCE_ROOT}
         COMMAND ${_arg_ANDROIDDEPLOYQT_EXECUTABLE}
-            --verbose
+            ${VERBOSE}
             --output ${CMAKE_CURRENT_BINARY_DIR}/android-build
             --input ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json
             --gradle
@@ -309,6 +318,7 @@ function (portable_target TARGET)
         AUTORCC_OFF
         STATIC
         SHARED
+        VERBOSE
         ANDROID_INSTALL)
 
     set(singleparm
@@ -505,7 +515,12 @@ function (portable_target TARGET)
                     _portable_target_status("Android SSL extra libraries: ${_android_ssl_extra_libs}")
                 endif()
 
+                if (_arg_VERBOSE)
+                    set(APK_VERBOSE VERBOSE)
+                endif()
+
                 _portable_apk(${TARGET}_apk ${TARGET}
+                    ${APK_VERBOSE}
                     ANDROIDDEPLOYQT_EXECUTABLE ${ANDROIDDEPLOYQT_EXECUTABLE}
                     PACKAGE_NAME "${_arg_ANDROID_PACKAGE_NAME}"
                     APP_NAME "${_arg_ANDROID_APP_NAME}"
