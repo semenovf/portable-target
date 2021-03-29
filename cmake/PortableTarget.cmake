@@ -257,7 +257,10 @@ function (_portable_apk TARGET SOURCE_TARGET)
 #         endif()
 #     endif()
 
-    # TODO check if the apk must be installed to the device
+    # There are two options for `androiddeployqt` related to installation:
+    #   --install (will be called sequentially `adb uninstall` and `adb install -r`)
+    #   --reinstall (will be called `adb install -r` only).
+    # Will use second method.
     if  (_arg_INSTALL)
         set(INSTALL_OPTIONS --reinstall)
     endif()
