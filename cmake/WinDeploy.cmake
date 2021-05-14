@@ -150,6 +150,17 @@ function (portable_windeploy PRE_BUILD_TARGET)
             list(APPEND _windeployqt_args "--compiler-runtime")
         endif()
 
+        # Add required libraries
+        # There is no Qt5MultimediaQuick.dll on versions < 5.10
+        #if (${QT_VERSION} VERSION_GREATER 5.10.0)
+            set(_QtDir "${Qt5_ROOT}/${Qt5_PLATFORM}/bin")
+            add_custom_command(TARGET ${PRE_BUILD_TARGET}
+                    PRE_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E make_directory "${_arg_WINDEPLOYQT_OUTPUT_DIR}"
+                    COMMAND ${CMAKE_COMMAND} -E copy "${_QtDir}/Qt5MultimediaQuick.dll" "${_arg_WINDEPLOYQT_OUTPUT_DIR}/"
+                    )
+        #endif()
+
 #        if (_arg_WINDEPLOYQT_QML_DIR)
 #            list(APPEND _windeployqt_args --qmldir "${_arg_WINDEPLOYQT_QML_DIR}")
 #        endif()
@@ -163,11 +174,32 @@ function (portable_windeploy PRE_BUILD_TARGET)
             endif()
 
             foreach (_qml_module ${_arg_WINDEPLOYQT_QML_MODULES})
+                set(_qml_dll_excludes "")
+
+                # Collect unnecessary DLLs for later removing
+                file(GLOB_RECURSE _qml_dlls LIST_DIRECTORIES false 
+                    RELATIVE ${_qml_dir}/${_qml_module}
+                    "${_qml_dir}/${_qml_module}/*.dll")
+
+                foreach (_qml_dll ${_qml_dlls})
+                    get_filename_component(_qml_dll_filename ${_qml_dll} NAME_WLE)
+                    get_filename_component(_qml_dll_subdir ${_qml_dll} DIRECTORY)
+
+                    if (EXISTS "${_qml_dir}/${_qml_module}/${_qml_dll_subdir}/${_qml_dll_filename}d.dll")
+                        if (CMAKE_BUILD_TYPE STREQUAL "Release")
+                            set(_qml_dll_excludes "${_qml_dll_excludes} \"${_arg_WINDEPLOYQT_OUTPUT_DIR}/qml/${_qml_module}/${_qml_dll_subdir}/${_qml_dll_filename}d.dll\"")
+                        else()
+                            set(_qml_dll_excludes "${_qml_dll_excludes} \"${_arg_WINDEPLOYQT_OUTPUT_DIR}/qml/${_qml_module}/${_qml_dll_subdir}/${_qml_dll_filename}.dll\"")
+                        endif()
+                    endif()
+                endforeach()
+
                 add_custom_command(TARGET ${PRE_BUILD_TARGET}
                     PRE_BUILD
                     COMMAND ${CMAKE_COMMAND} -E make_directory "${_arg_WINDEPLOYQT_OUTPUT_DIR}"
                     COMMAND ${CMAKE_COMMAND} -E copy_directory "${_qml_dir}/${_qml_module}" 
                         "${_arg_WINDEPLOYQT_OUTPUT_DIR}/qml/${_qml_module}"
+                    COMMAND ${CMAKE_COMMAND} -E rm ${_qml_dll_excludes}
                 )
             endforeach()
         endif()
