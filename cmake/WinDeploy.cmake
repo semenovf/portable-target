@@ -35,6 +35,7 @@ function (portable_windeploy PRE_BUILD_TARGET)
 
     set(multiparm
         TARGETS
+        WINDEPLOYQT_EXTRA_LIBS
         WINDEPLOYQT_QML_MODULES)
 
     # TODO Implement later
@@ -111,6 +112,7 @@ function (portable_windeploy PRE_BUILD_TARGET)
     if (_arg_WINDEPLOYQT_EXECUTABLE 
             OR _arg_WINDEPLOYQT 
             OR _arg_WINDEPLOYQT_OUTPUT_DIR 
+            OR _arg_WINDEPLOYQT_EXTRA_LIBS
             OR _arg_WINDEPLOYQT_QML_MODULES)
         set(_arg_WINDEPLOYQT TRUE)
     endif()
@@ -126,6 +128,9 @@ function (portable_windeploy PRE_BUILD_TARGET)
                 "Qt5 Platform directory")
 
             set(_arg_WINDEPLOYQT_EXECUTABLE "${Qt5_ROOT}/${Qt5_PLATFORM}/bin/windeployqt.exe")
+            set(Qt5_BIN_DIR "${Qt5_ROOT}/${Qt5_PLATFORM}/bin")
+        else()
+            get_filename_component(Qt5_BIN_DIR ${_arg_WINDEPLOYQT_EXECUTABLE} DIRECTORY)
         endif()
 
         if (NOT EXISTS ${_arg_WINDEPLOYQT_EXECUTABLE})
@@ -150,24 +155,40 @@ function (portable_windeploy PRE_BUILD_TARGET)
             list(APPEND _windeployqt_args "--compiler-runtime")
         endif()
 
-        # Add required libraries
-        # There is no Qt5MultimediaQuick.dll on versions < 5.10
-        #if (${QT_VERSION} VERSION_GREATER 5.10.0)
-            set(_QtDir "${Qt5_ROOT}/${Qt5_PLATFORM}/bin")
-            add_custom_command(TARGET ${PRE_BUILD_TARGET}
+        # WINDEPLOYQT_EXTRA_LIBS used especially as workaround when windeployqt 
+        # do not properly obtains MultimediaQuick
+        if (_arg_WINDEPLOYQT_EXTRA_LIBS)
+            if (CMAKE_BUILD_TYPE STREQUAL "Release")
+                set(_qt_extra_lib_suffix "")
+            else()
+                set(_qt_extra_lib_suffix "d")
+            endif()
+
+            foreach (_qt_extra_lib ${_arg_WINDEPLOYQT_EXTRA_LIBS})
+                set(_qt_extra_lib_path "${Qt5_BIN_DIR}/Qt5${_qt_extra_lib}${_qt_extra_lib_suffix}.dll")
+
+                if (NOT EXISTS ${_qt_extra_lib_path})
+                    set(_qt_extra_lib_path "${Qt5_BIN_DIR}/Qt5${_qt_extra_lib}${_qt_extra_lib_suffix}_p.dll")
+
+                    if (NOT EXISTS ${_qt_extra_lib_path})
+                        _portable_target_error(${LOG_PREFIX} "${_qt_extra_lib}: no corresponding library found at: ${Qt5_BIN_DIR}")
+                    endif()
+                endif()
+
+                add_custom_command(TARGET ${PRE_BUILD_TARGET}
                     PRE_BUILD
                     COMMAND ${CMAKE_COMMAND} -E make_directory "${_arg_WINDEPLOYQT_OUTPUT_DIR}"
-                    COMMAND ${CMAKE_COMMAND} -E copy "${_QtDir}/Qt5MultimediaQuick.dll" "${_arg_WINDEPLOYQT_OUTPUT_DIR}/"
-                    )
+                    COMMAND ${CMAKE_COMMAND} -E copy "${_qt_extra_lib_path}" "${_arg_WINDEPLOYQT_OUTPUT_DIR}/")
+            endforeach()
+        endif()
+
+        # Do not work properly (workaround see below)
+        #if (_arg_WINDEPLOYQT_QML_DIR)
+        #    list(APPEND _windeployqt_args --qmldir "${_arg_WINDEPLOYQT_QML_DIR}")
         #endif()
 
-#        if (_arg_WINDEPLOYQT_QML_DIR)
-#            list(APPEND _windeployqt_args --qmldir "${_arg_WINDEPLOYQT_QML_DIR}")
-#        endif()
-
         if (_arg_WINDEPLOYQT_QML_MODULES)
-            get_filename_component(_qml_dir ${_arg_WINDEPLOYQT_EXECUTABLE} DIRECTORY)
-            set(_qml_dir "${_qml_dir}/../qml")
+            set(_qml_dir "${Qt5_BIN_DIR}/../qml")
 
             if (NOT EXISTS ${_qml_dir})
                 _portable_target_error(${LOG_PREFIX} "QML directory not found at: ${_qml_dir}")
