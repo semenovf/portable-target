@@ -48,6 +48,19 @@ function (portable_translation BASENAME)
     set(_lupdate_target ${BASENAME}_${_arg_TARGET_LANG}_translation_update)
     set(_lrelease_target ${BASENAME}_${_arg_TARGET_LANG}_translation_release)
 
+    _optional_var_env(Qt5_ROOT Qt5_ROOT "Qt5 Root directory")
+    _optional_var_env(Qt5_PLATFORM Qt5_PLATFORM "Qt5 Platform directory")
+
+    if (Qt5_ROOT AND Qt5_PLATFORM)
+        set(Qt5_BIN_DIR "${Qt5_ROOT}/${Qt5_PLATFORM}/bin")
+    endif()
+
+    if (NOT _lupdate_program)
+        if (Qt5_BIN_DIR AND EXISTS "${Qt5_BIN_DIR}/lupdate${CMAKE_EXECUTABLE_SUFFIX}")
+            set(_lupdate_program "${Qt5_BIN_DIR}/lupdate${CMAKE_EXECUTABLE_SUFFIX}")
+        endif()
+    endif()
+
     if (_lupdate_program)
         add_custom_target(${_lupdate_target}
             #DEPENDS ${_arg_SOURCES}
@@ -69,6 +82,12 @@ function (portable_translation BASENAME)
         add_custom_target(${_lupdate_target}
             COMMAND ${CMAKE_COMMAND} -E echo "`lupdate` command/program not found"
             COMMAND ${CMAKE_COMMAND} -E false)
+    endif()
+
+    if (NOT _lrelease_program)
+        if (Qt5_BIN_DIR AND EXISTS "${Qt5_BIN_DIR}/lrelease${CMAKE_EXECUTABLE_SUFFIX}")
+            set(_lrelease_program "${Qt5_BIN_DIR}/lrelease${CMAKE_EXECUTABLE_SUFFIX}")
+        endif()
     endif()
 
     if (_lrelease_program)
@@ -133,8 +152,22 @@ function (portable_translation_amalgamate BASENAME)
         set(_arg_OUTPUT_DIR ${_arg_RELEASE_DIR})
     endif()
 
+    set(_target ${BASENAME}_${_arg_TARGET_LANG})
+
+    _optional_var_env(Qt5_ROOT Qt5_ROOT "Qt5 Root directory")
+    _optional_var_env(Qt5_PLATFORM Qt5_PLATFORM "Qt5 Platform directory")
+
+    if (Qt5_ROOT AND Qt5_PLATFORM)
+        set(Qt5_BIN_DIR "${Qt5_ROOT}/${Qt5_PLATFORM}/bin")
+    endif()
+
+    if (NOT _lconvert_program)
+        if (Qt5_BIN_DIR AND EXISTS "${Qt5_BIN_DIR}/lconvert${CMAKE_EXECUTABLE_SUFFIX}")
+            set(_lconvert_program "${Qt5_BIN_DIR}/lconvert${CMAKE_EXECUTABLE_SUFFIX}")
+        endif()
+    endif()
+
     if (_lconvert_program)
-        set(_target ${BASENAME}_${_arg_TARGET_LANG})
         set(_dest "${_arg_OUTPUT_DIR}/${_target}.qm")
 
         # Get files from list
@@ -152,9 +185,8 @@ function (portable_translation_amalgamate BASENAME)
         if (_arg_DEPENDS)
             add_dependencies(${_target} ${_arg_DEPENDS})
         endif()
-
-    else()
-        add_custom_target(${_lconvert_program}
+   else()
+        add_custom_target(${_target}
             COMMAND ${CMAKE_COMMAND} -E echo "`lconvert` command/program not found"
             COMMAND ${CMAKE_COMMAND} -E false)
     endif()

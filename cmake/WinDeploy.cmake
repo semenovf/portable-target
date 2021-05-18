@@ -104,14 +104,14 @@ function (portable_windeploy PRE_BUILD_TARGET)
     # webenginewidgets 3dcore 3drenderer 3dquick 3dquickrenderer 3dinput 3danimation
     # 3dextras geoservices webchannel texttospeech serialbus webview
     #
-    # windeployqt --qmldir . --release --force --gui --network --qml --quick --webchannel 
-    #   --webengine --webenginewidgets --widgets --positioning --sql --serialport 
+    # windeployqt --qmldir . --release --force --gui --network --qml --quick --webchannel
+    #   --webengine --webenginewidgets --widgets --positioning --sql --serialport
     #   --multimedia TacticalPad2Bin.exe
     #
 
-    if (_arg_WINDEPLOYQT_EXECUTABLE 
-            OR _arg_WINDEPLOYQT 
-            OR _arg_WINDEPLOYQT_OUTPUT_DIR 
+    if (_arg_WINDEPLOYQT_EXECUTABLE
+            OR _arg_WINDEPLOYQT
+            OR _arg_WINDEPLOYQT_OUTPUT_DIR
             OR _arg_WINDEPLOYQT_EXTRA_LIBS
             OR _arg_WINDEPLOYQT_QML_MODULES)
         set(_arg_WINDEPLOYQT TRUE)
@@ -155,7 +155,7 @@ function (portable_windeploy PRE_BUILD_TARGET)
             list(APPEND _windeployqt_args "--compiler-runtime")
         endif()
 
-        # WINDEPLOYQT_EXTRA_LIBS used especially as workaround when windeployqt 
+        # WINDEPLOYQT_EXTRA_LIBS used especially as workaround when windeployqt
         # do not properly obtains MultimediaQuick
         if (_arg_WINDEPLOYQT_EXTRA_LIBS)
             if (CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -178,7 +178,7 @@ function (portable_windeploy PRE_BUILD_TARGET)
                 add_custom_command(TARGET ${PRE_BUILD_TARGET}
                     PRE_BUILD
                     COMMAND ${CMAKE_COMMAND} -E make_directory "${_arg_WINDEPLOYQT_OUTPUT_DIR}"
-                    COMMAND ${CMAKE_COMMAND} -E copy "${_qt_extra_lib_path}" "${_arg_WINDEPLOYQT_OUTPUT_DIR}/")
+                    COMMAND ${CMAKE_COMMAND} -E copy "${_qt_extra_lib_path}" "${_arg_WINDEPLOYQT_OUTPUT_DIR}")
             endforeach()
         endif()
 
@@ -195,10 +195,10 @@ function (portable_windeploy PRE_BUILD_TARGET)
             endif()
 
             foreach (_qml_module ${_arg_WINDEPLOYQT_QML_MODULES})
-                set(_qml_dll_excludes "")
+                #set(_qml_dll_excludes "")
 
                 # Collect unnecessary DLLs for later removing
-                file(GLOB_RECURSE _qml_dlls LIST_DIRECTORIES false 
+                file(GLOB_RECURSE _qml_dlls LIST_DIRECTORIES false
                     RELATIVE ${_qml_dir}/${_qml_module}
                     "${_qml_dir}/${_qml_module}/*.dll")
 
@@ -218,10 +218,14 @@ function (portable_windeploy PRE_BUILD_TARGET)
                 add_custom_command(TARGET ${PRE_BUILD_TARGET}
                     PRE_BUILD
                     COMMAND ${CMAKE_COMMAND} -E make_directory "${_arg_WINDEPLOYQT_OUTPUT_DIR}"
-                    COMMAND ${CMAKE_COMMAND} -E copy_directory "${_qml_dir}/${_qml_module}" 
-                        "${_arg_WINDEPLOYQT_OUTPUT_DIR}/qml/${_qml_module}"
-                    COMMAND ${CMAKE_COMMAND} -E rm ${_qml_dll_excludes}
-                )
+                    COMMAND ${CMAKE_COMMAND} -E copy_directory "${_qml_dir}/${_qml_module}"
+                        "${_arg_WINDEPLOYQT_OUTPUT_DIR}/qml/${_qml_module}")
+
+                if (_qml_dll_excludes)
+                    add_custom_command(TARGET ${PRE_BUILD_TARGET}
+                        PRE_BUILD
+                        COMMAND ${CMAKE_COMMAND} -E remove ${_qml_dll_excludes})
+                endif()
             endforeach()
         endif()
 
@@ -236,9 +240,9 @@ function (portable_windeploy PRE_BUILD_TARGET)
         add_custom_command(TARGET ${PRE_BUILD_TARGET}
             PRE_BUILD
             COMMAND ${CMAKE_COMMAND} -E make_directory "${_arg_WINDEPLOYQT_OUTPUT_DIR}"
-            COMMAND ${_arg_WINDEPLOYQT_EXECUTABLE} 
-                ${_windeployqt_args} 
-                --dir "${_arg_WINDEPLOYQT_OUTPUT_DIR}" 
+            COMMAND ${_arg_WINDEPLOYQT_EXECUTABLE}
+                ${_windeployqt_args}
+                --dir "${_arg_WINDEPLOYQT_OUTPUT_DIR}"
                 ${_windeployqt_files})
 
     endif(_arg_WINDEPLOYQT)
