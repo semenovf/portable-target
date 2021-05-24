@@ -3,7 +3,7 @@ CMake-based scripts for build portable applications.
 Tested on Linux, Windows, Android
 
 ## Android
-### Warnings and errors while build and package
+### Warnings and errors while building and packaging
 
 1. #### QML import could not be resolved in ...
 ```sh
