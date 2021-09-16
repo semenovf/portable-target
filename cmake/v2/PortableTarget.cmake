@@ -1,0 +1,48 @@
+################################################################################
+# Copyright (c) 2019-2021 Vladislav Trifochkin
+#
+# This file is part of [portable-target](https://github.com/semenovf/portable-target).
+#
+# Changelog:
+#      2019.12.10 Initial version.
+#      2020.09.03 Splitted into Functions.cmake, AndroidToolchain.cmake and PortableTarget.cmake.
+#      2021.03.06 Added support for extra Android SSL libraries.
+#      2021.09.07 Started version 2.
+###############################################################################
+cmake_minimum_required(VERSION 3.11)
+
+set(_PORTABLE_TARGET_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR})
+include(${_PORTABLE_TARGET_ROOT_DIR}/Functions.cmake)
+
+#
+# Usage:
+#
+# portable_target(<action> <target> <action-options>)
+#
+# Available actions (case sensitive):
+#   ADD_EXECUTABLE      Add executable or shared library for Android.
+#   TODO ADD_LIBRARY    Add both shared and static (with '-static' suffix)
+#                       libraries, or shared library only for Android).
+# #   TODO ADD_SHARED_LIBRARY  Add shared library.
+# #   TODO ADD_STATIC_LIBRARY  Add static library (with '-static' suffix) .
+
+################################################################################
+# portable_target
+################################################################################
+function (portable_target ACTION TARGET)
+    set(boolparm)
+    set(singleparm)
+    set(multiparm)
+
+    cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
+
+    _portable_target_status(${TARGET} "Action: [${ACTION}]")
+
+    if (ACTION STREQUAL "ADD_EXECUTABLE")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/add_executable.cmake)
+        portable_target_add_executable(${TARGET} "${_arg_UNPARSED_ARGUMENTS}")
+    elseif (ACTION STREQUAL "SOURCES")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/sources.cmake)
+        portable_target_sources(${TARGET} ${_arg_UNPARSED_ARGUMENTS})
+    endif()
+endfunction(portable_target)
