@@ -27,3 +27,10 @@ portable_target(SOURCES executable
     INTERFACE iface3.cpp)
 portable_target(SOURCES executable INTERFACE iface4.cpp)
 
+portable_target(LIBRARY mylib)
+portable_target(SOURCES mylib src.cpp)
+portable_target(DEFINITIONS mylib "-DDEFIN1=1 -DDEFIN2=0")
+
+# portable_target(LIBRARY mylib1 STATIC)
+# portable_target(LINK STATIC mylib SHARED mylib)
+

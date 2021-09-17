@@ -20,15 +20,17 @@ include(${_PORTABLE_TARGET_ROOT_DIR}/Functions.cmake)
 # portable_target(<action> <target> <action-options>)
 #
 # Available actions (case sensitive):
-#   ADD_EXECUTABLE      Add executable or shared library for Android.
-#   TODO ADD_LIBRARY    Add both shared and static (with '-static' suffix)
-#                       libraries, or shared library only for Android).
-# #   TODO ADD_SHARED_LIBRARY  Add shared library.
-# #   TODO ADD_STATIC_LIBRARY  Add static library (with '-static' suffix) .
-
-################################################################################
-# portable_target
-################################################################################
+#
+# ADD_EXECUTABLE
+# APPLICATION         Add executable or shared library for Android.
+#
+# ADD_LIBRARY
+# LIBRARY             Add both shared and static (with '-static' suffix by default)
+#                     libraries, or shared library only for Android).
+#
+# DEFINITIONS         Add compile defintions (see target_compile_definitions)
+# INCLUDE_DIRECTORIES Add include directories (see target_include_directories)
+#
 function (portable_target ACTION TARGET)
     set(boolparm)
     set(singleparm)
@@ -38,11 +40,22 @@ function (portable_target ACTION TARGET)
 
     _portable_target_status(${TARGET} "Action: [${ACTION}]")
 
-    if (ACTION STREQUAL "ADD_EXECUTABLE")
+    if (ACTION STREQUAL "ADD_EXECUTABLE" OR ACTION STREQUAL "APPLICATION")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/add_executable.cmake)
         portable_target_add_executable(${TARGET} "${_arg_UNPARSED_ARGUMENTS}")
+    elseif (ACTION STREQUAL "ADD_LIBRARY" OR ACTION STREQUAL "LIBRARY")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/add_library.cmake)
+        portable_target_add_library(${TARGET} "${_arg_UNPARSED_ARGUMENTS}")
     elseif (ACTION STREQUAL "SOURCES")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/sources.cmake)
         portable_target_sources(${TARGET} ${_arg_UNPARSED_ARGUMENTS})
+    elseif (ACTION STREQUAL "DEFINITIONS")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/definitions.cmake)
+        portable_target_definitions(${TARGET} ${_arg_UNPARSED_ARGUMENTS})
+    elseif (ACTION STREQUAL "INCLUDE_DIRECTORIES")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/include_directories.cmake)
+        portable_target_include_directories(${TARGET} ${_arg_UNPARSED_ARGUMENTS})
+    else ()
+        _portable_target_error(${TARGET} "Bad action: [${ACTION}]")
     endif()
 endfunction(portable_target)
