@@ -17,7 +17,7 @@ function (_portable_target_error TITLE)
     else()
         message(FATAL_ERROR "*** ERROR: portable_target: ${TITLE}")
     endif()
-endfunction()
+endfunction(_portable_target_error)
 
 ################################################################################
 # _portable_target_status
@@ -28,7 +28,24 @@ function (_portable_target_status TITLE)
     else()
         message(STATUS "portable_target: ${TITLE}")
     endif()
-endfunction()
+endfunction(_portable_target_status)
+
+################################################################################
+# _portable_target_trace
+#
+# To enable/disable trace output use portable_target(SET ENABLE_TRACE ON|OFF)
+################################################################################
+function (_portable_target_trace TITLE)
+    get_property(_enable_trace GLOBAL PROPERTY PORTABLE_TARGET_PROP_ENABLE_TRACE)
+
+    if (_enable_trace)
+        if (${ARGC} GREATER 1)
+            message(STATUS "portable_target [${TITLE}]: ${ARGV1}")
+        else()
+            message(STATUS "portable_target: ${TITLE}")
+        endif()
+    endif()
+endfunction(_portable_target_trace)
 
 ################################################################################
 # _portable_apk_error

@@ -8,6 +8,7 @@
 ###############################################################################
 cmake_minimum_required(VERSION 3.11)
 include(${CMAKE_CURRENT_LIST_DIR}/../Functions.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 
 #
 # Usage:
@@ -23,10 +24,11 @@ include(${CMAKE_CURRENT_LIST_DIR}/../Functions.cmake)
 #
 
 function (portable_target_add_library TARGET)
-    # TODO This variables may be configurable
-    set(_objlib_siffix "_OBJLIB")
-    set(_static_siffix "-static")
-    set(_static_alias_siffix "::static")
+    _portable_target_set_properties_defaults()
+
+    portable_target_get_property(OBJLIB_SUFFIX _objlib_suffix)
+    portable_target_get_property(STATIC_SUFFIX _static_suffix)
+    portable_target_get_property(STATIC_ALIAS_SUFFIX _static_alias_suffix)
 
     set(boolparm SHARED STATIC)
     set(singleparm SHARED_ALIAS STATIC_ALIAS)
@@ -44,20 +46,20 @@ function (portable_target_add_library TARGET)
     endif()
 
     # Make object files for STATIC and SHARED targets
-    add_library(${TARGET}${_objlib_siffix} OBJECT)
+    add_library(${TARGET}${_objlib_suffix} OBJECT)
 
     # Shared libraries need PIC
     # For SHARED and MODULE libraries the POSITION_INDEPENDENT_CODE target property
     # is set to ON automatically, but need for OBJECT type
-    set_target_properties(${TARGET}${_objlib_siffix} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    set_target_properties(${TARGET}${_objlib_suffix} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
     if (_arg_SHARED)
-        add_library(${TARGET} SHARED $<TARGET_OBJECTS:${TARGET}${_objlib_siffix}>)
+        add_library(${TARGET} SHARED $<TARGET_OBJECTS:${TARGET}${_objlib_suffix}>)
         set_target_properties(${TARGET} PROPERTIES POSITION_INDEPENDENT_CODE ON)
     endif()
 
     if (_arg_STATIC)
-        add_library(${TARGET}${_static_siffix} STATIC $<TARGET_OBJECTS:${TARGET}${_objlib_siffix}>)
+        add_library(${TARGET}${_static_suffix} STATIC $<TARGET_OBJECTS:${TARGET}${_objlib_suffix}>)
     endif()
 
     if (_arg_ALIAS)
@@ -66,7 +68,7 @@ function (portable_target_add_library TARGET)
         endif()
 
         if (_arg_STATIC)
-            add_library(${_arg_ALIAS}${_static_alias_siffix} ALIAS ${TARGET}${_static_siffix})
+            add_library(${_arg_ALIAS}${_static_alias_suffix} ALIAS ${TARGET}${_static_suffix})
         endif()
     endif()
 

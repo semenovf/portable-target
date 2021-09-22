@@ -8,6 +8,7 @@
 ###############################################################################
 cmake_minimum_required(VERSION 3.11)
 include(${CMAKE_CURRENT_LIST_DIR}/../Functions.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 
 #
 # Usage:
@@ -25,6 +26,8 @@ include(${CMAKE_CURRENT_LIST_DIR}/../Functions.cmake)
 # portable_target_add_executable
 ################################################################################
 function (portable_target_add_executable TARGET)
+    _portable_target_set_properties_defaults()
+
     set(boolparm)
     set(singleparm)
     set(multiparm SOURCES)
