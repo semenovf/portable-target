@@ -14,6 +14,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 # Usage:
 #
 # portable_target_include_directories(<target>
+#   [inc...]
 #   [INTERFACE inc...]
 #   [PUBLIC inc...]
 #   [PRIVATE inc...])

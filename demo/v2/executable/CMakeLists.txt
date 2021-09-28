@@ -17,6 +17,7 @@ if (NOT CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 
+# Enable output of trace info
 portable_target(SET ENABLE_TRACE ON)
 
 portable_target(GET OBJLIB_SUFFIX _objlib_suffix)
@@ -45,5 +46,10 @@ portable_target(SOURCES mylib src.cpp)
 portable_target(DEFINITIONS mylib "-DDEFIN1=1 -DDEFIN2=0")
 
 # portable_target(LIBRARY mylib1 STATIC)
-# portable_target(LINK STATIC mylib SHARED mylib)
+portable_target(LINK executable mylib)
 
+portable_target(LINK_QT5_COMPONENTS executable REQUIRED
+    Core
+    INTERFACE Xml
+    PUBLIC Network
+    PRIVATE Sql)
