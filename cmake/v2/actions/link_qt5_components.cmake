@@ -15,6 +15,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/link_libraries.cmake)
 # Usage:
 #
 # portable_target_link_qt5_components(target
+#   [component...]           # INTERFACE, PUBLIC or PRIVATE depends on target type
 #   [REQUIRED]
 #   [Qt5_ROOT dir]           # Must point to Qt5 official distribution
 #                            # directory. If not specified set to
@@ -22,10 +23,12 @@ include(${CMAKE_CURRENT_LIST_DIR}/link_libraries.cmake)
 #   [Qt5_PLATFORM platform]  # If not specified set to
 #                            # PORTABLE_TARGET_Qt5_PLATFORM or uses
 #                            # system platform
+#   [AUTOMOC ON|OFF]         # (default is ON)
+#   [AUTORCC ON|OFF]         # (default is ON)
+#   [AUTOUIC ON|OFF]         # (default is ON)
 #   [INTERFACE component...]
 #   [PUBLIC component...]
-#   [PRIVATE component...]
-#   [component...])
+#   [PRIVATE component...])
 #
 #   Available platforms for Qt5.13.2:
 #       - gcc_64
@@ -35,10 +38,18 @@ include(${CMAKE_CURRENT_LIST_DIR}/link_libraries.cmake)
 #
 function (portable_target_link_qt5_components TARGET)
     set(boolparm REQUIRED)
-    set(singleparm Qt5_ROOT Qt5_PLATFORM)
+    set(singleparm Qt5_ROOT Qt5_PLATFORM AUTOMOC AUTORCC AUTOUIC)
     set(multiparm INTERFACE PUBLIC PRIVATE)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
+
+    portable_target_get_property(STATIC_SUFFIX _static_suffix)
+
+    set(_primary_target ${TARGET})
+
+    if (TARGET ${TARGET}${_static_suffix})
+        set(_secondary_target ${TARGET}${_static_suffix})
+    endif()
 
     set(Qt5_DEFAULT_COMPONENTS ${_arg_UNPARSED_ARGUMENTS})
     set(Qt5_INTERFACE_COMPONENTS ${_arg_INTERFACE})
@@ -162,10 +173,43 @@ function (portable_target_link_qt5_components TARGET)
         PUBLIC ${_public_libraries}
         PRIVATE ${_private_libraries})
 
+    ############################################################################
+    # Configure AUTOMOC, AUTORCC, AUTOUIC
+    ############################################################################
+    if (NOT DEFINED _arg_AUTOMOC OR _arg_AUTOMOC)
+        set(_arg_AUTOMOC ON)
+    else()
+        set(_arg_AUTOMOC OFF)
+    endif()
+
+    if (NOT DEFINED _arg_AUTORCC OR _arg_AUTORCC)
+        set(_arg_AUTORCC ON)
+    else()
+        set(_arg_AUTORCC OFF)
+    endif()
+
+    if (NOT DEFINED _arg_AUTOUIC OR _arg_AUTOUIC)
+        set(_arg_AUTOUIC ON)
+    else()
+        set(_arg_AUTOUIC OFF)
+    endif()
+
+    _portable_target_trace(${TARGET} "AUTOMOC: [${_arg_AUTOMOC}]")
+    _portable_target_trace(${TARGET} "AUTORCC: [${_arg_AUTORCC}]")
+    _portable_target_trace(${TARGET} "AUTOUIC: [${_arg_AUTOUIC}]")
+
     set_target_properties(${TARGET}
         PROPERTIES
-            AUTOMOC ON
-            AUTOUIC ON
-            AUTORCC ON)
-endfunction(portable_target_link_qt5_components)
+            AUTOMOC ${_arg_AUTOMOC}
+            AUTORCC ${_arg_AUTORCC}
+            AUTOUIC ${_arg_AUTOUIC})
 
+    if (_secondary_target)
+        set_target_properties(${_secondary_target}
+            PROPERTIES
+                AUTOMOC ${_arg_AUTOMOC}
+                AUTORCC ${_arg_AUTORCC}
+                AUTOUIC ${_arg_AUTOUIC})
+    endif()
+
+endfunction(portable_target_link_qt5_components)

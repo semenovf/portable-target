@@ -39,7 +39,7 @@ function (portable_target_include_directories TARGET)
     #  - EXECUTABLE
     #  - OBJECT_LIBRARY
 
-    # For library target defintions must be assigned to OBJECT target
+    # For library target definitions must be assigned to OBJECT target
     if (TARGET ${TARGET}${_objlib_suffix})
         set(_real_target ${TARGET}${_objlib_suffix})
         get_target_property(_target_type ${_real_target} TYPE)

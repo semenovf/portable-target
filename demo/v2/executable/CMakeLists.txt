@@ -2,7 +2,7 @@
 # Copyright (c) 2020 Vladislav Trifochkin
 #
 # Changelog:
-#      2020.04.04 Initial version
+#      2021.09.07 Initial version.
 ################################################################################
 #
 # $ cmake -G <Generator>
@@ -19,6 +19,7 @@ endif()
 
 # Enable output of trace info
 portable_target(SET ENABLE_TRACE ON)
+portable_target(SET AGGRESSIVE_COMPILER_CHECK ON)
 
 portable_target(GET OBJLIB_SUFFIX _objlib_suffix)
 portable_target(GET STATIC_SUFFIX _static_suffix)
@@ -44,6 +45,7 @@ portable_target(INCLUDE_DIRS executable ./)
 portable_target(ADD_LIBRARY mylib)
 portable_target(SOURCES mylib src.cpp)
 portable_target(DEFINITIONS mylib "-DDEFIN1=1 -DDEFIN2=0")
+portable_target(COMPILE_OPTIONS mylib AGGRESSIVE_CHECK ON)
 
 # portable_target(LIBRARY mylib1 STATIC)
 portable_target(LINK executable mylib)
@@ -52,4 +54,5 @@ portable_target(LINK_QT5_COMPONENTS executable REQUIRED
     Core
     INTERFACE Xml
     PUBLIC Network
-    PRIVATE Sql)
+    PRIVATE Sql
+    AUTOUIC)
