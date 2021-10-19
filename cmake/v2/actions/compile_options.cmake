@@ -55,7 +55,6 @@ endfunction(_target_compile_options_helper)
 #   [PUBLIC opts...]
 #   [PRIVATE opts...]))
 #
-#
 function (portable_target_compile_options TARGET)
     set(boolparm)
     set(singleparm AGGRESSIVE_CHECK)
@@ -71,58 +70,60 @@ function (portable_target_compile_options TARGET)
 
     _portable_target_trace(${TARGET} "Aggressive compiler check: [${_arg_AGGRESSIVE_CHECK}]")
 
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        #
-        # See [https://codeforces.com/blog/entry/15547](https://codeforces.com/blog/entry/15547)
-        #
-        _portable_target_status(${TARGET} "Aggressive compiler check is ON")
+    if (_arg_AGGRESSIVE_CHECK)
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            #
+            # See [https://codeforces.com/blog/entry/15547](https://codeforces.com/blog/entry/15547)
+            #
+            _portable_target_status(${TARGET} "Aggressive compiler check is ON")
 
-        list(APPEND _aggressive_check_flags
-            "-D_GLIBCXX_DEBUG=1"
-            "-D_GLIBCXX_DEBUG_PEDANTIC=1"
-            "-D_FORTIFY_SOURCE=2"
-            "-pedantic"
-            "-O2"
-            "-Wall"
-            "-Wextra"
-            "-Wshadow"
-            "-Wformat=2"
-            "-Wfloat-equal"
-            # "-Wconversion" # <-- Annoying message, may be need separate option for this
-            "-Wlogical-op"
-            "-Wshift-overflow=2"
-            "-Wduplicated-cond"
-            "-Wcast-qual"
-            "-Wcast-align"
-            "-fsanitize=address"   # <-- The option cannot be combined with -fsanitize=thread and/or -fcheck-pointer-bounds.
-            "-fsanitize=undefined"
-            "-fsanitize=leak"      # <-- The option cannot be combined with -fsanitize=thread
-            "-fno-sanitize-recover"
-            "-fstack-protector"
+            list(APPEND _aggressive_check_flags
+                "-D_GLIBCXX_DEBUG=1"
+                "-D_GLIBCXX_DEBUG_PEDANTIC=1"
+                "-D_FORTIFY_SOURCE=2"
+                "-pedantic"
+                "-O2"
+                "-Wall"
+                "-Wextra"
+                "-Wshadow"
+                "-Wformat=2"
+                "-Wfloat-equal"
+                # "-Wconversion" # <-- Annoying message, may be need separate option for this
+                "-Wlogical-op"
+                "-Wshift-overflow=2"
+                "-Wduplicated-cond"
+                "-Wcast-qual"
+                "-Wcast-align"
+                "-fsanitize=address"   # <-- The option cannot be combined with -fsanitize=thread and/or -fcheck-pointer-bounds.
+                "-fsanitize=undefined"
+                "-fsanitize=leak"      # <-- The option cannot be combined with -fsanitize=thread
+                "-fno-sanitize-recover"
+                "-fstack-protector"
 
-            # gcc: error: -fsanitize=address and -fsanitize=kernel-address are incompatible with -fsanitize=thread
-            # "-fsanitize=thread"
-        )
+                # gcc: error: -fsanitize=address and -fsanitize=kernel-address are incompatible with -fsanitize=thread
+                # "-fsanitize=thread"
+            )
 
-        list(APPEND _link_flags
-            "-fsanitize=address"
-            "-fsanitize=undefined"
-            "-fsanitize=leak")
+            list(APPEND _link_flags
+                "-fsanitize=address"
+                "-fsanitize=undefined"
+                "-fsanitize=leak")
 
-        list(APPEND _link_libraries
-            "-lasan"  # <-- need for -fsanitize=address
-            "-lubsan" # <-- need for -fsanitize=undefined
-            #"-ltsan"  # <-- need for -fsanitize=thread
-        )
+            list(APPEND _link_libraries
+                "-lasan"  # <-- need for -fsanitize=address
+                "-lubsan" # <-- need for -fsanitize=undefined
+                #"-ltsan"  # <-- need for -fsanitize=thread
+            )
 
-        _portable_target_trace(${TARGET} "Aggressive compiler check flags: [${_aggressive_check_flags}]")
+            _portable_target_trace(${TARGET} "Aggressive compiler check flags: [${_aggressive_check_flags}]")
 
-        list(APPEND _arg_PRIVATE ${_aggressive_check_flags})
+            list(APPEND _arg_PRIVATE ${_aggressive_check_flags})
 
-        portable_target_link_libraries(${TARGET} PRIVATE ${_link_flags} ${_link_libraries})
-    else()
-        _portable_target_trace(${TARGET} "Aggressive compiler check: supported for GCC only at the moment")
-    endif()
+            portable_target_link_libraries(${TARGET} PRIVATE ${_link_flags} ${_link_libraries})
+        else()
+            _portable_target_trace(${TARGET} "Aggressive compiler check: supported for GCC only at the moment")
+        endif()
+    endif(_arg_AGGRESSIVE_CHECK)
 
     if (_arg_UNPARSED_ARGUMENTS)
         _portable_target_trace(${TARGET} "Default compile options: [${_arg_UNPARSED_ARGUMENTS}]")

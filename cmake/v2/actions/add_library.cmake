@@ -16,7 +16,19 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 # portable_target_add_library(<target>
 #       [SHARED]
 #       [STATIC]
+#       [NO_UNICODE]
+#       [NO_BIGOBJ]
 #       [ALIAS <alias>]
+#
+# NO_UNICODE (MSVC specific option)
+#       Disable UNICODE support.
+#
+# NO_BIGOBJ (MSVC specific option)
+#       Disable increase the number of sections that an object file can contain.
+#       By default `/bigobj` option is set for compiler.
+#       See [https://docs.microsoft.com/en-us/cpp/build/reference
+#           /bigobj-increase-number-of-sections-in-dot-obj-file
+#           ?redirectedfrom=MSDN&view=msvc-160]
 #
 # If neither SHARED nor STATIC is specified, both are set to ON.
 #
@@ -30,8 +42,8 @@ function (portable_target_add_library TARGET)
     portable_target_get_property(STATIC_SUFFIX _static_suffix)
     portable_target_get_property(STATIC_ALIAS_SUFFIX _static_alias_suffix)
 
-    set(boolparm SHARED STATIC)
-    set(singleparm SHARED_ALIAS STATIC_ALIAS)
+    set(boolparm SHARED STATIC NO_UNICODE NO_BIGOBJ)
+    set(singleparm ALIAS)
     set(multiparm)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
@@ -47,6 +59,14 @@ function (portable_target_add_library TARGET)
 
     # Make object files for STATIC and SHARED targets
     add_library(${TARGET}${_objlib_suffix} OBJECT)
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_BIGOBJ)
+        target_compile_options(${TARGET}${_objlib_suffix} PRIVATE "/bigobj")
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_UNICODE)
+        target_compile_definitions(${TARGET}${_objlib_suffix} PRIVATE "/D_UNICODE /DUNICODE")
+    endif()
 
     # Shared libraries need PIC
     # For SHARED and MODULE libraries the POSITION_INDEPENDENT_CODE target property
@@ -76,4 +96,3 @@ function (portable_target_add_library TARGET)
         target_compile_definitions(${TARGET} PUBLIC "-DANDROID=1")
     endif()
 endfunction(portable_target_add_library)
-

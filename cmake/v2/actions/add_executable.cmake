@@ -13,7 +13,20 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 #
 # Usage:
 #
-# portable_target_add_executable(<name>)
+# portable_target_add_executable(<name>
+#   [NO_UNICODE]
+#   [NO_BIGOBJ]
+#   source...)
+#
+# NO_UNICODE (MSVC specific option)
+#       Disable UNICODE support.
+#
+# NO_BIGOBJ (MSVC specific option)
+#       Disable increase the number of sections that an object file can contain.
+#       By default `/bigobj` option is set for compiler.
+#       See [https://docs.microsoft.com/en-us/cpp/build/reference
+#           /bigobj-increase-number-of-sections-in-dot-obj-file
+#           ?redirectedfrom=MSDN&view=msvc-160]
 #
 # NOTE WIN32 option for `add_executable()` must be controled by
 #      CMAKE_WIN32_EXECUTABLE variable.
@@ -28,7 +41,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 function (portable_target_add_executable TARGET)
     _portable_target_set_properties_defaults()
 
-    set(boolparm)
+    set(boolparm NO_UNICODE NO_BIGOBJ)
     set(singleparm)
     set(multiparm SOURCES)
 
@@ -40,7 +53,19 @@ function (portable_target_add_executable TARGET)
 
         # Shared libraries need PIC
         set_property(TARGET ${TARGET} PROPERTY POSITION_INDEPENDENT_CODE 1)
+
+        # Avoid error: undefined reference to '__android_log_write'
+        target_link_libraries(${TARGET} PRIVATE log)
     else()
         add_executable(${TARGET})
     endif()
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_BIGOBJ)
+        target_compile_options(${TARGET} PRIVATE "/bigobj")
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_UNICODE)
+        target_compile_definitions(${TARGET} PRIVATE "/D_UNICODE /DUNICODE")
+    endif()
+
 endfunction(portable_target_add_executable)
