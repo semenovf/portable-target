@@ -17,63 +17,32 @@ function (_target_link_libraries_helper TARGET)
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
     portable_target_get_property(OBJLIB_SUFFIX _objlib_suffix)
-    portable_target_get_property(STATIC_SUFFIX _static_suffix)
 
-    set(_primary_target ${TARGET})
+    set(_real_target ${TARGET})
 
-    # NOTE There is no matter what type of target.
-    # So it is enough to check the existence of the target.
-    if (TARGET ${TARGET}${_static_suffix})
-        if (NOT TARGET ${TARGET})
-            # Only STATIC library was added
-            set(_primary_target ${TARGET}${_static_suffix})
-        else()
-            set(_secondary_target ${TARGET}${_static_suffix})
-        endif()
-    endif()
-
+    # Check TARGET is library (SHARED and/or STATIC)
     if (TARGET ${TARGET}${_objlib_suffix})
-        set(_objlib_target ${TARGET}${_objlib_suffix})
+        set(_real_target ${TARGET}${_objlib_suffix})
+        get_target_property(_target_type ${_real_target} TYPE)
 
-        if (_arg_INTERFACE)
-            target_link_libraries(${TARGET}${_objlib_suffix} PRIVATE ${_arg_INTERFACE})
-        endif()
-
-        if (_arg_PUBLIC)
-            target_link_libraries(${TARGET}${_objlib_suffix} PRIVATE ${_arg_PUBLIC})
-        endif()
-
-        if (_arg_PRIVATE)
-            target_link_libraries(${TARGET}${_objlib_suffix} PRIVATE ${_arg_PRIVATE})
+        if (NOT _target_type STREQUAL "OBJECT_LIBRARY")
+            _portable_target_error(${TARGET} "Expected OBJECT TYPE for '${TARGET}${_objlib_suffix}'")
         endif()
     endif()
 
     if (_arg_INTERFACE)
         _portable_target_trace(${TARGET} "Interface libraries: [${_arg_INTERFACE}]")
-
-        target_link_libraries(${_primary_target} INTERFACE ${_arg_INTERFACE})
-
-        if (_secondary_target)
-            target_link_libraries(${_secondary_target} INTERFACE ${_arg_INTERFACE})
-        endif()
+        target_link_libraries(${_real_target} INTERFACE ${_arg_INTERFACE})
     endif()
 
     if (_arg_PUBLIC)
         _portable_target_trace(${TARGET} "Public libraries: [${_arg_PUBLIC}]")
-        target_link_libraries(${_primary_target} PUBLIC ${_arg_PUBLIC})
-
-        if (_secondary_target)
-            target_link_libraries(${_secondary_target} PUBLIC ${_arg_PUBLIC})
-        endif()
+        target_link_libraries(${_real_target} PUBLIC ${_arg_PUBLIC})
     endif()
 
     if (_arg_PRIVATE)
         _portable_target_trace(${TARGET} "Private libraries: [${_arg_PRIVATE}]")
-        target_link_libraries(${_primary_target} PRIVATE ${_arg_PRIVATE})
-
-        if (_secondary_target)
-            target_link_libraries(${_secondary_target} PRIVATE ${_arg_PRIVATE})
-        endif()
+        target_link_libraries(${_real_target} PRIVATE ${_arg_PRIVATE})
     endif()
 endfunction(_target_link_libraries_helper)
 

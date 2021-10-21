@@ -17,6 +17,7 @@ function (_target_compile_options_helper TARGET)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
+    portable_target_get_property(OBJLIB_SUFFIX _objlib_suffix)
     set(_real_target ${TARGET})
 
     # Check TARGET is library (SHARED and/or STATIC)
