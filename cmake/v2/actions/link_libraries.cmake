@@ -16,6 +16,7 @@ function (_target_link_libraries_helper TARGET)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
+    portable_target_get_property(OBJLIB_SUFFIX _objlib_suffix)
     portable_target_get_property(STATIC_SUFFIX _static_suffix)
 
     set(_primary_target ${TARGET})
@@ -31,8 +32,25 @@ function (_target_link_libraries_helper TARGET)
         endif()
     endif()
 
+    if (TARGET ${TARGET}${_objlib_suffix})
+        set(_objlib_target ${TARGET}${_objlib_suffix})
+
+        if (_arg_INTERFACE)
+            target_link_libraries(${TARGET}${_objlib_suffix} PRIVATE ${_arg_INTERFACE})
+        endif()
+
+        if (_arg_PUBLIC)
+            target_link_libraries(${TARGET}${_objlib_suffix} PRIVATE ${_arg_PUBLIC})
+        endif()
+
+        if (_arg_PRIVATE)
+            target_link_libraries(${TARGET}${_objlib_suffix} PRIVATE ${_arg_PRIVATE})
+        endif()
+    endif()
+
     if (_arg_INTERFACE)
         _portable_target_trace(${TARGET} "Interface libraries: [${_arg_INTERFACE}]")
+
         target_link_libraries(${_primary_target} INTERFACE ${_arg_INTERFACE})
 
         if (_secondary_target)
