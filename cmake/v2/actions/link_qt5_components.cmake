@@ -46,7 +46,9 @@ function (portable_target_link_qt5_components TARGET)
     portable_target_get_property(STATIC_SUFFIX _static_suffix)
 
     # Automatically link Qt executables to qtmain target on Windows
-    cmake_policy(SET CMP0020 NEW)
+    if (POLICY CMP0020)
+        cmake_policy(SET CMP0020 NEW)
+    endif()
 
     set(_primary_target ${TARGET})
 
