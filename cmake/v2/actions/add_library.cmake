@@ -19,6 +19,8 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 #       [NO_UNICODE]
 #       [NO_BIGOBJ]
 #       [ALIAS <alias>]
+#       [EXPORT_DEF <export_def>]
+#       [STATIC_DEF <static_def>]
 #
 # NO_UNICODE (MSVC specific option)
 #       Disable UNICODE support.
