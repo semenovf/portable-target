@@ -62,4 +62,19 @@ function (portable_target_definitions TARGET)
         _portable_target_trace(${_real_target} "Private definitions: [${_arg_PRIVATE}]")
         target_compile_definitions(${_real_target} PRIVATE ${_arg_PRIVATE})
     endif()
+
+    if (_arg_UNPARSED_ARGUMENTS)
+        _portable_target_trace(${_real_target} "Default definitions: [${_arg_UNPARSED_ARGUMENTS}]")
+
+        if (_target_type STREQUAL "EXECUTABLE"
+                OR _target_type STREQUAL "STATIC_LIBRARY"
+                OR _target_type STREQUAL "SHARED_LIBRARY")
+            target_compile_definitions(${_real_target} PRIVATE ${_arg_UNPARSED_ARGUMENTS})
+        elseif(_target_type STREQUAL "INTERFACE_LIBRARY")
+            target_compile_definitions(${_real_target} INTERFACE ${_arg_UNPARSED_ARGUMENTS})
+        else()
+            target_compile_definitions(${_real_target} PRIVATE ${_arg_UNPARSED_ARGUMENTS})
+        endif()
+    endif()
+
 endfunction(portable_target_definitions)

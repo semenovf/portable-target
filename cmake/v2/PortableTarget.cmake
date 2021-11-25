@@ -41,7 +41,7 @@ function (portable_target ACTION FIRST_ARG)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
-    _portable_target_trace(${TARGET} "Action: [${ACTION}]")
+    #_portable_target_trace(${TARGET} "Action: [${ACTION}]")
 
     if (ACTION STREQUAL "SET")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/properties.cmake)
