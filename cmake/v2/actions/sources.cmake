@@ -5,6 +5,7 @@
 #
 # Changelog:
 #      2021.09.16 Initial version.
+#      2021.11.25 Refactored totally.
 ###############################################################################
 cmake_minimum_required(VERSION 3.11)
 include(${CMAKE_CURRENT_LIST_DIR}/../Functions.cmake)
@@ -19,19 +20,16 @@ cmake_policy(SET CMP0076 NEW) # Since version 3.13.
 #
 # Usage:
 #
-# portable_target_sources(<target> sources...
-#   [INTERFACE sources...]
-#   [PUBLIC sources...]
-#   [PRIVATE sources...])
+# portable_target_sources(<target> sources...)
 #
 function (portable_target_sources TARGET)
     portable_target_get_property(OBJLIB_SUFFIX _objlib_suffix)
-
-    set(boolparm)
-    set(singleparm)
-    set(multiparm INTERFACE PUBLIC PRIVATE)
-
-    cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
+#
+#     set(boolparm)
+#     set(singleparm)
+#     set(multiparm INTERFACE PUBLIC PRIVATE)
+#
+#     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
     set(_real_target ${TARGET})
 
@@ -54,32 +52,6 @@ function (portable_target_sources TARGET)
         endif()
     endif()
 
-    if (_arg_INTERFACE)
-        _portable_target_trace(${_real_target} "Interface sources: [${_arg_INTERFACE}]")
-        target_sources(${_real_target} INTERFACE ${_arg_INTERFACE})
-    endif()
-
-    if (_arg_PUBLIC)
-        _portable_target_trace(${_real_target} "Public sources: [${_arg_PUBLIC}]")
-        target_sources(${_real_target} PUBLIC ${_arg_PUBLIC})
-    endif()
-
-    if (_arg_PRIVATE)
-        _portable_target_trace(${_real_target} "Private sources: [${_arg_PRIVATE}]")
-        target_sources(${_real_target} PRIVATE ${_arg_PRIVATE})
-    endif()
-
-    if (_arg_UNPARSED_ARGUMENTS)
-        _portable_target_trace(${_real_target} "Default sources: [${_arg_UNPARSED_ARGUMENTS}]")
-
-        if (_target_type STREQUAL "EXECUTABLE"
-                OR _target_type STREQUAL "STATIC_LIBRARY"
-                OR _target_type STREQUAL "SHARED_LIBRARY")
-            target_sources(${_real_target} PRIVATE ${_arg_UNPARSED_ARGUMENTS})
-        elseif(_target_type STREQUAL "INTERFACE_LIBRARY")
-            target_sources(${_real_target} INTERFACE ${_arg_UNPARSED_ARGUMENTS})
-        else()
-            target_sources(${_real_target} PRIVATE ${_arg_UNPARSED_ARGUMENTS})
-        endif()
-    endif()
+    _portable_target_trace(${_real_target} "Sources: [${_arg_UNPARSED_ARGUMENTS}]")
+    target_sources(${_real_target} PRIVATE ${_arg_UNPARSED_ARGUMENTS})
 endfunction(portable_target_sources)
