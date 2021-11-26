@@ -46,25 +46,24 @@ function (_compile_options_helper TARGET)
         _portable_target_trace(${TARGET} "INTERFACE options: [${_arg_INTERFACE}]")
         target_compile_options(${TARGET} INTERFACE ${_arg_INTERFACE})
 
-        if (TARGET _objlib_target)
+        if (_objlib_target AND TARGET ${_objlib_target})
             target_compile_options(${_objlib_target} PRIVATE ${_arg_INTERFACE})
         endif()
 
-        if (TARGET _static_target)
+        if (_static_target AND TARGET ${_static_target})
             target_compile_options(${_static_target} INTERFACE ${_arg_INTERFACE})
         endif()
-
     endif()
 
     if (_arg_PUBLIC)
         _portable_target_trace(${TARGET} "PUBLIC options: [${_arg_PUBLIC}]")
         target_compile_options(${TARGET} PUBLIC ${_arg_PUBLIC})
 
-        if (TARGET _objlib_target)
+        if (_objlib_target AND TARGET ${_objlib_target})
             target_compile_options(${_objlib_target} PRIVATE ${_arg_PUBLIC})
         endif()
 
-        if (TARGET _static_target)
+        if (_static_target AND TARGET ${_static_target})
             target_compile_options(${_static_target} PUBLIC ${_arg_PUBLIC})
         endif()
     endif()
@@ -73,11 +72,11 @@ function (_compile_options_helper TARGET)
         _portable_target_trace(${TARGET} "PRIVATE options: [${_arg_PRIVATE}]")
         target_compile_options(${TARGET} PRIVATE ${_arg_PRIVATE})
 
-        if (TARGET _objlib_target)
+        if (_objlib_target AND TARGET ${_objlib_target})
             target_compile_options(${_objlib_target} PRIVATE ${_arg_PRIVATE})
         endif()
 
-        if (TARGET _static_target)
+        if (_static_target AND TARGET ${_static_target})
             target_compile_options(${_static_target} PRIVATE ${_arg_PRIVATE})
         endif()
     endif()
