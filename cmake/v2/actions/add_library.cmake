@@ -14,13 +14,12 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 # Usage:
 #
 # portable_target_add_library(<target>
+#       [INTERFACE]
 #       [SHARED]
 #       [STATIC]
 #       [NO_UNICODE]
 #       [NO_BIGOBJ]
 #       [ALIAS <alias>]
-#       [EXPORT_DEF <export_def>]
-#       [STATIC_DEF <static_def>]
 #
 # NO_UNICODE (MSVC specific option)
 #       Disable UNICODE support.
@@ -32,7 +31,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 #           /bigobj-increase-number-of-sections-in-dot-obj-file
 #           ?redirectedfrom=MSDN&view=msvc-160]
 #
-# If neither SHARED nor STATIC is specified, both are set to ON.
+# If neither SHARED nor STATIC and no INTERFACE is specified, both are set to ON.
 #
 # NOTE Since cmake v3.11 source files is optional for add_executable/add_library
 #
@@ -44,7 +43,7 @@ function (portable_target_add_library TARGET)
     portable_target_get_property(STATIC_SUFFIX _static_suffix)
     portable_target_get_property(STATIC_ALIAS_SUFFIX _static_alias_suffix)
 
-    set(boolparm SHARED STATIC NO_UNICODE NO_BIGOBJ)
+    set(boolparm SHARED STATIC INTERFACE NO_UNICODE NO_BIGOBJ)
     set(singleparm ALIAS)
     set(multiparm)
 
@@ -59,38 +58,46 @@ function (portable_target_add_library TARGET)
         set(_arg_STATIC OFF)
     endif()
 
-    # Make object files for STATIC and SHARED targets
-    add_library(${TARGET}${_objlib_suffix} OBJECT)
+    if (NOT _arg_INTERFACE)
+        # Make object files for STATIC and SHARED targets
+        add_library(${TARGET}${_objlib_suffix} OBJECT)
 
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_BIGOBJ)
-        target_compile_options(${TARGET}${_objlib_suffix} PRIVATE "/bigobj")
-    endif()
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_BIGOBJ)
+            target_compile_options(${TARGET}${_objlib_suffix} PRIVATE "/bigobj")
+        endif()
 
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_UNICODE)
-        target_compile_definitions(${TARGET}${_objlib_suffix} PRIVATE "/D_UNICODE /DUNICODE")
-    endif()
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_UNICODE)
+            target_compile_definitions(${TARGET}${_objlib_suffix} PRIVATE "/D_UNICODE /DUNICODE")
+        endif()
 
-    # Shared libraries need PIC
-    # For SHARED and MODULE libraries the POSITION_INDEPENDENT_CODE target property
-    # is set to ON automatically, but need for OBJECT type
-    set_target_properties(${TARGET}${_objlib_suffix} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+        # Shared libraries need PIC
+        # For SHARED and MODULE libraries the POSITION_INDEPENDENT_CODE target property
+        # is set to ON automatically, but need for OBJECT type
+        set_target_properties(${TARGET}${_objlib_suffix} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-    if (_arg_SHARED)
-        add_library(${TARGET} SHARED $<TARGET_OBJECTS:${TARGET}${_objlib_suffix}>)
-        set_target_properties(${TARGET} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-    endif()
-
-    if (_arg_STATIC)
-        add_library(${TARGET}${_static_suffix} STATIC $<TARGET_OBJECTS:${TARGET}${_objlib_suffix}>)
-    endif()
-
-    if (_arg_ALIAS)
         if (_arg_SHARED)
-            add_library(${_arg_ALIAS} ALIAS ${TARGET})
+            add_library(${TARGET} SHARED $<TARGET_OBJECTS:${TARGET}${_objlib_suffix}>)
+            set_target_properties(${TARGET} PROPERTIES POSITION_INDEPENDENT_CODE ON)
         endif()
 
         if (_arg_STATIC)
-            add_library(${_arg_ALIAS}${_static_alias_suffix} ALIAS ${TARGET}${_static_suffix})
+            add_library(${TARGET}${_static_suffix} STATIC $<TARGET_OBJECTS:${TARGET}${_objlib_suffix}>)
+        endif()
+
+        if (_arg_ALIAS)
+            if (_arg_SHARED)
+                add_library(${_arg_ALIAS} ALIAS ${TARGET})
+            endif()
+
+            if (_arg_STATIC)
+                add_library(${_arg_ALIAS}${_static_alias_suffix} ALIAS ${TARGET}${_static_suffix})
+            endif()
+        endif()
+    else ()
+        add_library(${TARGET} INTERFACE)
+
+        if (_arg_ALIAS)
+            add_library(${_arg_ALIAS} ALIAS ${TARGET})
         endif()
     endif()
 
