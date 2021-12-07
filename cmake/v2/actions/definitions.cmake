@@ -81,7 +81,7 @@ function (_definitions_helper TARGET)
             target_compile_definitions(${_static_target} PRIVATE ${_arg_PRIVATE})
         endif()
     endif()
-endfunction(_compile_options_helper)
+endfunction(_definitions_helper)
 
 #
 # Usage:
