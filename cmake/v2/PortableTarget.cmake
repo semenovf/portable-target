@@ -35,6 +35,11 @@ include(${_PORTABLE_TARGET_ROOT_DIR}/Functions.cmake)
 # SET                 Set named property
 # GET                 Get named property
 #
+# INCLUDE_PROJECT     Call `include()` method wrapped by function.
+#                     This useful when including `cmake` scripts that contains
+#                    `project` directive to avoid `PROJECT_NAME` variable
+#                     overriding.
+#
 function (portable_target ACTION FIRST_ARG)
     set(boolparm)
     set(singleparm)
@@ -86,6 +91,9 @@ function (portable_target ACTION FIRST_ARG)
     elseif (ACTION STREQUAL "EXPORTS")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/exports.cmake)
         portable_target_exports(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
+    elseif (ACTION STREQUAL "INCLUDE_PROJECT")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/include_project.cmake)
+        portable_target_include_project(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
     else ()
         _portable_target_error("Bad action: [${ACTION}]")
     endif()
