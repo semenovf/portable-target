@@ -20,6 +20,17 @@ function (_portable_target_error TITLE)
 endfunction(_portable_target_error)
 
 ################################################################################
+# _portable_target_warn
+################################################################################
+function (_portable_target_warn TITLE)
+    if (${ARGC} GREATER 1)
+        message(WARNING "*** WARN: portable_target [${TITLE}]: ${ARGV1}")
+    else()
+        message(WARNING "*** WARN: portable_target: ${TITLE}")
+    endif()
+endfunction(_portable_target_warn)
+
+################################################################################
 # _portable_target_status
 ################################################################################
 function (_portable_target_status TITLE)

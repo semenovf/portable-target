@@ -40,6 +40,8 @@ include(${_PORTABLE_TARGET_ROOT_DIR}/Functions.cmake)
 #                    `project` directive to avoid `PROJECT_NAME` variable
 #                     overriding.
 #
+# TEST                Add tests
+#
 function (portable_target ACTION FIRST_ARG)
     set(boolparm)
     set(singleparm)
@@ -70,6 +72,9 @@ function (portable_target ACTION FIRST_ARG)
     elseif (ACTION STREQUAL "ADD_LIBRARY" OR ACTION STREQUAL "LIBRARY")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/add_library.cmake)
         portable_target_add_library(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
+    elseif (ACTION STREQUAL "ADD_TEST")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/add_test.cmake)
+        portable_target_add_test(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
     elseif (ACTION STREQUAL "SOURCES")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/sources.cmake)
         portable_target_sources(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
