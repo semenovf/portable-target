@@ -24,7 +24,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/PortableTarget.cmake)
 set(SOURCES main.cpp main.qrc)
 set(Qt5_COMPONENTS )
 
-portable_target(FileDialog
+portable_target_v1(FileDialog
     Qt5_COMPONENTS
         Core
         Widgets

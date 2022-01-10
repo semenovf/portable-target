@@ -24,7 +24,7 @@ set(QTDEPLOY_JSON_IN_FILE ${CMAKE_CURRENT_LIST_DIR}/qtdeploy.json.in)
 #
 # Usage:
 #
-# portable_target(MyApp
+# portable_target_v1(MyApp
 #       [AGGRESSIVE_COMPILER_CHECK]            # Default is OFF (Global variable PORTABLE_TARGET_AGGRESSIVE_COMPILER_CHECK)
 #       [AUTOMOC_OFF]                          # Default is ON
 #       [AUTOUIC_OFF]                          # Default is ON
@@ -313,7 +313,7 @@ endfunction()
 ################################################################################
 # portable_target
 ################################################################################
-function (portable_target TARGET)
+function (portable_target_v1 TARGET)
     set(boolparm
         AGGRESSIVE_COMPILER_CHECK
         AUTOMOC_OFF
