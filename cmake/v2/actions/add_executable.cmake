@@ -1,7 +1,7 @@
 ################################################################################
 # Copyright (c) 2021 Vladislav Trifochkin
 #
-# This file is part of [portable-target](https://github.com/semenovf/portable-target).
+# This file is part of `portable-target`.
 #
 # Changelog:
 #      2021.09.07 Initial version.
@@ -68,4 +68,13 @@ function (portable_target_add_executable TARGET)
         target_compile_definitions(${TARGET} PRIVATE "/D_UNICODE /DUNICODE")
     endif()
 
+    portable_target_get_property(RUNTIME_OUTPUT_DIRECTORY _output_dir)
+
+    if (_output_dir)
+        _portable_target_trace(${TARGET} "Runtime output directory: [${_output_dir}]")
+
+        set_target_properties(${TARGET}
+            PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${_output_dir}")
+    endif()
 endfunction(portable_target_add_executable)

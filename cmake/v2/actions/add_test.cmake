@@ -1,7 +1,7 @@
 ################################################################################
 # Copyright (c) 2021 Vladislav Trifochkin
 #
-# This file is part of [portable-target](https://github.com/semenovf/portable-target).
+# This file is part of `portable-target`.
 #
 # Changelog:
 #      2021.12.10 Initial version.

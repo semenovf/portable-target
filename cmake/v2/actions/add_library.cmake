@@ -1,7 +1,7 @@
 ################################################################################
 # Copyright (c) 2021 Vladislav Trifochkin
 #
-# This file is part of [portable-target](https://github.com/semenovf/portable-target).
+# This file is part of `portable-target`.
 #
 # Changelog:
 #      2021.09.16 Initial version.
@@ -103,5 +103,26 @@ function (portable_target_add_library TARGET)
 
     if (CMAKE_SYSTEM_NAME STREQUAL "Android")
         target_compile_definitions(${TARGET} PUBLIC "-DANDROID=1")
+    endif()
+
+    # XXX_OUTPUT_DIRECTORY properties not applicable for INTERFACE library.
+    if (NOT _arg_INTERFACE)
+        portable_target_get_property(ARCHIVE_OUTPUT_DIRECTORY _arch_output_dir)
+        portable_target_get_property(LIBRARY_OUTPUT_DIRECTORY _lib_output_dir)
+
+        if (_arch_output_dir AND _arg_STATIC)
+            _portable_target_trace(${TARGET}${_static_suffix} "Archive output directory: [${_arch_output_dir}]")
+
+            set_target_properties(${TARGET}${_static_suffix}
+                PROPERTIES
+                ARCHIVE_OUTPUT_DIRECTORY "${_arch_output_dir}")
+        endif()
+
+        if (_lib_output_dir AND _arg_SHARED)
+            _portable_target_trace(${TARGET} "Library output directory: [${_lib_output_dir}]")
+            set_target_properties(${TARGET}
+                PROPERTIES
+                LIBRARY_OUTPUT_DIRECTORY "${_lib_output_dir}")
+        endif()
     endif()
 endfunction(portable_target_add_library)

@@ -1,7 +1,7 @@
 ################################################################################
 # Copyright (c) 2021 Vladislav Trifochkin
 #
-# This file is part of [portable-target](https://github.com/semenovf/portable-target).
+# This file is part of `portable-target`.
 #
 # Changelog:
 #      2021.09.16 Initial version.
@@ -24,12 +24,12 @@ cmake_policy(SET CMP0076 NEW) # Since version 3.13.
 #
 function (portable_target_sources TARGET)
     portable_target_get_property(OBJLIB_SUFFIX _objlib_suffix)
-#
-#     set(boolparm)
-#     set(singleparm)
-#     set(multiparm INTERFACE PUBLIC PRIVATE)
-#
-#     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
+
+    set(boolparm)
+    set(singleparm)
+    set(multiparm)
+
+    cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
     set(_real_target ${TARGET})
 

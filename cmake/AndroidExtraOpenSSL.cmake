@@ -1,7 +1,7 @@
 ################################################################################
 # Copyright (c) 2019-2021 Vladislav Trifochkin
 #
-# This file is part of [portable-target](https://github.com/semenovf/portable-target).
+# This file is part of `portable-target`.
 #
 # Changelog:
 #      2021.03.06 Initial version (inspired from github.com/KDAB/android_openssl/CMakeLists.txt)

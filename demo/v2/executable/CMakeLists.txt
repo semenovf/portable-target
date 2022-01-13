@@ -26,6 +26,25 @@ portable_target(GET STATIC_SUFFIX _static_suffix)
 portable_target(GET STATIC_ALIAS_SUFFIX _static_alias_suffix)
 portable_target(GET UNDEFINED_VAR _undefined_var "UNDEFINED VALUE")
 
+
+#
+# Workaround for
+# set_target_properties(${target_name}
+#         PROPERTIES
+#         ARCHIVE_OUTPUT_DIRECTORY "${_output_dir}"
+#         LIBRARY_OUTPUT_DIRECTORY "${_output_dir}"
+#         RUNTIME_OUTPUT_DIRECTORY "${_output_dir}")
+if (MSVC)
+    set(_output_dir "${CMAKE_BINARY_DIR}")
+else()
+    set(_output_dir "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}")
+endif()
+
+portable_target(SET ARCHIVE_OUTPUT_DIRECTORY ${_output_dir})
+portable_target(SET LIBRARY_OUTPUT_DIRECTORY ${_output_dir})
+portable_target(SET RUNTIME_OUTPUT_DIRECTORY ${_output_dir})
+portable_target(SET OUTPUT_DIRECTORY ${_output_dir})
+
 _portable_target_trace("OBJLIB_SUFFIX      : [${_objlib_suffix}]")
 _portable_target_trace("STATIC_SUFFIX      : [${_static_suffix}]")
 _portable_target_trace("STATIC_ALIAS_SUFFIX: [${_static_alias_suffix}]")

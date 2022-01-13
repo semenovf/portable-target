@@ -1,7 +1,7 @@
 ################################################################################
 # Copyright (c) 2019-2021 Vladislav Trifochkin
 #
-# This file is part of [portable-target](https://github.com/semenovf/portable-target).
+# This file is part of `portable-target`.
 #
 # Changelog:
 #      2019.12.10 Initial version.
@@ -39,6 +39,8 @@ include(${_PORTABLE_TARGET_ROOT_DIR}/Functions.cmake)
 #                     This useful when including `cmake` scripts that contains
 #                    `project` directive to avoid `PROJECT_NAME` variable
 #                     overriding.
+#
+# ICONS               Build icons library
 #
 # TEST                Add tests
 #
@@ -99,6 +101,9 @@ function (portable_target ACTION FIRST_ARG)
     elseif (ACTION STREQUAL "INCLUDE_PROJECT")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/include_project.cmake)
         portable_target_include_project(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
+    elseif (ACTION STREQUAL "ICONS")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/icons.cmake)
+        portable_target_icons(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
     else ()
         _portable_target_error("Bad action: [${ACTION}]")
     endif()
