@@ -49,12 +49,6 @@ function (portable_target_set_property PROPERTY_NAME PROPERTY_VALUE)
         _portable_target_error("PROPERTY_VALUE must be specified")
     endif()
 
-    if (PROPERTY_NAME STREQUAL "OUTPUT_DIRECTORY")
-        portable_target_set_property(ARCHIVE_OUTPUT_DIRECTORY ${PROPERTY_VALUE})
-        portable_target_set_property(LIBRARY_OUTPUT_DIRECTORY ${PROPERTY_VALUE})
-        portable_target_set_property(RUNTIME_OUTPUT_DIRECTORY ${PROPERTY_VALUE})
-    endif()
-
     set_property(GLOBAL PROPERTY PORTABLE_TARGET_PROP_${PROPERTY_NAME} ${PROPERTY_VALUE})
 endfunction(portable_target_set_property)
 

@@ -16,6 +16,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 # portable_target_add_executable(<name>
 #   [NO_UNICODE]
 #   [NO_BIGOBJ]
+#   [OUTPUT dir]
 #   source...)
 #
 # NO_UNICODE (MSVC specific option)
@@ -42,7 +43,7 @@ function (portable_target_add_executable TARGET)
     _portable_target_set_properties_defaults()
 
     set(boolparm NO_UNICODE NO_BIGOBJ)
-    set(singleparm)
+    set(singleparm OUTPUT)
     set(multiparm SOURCES)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
@@ -68,13 +69,11 @@ function (portable_target_add_executable TARGET)
         target_compile_definitions(${TARGET} PRIVATE "/D_UNICODE /DUNICODE")
     endif()
 
-    portable_target_get_property(RUNTIME_OUTPUT_DIRECTORY _output_dir)
-
-    if (_output_dir)
-        _portable_target_trace(${TARGET} "Runtime output directory: [${_output_dir}]")
+    if (_arg_OUTPUT)
+        _portable_target_trace(${TARGET} "Runtime output directory: [${_arg_OUTPUT}]")
 
         set_target_properties(${TARGET}
             PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY "${_output_dir}")
+            RUNTIME_OUTPUT_DIRECTORY "${_arg_OUTPUT}")
     endif()
 endfunction(portable_target_add_executable)

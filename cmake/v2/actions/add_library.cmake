@@ -19,7 +19,8 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 #       [STATIC]
 #       [NO_UNICODE]
 #       [NO_BIGOBJ]
-#       [ALIAS <alias>]
+#       [ALIAS alias]
+#       [OUTPUT dir]
 #
 # NO_UNICODE (MSVC specific option)
 #       Disable UNICODE support.
@@ -44,7 +45,7 @@ function (portable_target_add_library TARGET)
     portable_target_get_property(STATIC_ALIAS_SUFFIX _static_alias_suffix)
 
     set(boolparm SHARED STATIC INTERFACE NO_UNICODE NO_BIGOBJ)
-    set(singleparm ALIAS)
+    set(singleparm ALIAS OUTPUT)
     set(multiparm)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
@@ -107,22 +108,19 @@ function (portable_target_add_library TARGET)
 
     # XXX_OUTPUT_DIRECTORY properties not applicable for INTERFACE library.
     if (NOT _arg_INTERFACE)
-        portable_target_get_property(ARCHIVE_OUTPUT_DIRECTORY _arch_output_dir)
-        portable_target_get_property(LIBRARY_OUTPUT_DIRECTORY _lib_output_dir)
-
-        if (_arch_output_dir AND _arg_STATIC)
-            _portable_target_trace(${TARGET}${_static_suffix} "Archive output directory: [${_arch_output_dir}]")
+        if (_arg_OUTPUT AND _arg_STATIC)
+            _portable_target_trace(${TARGET}${_static_suffix} "Archive output directory: [${_arg_OUTPUT}]")
 
             set_target_properties(${TARGET}${_static_suffix}
                 PROPERTIES
-                ARCHIVE_OUTPUT_DIRECTORY "${_arch_output_dir}")
+                ARCHIVE_OUTPUT_DIRECTORY "${_arg_OUTPUT}")
         endif()
 
-        if (_lib_output_dir AND _arg_SHARED)
-            _portable_target_trace(${TARGET} "Library output directory: [${_lib_output_dir}]")
+        if (_arg_OUTPUT AND _arg_SHARED)
+            _portable_target_trace(${TARGET} "Library output directory: [${_arg_OUTPUT}]")
             set_target_properties(${TARGET}
                 PROPERTIES
-                LIBRARY_OUTPUT_DIRECTORY "${_lib_output_dir}")
+                LIBRARY_OUTPUT_DIRECTORY "${_arg_OUTPUT}")
         endif()
     endif()
 endfunction(portable_target_add_library)

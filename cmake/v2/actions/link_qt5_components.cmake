@@ -203,18 +203,17 @@ function (portable_target_link_qt5_components TARGET)
     _portable_target_trace(${TARGET} "AUTORCC: [${_arg_AUTORCC}]")
     _portable_target_trace(${TARGET} "AUTOUIC: [${_arg_AUTOUIC}]")
 
-    set_target_properties(${TARGET}
+    portable_target_get_property(OBJLIB_SUFFIX _objlib_suffix)
+
+    if (TARGET ${TARGET}${_objlib_suffix})
+        set(_target ${TARGET}${_objlib_suffix})
+    else()
+        set(_target ${TARGET})
+    endif()
+
+    set_target_properties(${_target}
         PROPERTIES
             AUTOMOC ${_arg_AUTOMOC}
             AUTORCC ${_arg_AUTORCC}
             AUTOUIC ${_arg_AUTOUIC})
-
-    if (_secondary_target)
-        set_target_properties(${_secondary_target}
-            PROPERTIES
-                AUTOMOC ${_arg_AUTOMOC}
-                AUTORCC ${_arg_AUTORCC}
-                AUTOUIC ${_arg_AUTOUIC})
-    endif()
-
 endfunction(portable_target_link_qt5_components)
