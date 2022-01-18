@@ -41,7 +41,7 @@ include(${_PORTABLE_TARGET_ROOT_DIR}/Functions.cmake)
 #                     overriding.
 #
 # ICONS               Build icons library
-#
+# TRANSLATE           Add internationalization support
 # TEST                Add tests
 #
 function (portable_target ACTION FIRST_ARG)
@@ -104,6 +104,9 @@ function (portable_target ACTION FIRST_ARG)
     elseif (ACTION STREQUAL "ICONS")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/icons.cmake)
         portable_target_icons(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
+    elseif (ACTION STREQUAL "TRANSLATE")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/translate.cmake)
+        portable_target_translate(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
     else ()
         _portable_target_error("Bad action: [${ACTION}]")
     endif()
