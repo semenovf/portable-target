@@ -9,6 +9,7 @@
 cmake_minimum_required(VERSION 3.11)
 include(${CMAKE_CURRENT_LIST_DIR}/../Functions.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/compile_options.cmake)
 
 #
 # Usage:
@@ -50,13 +51,15 @@ function (portable_target_add_library TARGET)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
+    # Explicit STATIC keyword do not ignore on Android
     if (NOT _arg_SHARED AND NOT _arg_STATIC)
         set(_arg_SHARED ON)
-        set(_arg_STATIC ON)
-    endif()
 
-    if (CMAKE_SYSTEM_NAME STREQUAL "Android")
-        set(_arg_STATIC OFF)
+        if (CMAKE_SYSTEM_NAME STREQUAL "Android")
+            set(_arg_STATIC OFF)
+        else()
+            set(_arg_STATIC ON)
+        endif()
     endif()
 
     if (NOT _arg_INTERFACE)
@@ -103,7 +106,7 @@ function (portable_target_add_library TARGET)
     endif()
 
     if (CMAKE_SYSTEM_NAME STREQUAL "Android")
-        target_compile_definitions(${TARGET} PUBLIC "-DANDROID=1")
+        portable_target_compile_options(${TARGET} "-DANDROID=1")
     endif()
 
     # XXX_OUTPUT_DIRECTORY properties not applicable for INTERFACE library.

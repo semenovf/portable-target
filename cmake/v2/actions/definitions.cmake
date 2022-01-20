@@ -43,8 +43,11 @@ function (_definitions_helper TARGET)
     endif()
 
     if (_arg_INTERFACE)
-        _portable_target_trace(${TARGET} "Interface compile options: [${_arg_INTERFACE}]")
-        target_compile_definitions(${TARGET} INTERFACE ${_arg_INTERFACE})
+        _portable_target_trace(${TARGET} "INTERFACE compile options: [${_arg_INTERFACE}]")
+
+        if (TARGET ${TARGET})
+            target_compile_definitions(${TARGET} INTERFACE ${_arg_INTERFACE})
+        endif()
 
         if (_objlib_target AND TARGET ${_objlib_target})
             target_compile_definitions(${_objlib_target} PRIVATE ${_arg_INTERFACE})
@@ -53,12 +56,14 @@ function (_definitions_helper TARGET)
         if (_static_target AND TARGET ${_static_target})
             target_compile_definitions(${_static_target} INTERFACE ${_arg_INTERFACE})
         endif()
-
     endif()
 
     if (_arg_PUBLIC)
-        _portable_target_trace(${TARGET} "Public compile options: [${_arg_PUBLIC}]")
-        target_compile_definitions(${TARGET} PUBLIC ${_arg_PUBLIC})
+        _portable_target_trace(${TARGET} "PUBLIC compile options: [${_arg_PUBLIC}]")
+
+        if (TARGET ${TARGET})
+            target_compile_definitions(${TARGET} PUBLIC ${_arg_PUBLIC})
+        endif()
 
         if (_objlib_target AND TARGET ${_objlib_target})
             target_compile_definitions(${_objlib_target} PRIVATE ${_arg_PUBLIC})
@@ -70,8 +75,11 @@ function (_definitions_helper TARGET)
     endif()
 
     if (_arg_PRIVATE)
-        _portable_target_trace(${TARGET} "Private compile options: [${_arg_PRIVATE}]")
-        target_compile_definitions(${TARGET} PRIVATE ${_arg_PRIVATE})
+        _portable_target_trace(${TARGET} "PRIVATE compile options: [${_arg_PRIVATE}]")
+
+        if (TARGET ${TARGET})
+            target_compile_definitions(${TARGET} PRIVATE ${_arg_PRIVATE})
+        endif()
 
         if (_objlib_target AND TARGET ${_objlib_target})
             target_compile_definitions(${_objlib_target} PRIVATE ${_arg_PRIVATE})
@@ -98,13 +106,20 @@ function (portable_target_definitions TARGET)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
+    portable_target_get_property(OBJLIB_SUFFIX _objlib_suffix)
+
     if (_arg_UNPARSED_ARGUMENTS)
-        get_target_property(_target_type ${TARGET} TYPE)
+        if (TARGET ${TARGET}${_objlib_suffix})
+            get_target_property(_target_type ${TARGET}${_objlib_suffix} TYPE)
+        else()
+            get_target_property(_target_type ${TARGET} TYPE)
+        endif()
 
         if (_target_type STREQUAL "EXECUTABLE")
             list(APPEND _arg_PRIVATE ${_arg_UNPARSED_ARGUMENTS})
-        elseif(_target_type STREQUAL "STATIC_LIBRARY"
-                OR _target_type STREQUAL "SHARED_LIBRARY")
+        elseif(_target_type STREQUAL "OBJECT_LIBRARY"
+                OR _target_type STREQUAL "SHARED_LIBRARY"
+                OR _target_type STREQUAL "STATIC_LIBRARY")
             list(APPEND _arg_PUBLIC ${_arg_UNPARSED_ARGUMENTS})
         elseif(_target_type STREQUAL "INTERFACE_LIBRARY")
             list(APPEND _arg_INTERFACE ${_arg_UNPARSED_ARGUMENTS})

@@ -452,7 +452,7 @@ function (portable_target_v1 TARGET)
         endforeach()
     endif()
 
-    if (ANDROID)
+    if (ANDROID AND NOT _arg_STATIC)
         add_library(${TARGET} SHARED ${_arg_SOURCES})
         target_compile_definitions(${TARGET} PRIVATE ANDROID)
 
