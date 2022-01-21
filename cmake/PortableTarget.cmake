@@ -141,7 +141,17 @@ function (_portable_apk TARGET SOURCE_TARGET)
         set(ANDROID_APP_IS_DEBUGGABLE "true")
     else()
         set(ANDROID_APP_IS_DEBUGGABLE "false")
+        #set(SIGN_OPTIONS --release)
+        #set(SIGN_OPTIONS --release --jarsigner --sign /home/wladt/TacticalPad2Cert.keystore --storepass 12345678 --keypass 12345678)
     endif()
+
+    # TODO check if the apk must be signed
+#     if(ARG_KEYSTORE)
+#         set(SIGN_OPTIONS --release --sign ${ARG_KEYSTORE} --tsa http://timestamp.digicert.com)
+#         if(ARG_KEYSTORE_PASSWORD)
+#             set(SIGN_OPTIONS ${SIGN_OPTIONS} --storepass ${ARG_KEYSTORE_PASSWORD})
+#         endif()
+#     endif()
 
     # Set the list of dependant libraries
     if (_arg_DEPENDS OR _arg_SSL_EXTRA_LIBS)
@@ -246,16 +256,6 @@ function (_portable_apk TARGET SOURCE_TARGET)
     file(GENERATE
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json
         INPUT ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json.in)
-
-    set(SIGN_OPTIONS)
-
-    # TODO check if the apk must be signed
-#     if(ARG_KEYSTORE)
-#         set(SIGN_OPTIONS --release --sign ${ARG_KEYSTORE} --tsa http://timestamp.digicert.com)
-#         if(ARG_KEYSTORE_PASSWORD)
-#             set(SIGN_OPTIONS ${SIGN_OPTIONS} --storepass ${ARG_KEYSTORE_PASSWORD})
-#         endif()
-#     endif()
 
     # There are two options for `androiddeployqt` related to installation:
     #   --install (will be called sequentially `adb uninstall` and `adb install -r`)

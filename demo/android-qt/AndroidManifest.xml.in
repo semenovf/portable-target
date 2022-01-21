@@ -37,7 +37,6 @@
         android:allowTaskReparenting="false"
         android:allowBackup="true"
         android:allowClearUserData="true"
-        android:debuggable="@ANDROID_APP_IS_DEBUGGABLE@"
         android:enabled="true"
         android:hasCode="true"
         android:hardwareAccelerated="true"

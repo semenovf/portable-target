@@ -32,12 +32,30 @@
             * android:usesCleartextTraffic="true" (API level >= 23)
         These attributes are not applicable:
             * android:banner="drawable resource"
+        ========================================================================
+        Do not set this attribute explicitly (explanation se below)
+            * android:debuggable="@ANDROID_APP_IS_DEBUGGABLE@"
+
+        Error: Avoid hardcoding the debug mode; leaving it out allows debug and
+               release builds to automatically assign one [HardcodedDebugMode]
+
+        android:debuggable="false"
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~
+        Explanation for issues of type "HardcodedDebugMode":
+        It's best to leave out the android:debuggable attribute from the manifest.
+        If you do, then the tools will automatically insert android:debuggable=true
+        when building an APK to debug on an emulator or device. And when you
+        perform a release build, such as Exporting APK, it will automatically set
+        it to false.
+
+        If on the other hand you specify a specific value in the manifest file,
+        then the tools will always use it. This can lead to accidentally publishing
+        your app with debug information.
     -->
     <application
         android:allowTaskReparenting="false"
         android:allowBackup="true"
         android:allowClearUserData="true"
-        android:debuggable="@ANDROID_APP_IS_DEBUGGABLE@"
         android:enabled="true"
         android:hasCode="true"
         android:hardwareAccelerated="true"
