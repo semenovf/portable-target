@@ -161,6 +161,7 @@ _portable_target_status("Android ABI           : ${ANDROID_ABI}")
 _portable_target_status("Android platform      : ${ANDROID_PLATFORM}")
 _portable_target_status("Android STL           : ${ANDROID_STL}")
 _portable_target_status("Android STL path      : ${ANDROID_STL_PATH}")
+_portable_target_status("Strip program         : ${CMAKE_STRIP}")
 
 # Include actual toolchain file
 include(${ANDROID_TOOLCHAIN_FILE})

@@ -219,7 +219,7 @@ function (_portable_apk TARGET SOURCE_TARGET)
     # Generate a manifest from the template
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${_AndroidManifest_xml_in} ${ANDROID_APP_PACKAGE_SOURCE_ROOT}/AndroidManifest.xml @ONLY)
 
-    # Set "useLLVM" parameter in qtdeploy.json to 'false'
+    # Set "useLLVM" parameter in qtdeploy.json to default value 'false'
     set(ANDROID_USE_LLVM "false")
 
     # Set some toolchain variables used by androiddeployqt;
@@ -256,6 +256,30 @@ function (_portable_apk TARGET SOURCE_TARGET)
     file(GENERATE
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json
         INPUT ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json.in)
+
+    # Workaround for `androiddeployqt` bug with `llvm-strip` options.
+    # This bug takes places in Qt5.13.2 and older versions, but is already fixed
+    # in 5.12.9 and 5.15.0 as mentioned in the bug report:
+    # https://bugreports.qt.io/browse/QTBUG-74292.
+    # Let's not distinguish the Qt versions for now and apply this workaround
+    # for `llvm-strip` program in any cases.
+    if (ANDROID_TOOLCHAIN_PREFIX STREQUAL llvm)
+        if (CMAKE_STRIP MATCHES "llvm-strip$")
+            set(_llvm_strip_original "${CMAKE_STRIP}.original")
+
+            if (NOT EXISTS ${_llvm_strip_original})
+                get_filename_component(_llvm_strip_dir ${CMAKE_STRIP} DIRECTORY)
+                get_filename_component(_llvm_strip_filename ${CMAKE_STRIP} NAME)
+
+                file(RENAME ${CMAKE_STRIP} ${_llvm_strip_original})
+                file(WRITE ${CMAKE_BINARY_DIR}/${_llvm_strip_filename}
+                    "#!/usr/bin/env bash\n\n${_llvm_strip_original} \${@//-strip-all/--strip-all}\n")
+                file(COPY ${CMAKE_BINARY_DIR}/${_llvm_strip_filename}
+                    DESTINATION ${_llvm_strip_dir}
+                    FILE_PERMISSIONS OWNER_EXECUTE OWNER_READ OWNER_WRITE)
+            endif()
+        endif()
+    endif()
 
     # There are two options for `androiddeployqt` related to installation:
     #   --install (will be called sequentially `adb uninstall` and `adb install -r`)
