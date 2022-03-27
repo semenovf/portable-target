@@ -12,6 +12,8 @@ include(${CMAKE_CURRENT_LIST_DIR}/include_directories.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/link_libraries.cmake)
 
 #
+# NOTE MUST BE ONE CALL PER PROJECT
+#
 # Usage:
 #
 # portable_target_link_qt5_components(target
@@ -80,6 +82,7 @@ function (portable_target_link_qt5_components TARGET)
         endif()
 
         set(Qt5_DIR "${_arg_Qt5_ROOT}/${_arg_Qt5_PLATFORM}/lib/cmake/Qt5")
+        portable_target_set_property(Qt5_DIR ${Qt5_DIR})
 
         if (NOT EXISTS ${Qt5_DIR})
             _portable_target_error(${TARGET}

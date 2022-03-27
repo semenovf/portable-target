@@ -15,6 +15,10 @@ set(PORTABLE_TARGET__ENABLED TRUE)
 set(_PORTABLE_TARGET_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR})
 include(${_PORTABLE_TARGET_ROOT_DIR}/Functions.cmake)
 
+_portable_target_status(${TARGET} "Cross-compiling     : ${CMAKE_CROSSCOMPILING}")
+_portable_target_status(${TARGET} "CMAKE_CXX_COMPILER  : ${CMAKE_CXX_COMPILER}")
+_portable_target_status(${TARGET} "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}")
+
 #
 # Usage:
 #
@@ -43,6 +47,8 @@ include(${_PORTABLE_TARGET_ROOT_DIR}/Functions.cmake)
 # ICONS               Build icons library
 # TRANSLATE           Add internationalization support
 # TEST                Add tests
+#
+# BUILD_APK           Build Android package
 #
 function (portable_target ACTION FIRST_ARG)
     set(boolparm)
@@ -107,6 +113,9 @@ function (portable_target ACTION FIRST_ARG)
     elseif (ACTION STREQUAL "TRANSLATE")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/translate.cmake)
         portable_target_translate(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
+    elseif (ACTION STREQUAL "BUILD_APK")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/build_apk.cmake)
+        portable_target_build_apk(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
     else ()
         _portable_target_error("Bad action: [${ACTION}]")
     endif()

@@ -67,6 +67,17 @@ function (_portable_apk_error TITLE)
     else()
         message(FATAL_ERROR "*** ERROR: portable_apk: ${TITLE}")
     endif()
+endfunction()
+
+################################################################################
+# _portable_apk_error
+################################################################################
+function (_portable_apk_warn TITLE)
+    if (${ARGC} GREATER 1)
+        message(WARNING "*** WARN: : portable_apk [${TITLE}]: ${ARGV1}")
+    else()
+        message(WARNING "*** WARN: : portable_apk: ${TITLE}")
+    endif()
 
 endfunction()
 
