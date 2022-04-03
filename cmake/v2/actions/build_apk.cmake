@@ -344,13 +344,16 @@ function (portable_target_build_apk TARGET)
     # Will use second method.
     if  (_arg_INSTALL)
         set(INSTALL_OPTIONS --reinstall)
+        set(INSTALL_YESNO "YES")
+    else()
+        set(INSTALL_YESNO "NO")
     endif()
 
     if (_arg_VERBOSE)
         set(VERBOSE "--verbose")
-        set(VERBOSITY "YES")
+        set(VERBOSITY_YESNO "YES")
     else()
-        set(VERBOSITY "NO")
+        set(VERBOSITY_YESNO "NO")
     endif()
 
     set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/android-build/libs/${ANDROID_ABI})
@@ -366,8 +369,8 @@ function (portable_target_build_apk TARGET)
     _portable_apk_status(${TARGET} "Application name        : \"${ANDROID_APP_NAME}\"")
     _portable_apk_status(${TARGET} "Application version     : ${ANDROID_APP_VERSION}")
     _portable_apk_status(${TARGET} "Application version code: ${ANDROID_APP_VERSION_CODE}")
-    _portable_apk_status(${TARGET} "Verbosity output        : ${VERBOSITY} ")
-    _portable_apk_status(${TARGET} "Install APK             : ${_arg_INSTALL}")
+    _portable_apk_status(${TARGET} "Verbosity output        : ${VERBOSITY_YESNO}")
+    _portable_apk_status(${TARGET} "Install APK             : ${INSTALL_YESNO}")
 
     #---------------------------------------------------------------------------
     # Create a custom command that will run the androiddeployqt utility
