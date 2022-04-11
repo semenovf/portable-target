@@ -42,7 +42,7 @@ function (_link_libraries_helper TARGET)
     endif()
 
     if (_arg_INTERFACE)
-        _portable_target_trace(${TARGET} "INTERFACE include dirs: [${_arg_INTERFACE}]")
+        _portable_target_trace(${TARGET} "INTERFACE link libs: [${_arg_INTERFACE}]")
 
         if (TARGET ${TARGET})
             target_link_libraries(${TARGET} INTERFACE ${_arg_INTERFACE})
@@ -58,7 +58,7 @@ function (_link_libraries_helper TARGET)
     endif()
 
     if (_arg_PUBLIC)
-        _portable_target_trace(${TARGET} "PUBLIC include dirs: [${_arg_PUBLIC}]")
+        _portable_target_trace(${TARGET} "PUBLIC link libs: [${_arg_PUBLIC}]")
 
         if (TARGET ${TARGET})
             target_link_libraries(${TARGET} PUBLIC ${_arg_PUBLIC})
@@ -74,7 +74,7 @@ function (_link_libraries_helper TARGET)
     endif()
 
     if (_arg_PRIVATE)
-        _portable_target_trace(${TARGET} "PRIVATE include dirs: [${_arg_PRIVATE}]")
+        _portable_target_trace(${TARGET} "PRIVATE link libs: [${_arg_PRIVATE}]")
 
         if (TARGET ${TARGET})
             target_link_libraries(${TARGET} PRIVATE ${_arg_PRIVATE})
