@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 'translation' '1.0'\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-06-09 12:25+0500\n"
-"PO-Revision-Date: 2022-06-09 11:24+0500\n"
+"POT-Creation-Date: 2022-06-09 10:08+0500\n"
+"PO-Revision-Date: 2022-06-08 10:45+0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: ru\n"
@@ -17,20 +17,16 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Poedit 3.1\n"
+"X-Generator: Poedit 3.0.1\n"
 
-#: main.cpp:41
-msgid "Demo"
-msgstr "Демо"
-
-#: main.cpp:66
-msgid "Hello, World!"
-msgstr ""
-
-#: main.cpp:67 main.cpp:68 main.cpp:69 main.cpp:70 main.cpp:71
+#: main.cpp:36
 #, c-format
-msgid "%d day left\n"
-msgid_plural "%d days left\n"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgid "Hello, World!\n"
+msgstr "Привет, Мир !\n"
+
+#, c-format
+#~ msgid "%d day left\n"
+#~ msgid_plural "%d days left\n"
+#~ msgstr[0] "%d день остался\n"
+#~ msgstr[1] "%d дня осталось\n"
+#~ msgstr[2] "%d дней осталось\n"
