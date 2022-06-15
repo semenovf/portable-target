@@ -33,11 +33,16 @@ _portable_target_status(${TARGET} "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}
 # LIBRARY             Add both shared and static (with '-static' suffix by default)
 #                     libraries, or shared library only for Android).
 #
-# DEFINITIONS         Add compile defintions (see target_compile_definitions)
-# INCLUDE_DIRS        Add include directories (see target_include_directories)
+# DEFINITIONS         Add compile defintions (see target_compile_definitions).
+# INCLUDE_DIRS        Add include directories (see target_include_directories).
 #
-# SET                 Set named property
-# GET                 Get named property
+# LINK                Link with specified libraries.
+# LINK_QT5_COMPONENTS Link with Qt5 components.
+# LINK_PROTOBUF       Genarate sources and link with PROTOBUF library.
+# LINK_GRPC           Genarate sources and link with gRPC library.
+
+# SET                 Set named property.
+# GET                 Get named property.
 #
 # INCLUDE_PROJECT     Call `include()` method wrapped by function.
 #                     This useful when including `cmake` scripts that contains
@@ -101,6 +106,12 @@ function (portable_target ACTION FIRST_ARG)
     elseif (ACTION STREQUAL "LINK_QT5_COMPONENTS")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/link_qt5_components.cmake)
         portable_target_link_qt5_components(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
+    elseif (ACTION STREQUAL "LINK_PROTOBUF")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/link_grpc.cmake)
+        portable_target_link_grpc(${FIRST_ARG} PROTOBUF_ONLY ${_arg_UNPARSED_ARGUMENTS})
+    elseif (ACTION STREQUAL "LINK_GRPC")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/link_grpc.cmake)
+        portable_target_link_grpc(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
     elseif (ACTION STREQUAL "EXPORTS")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/exports.cmake)
         portable_target_exports(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
