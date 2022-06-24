@@ -11,14 +11,15 @@ include(${CMAKE_CURRENT_LIST_DIR}/../Functions.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/compile_options.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/include_directories.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/link_libraries.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/sources.cmake)
 
-find_program(PROTOC_BIN protoc)
+find_program(SYSTEM_PROTOC_BIN protoc)
 
 #
 # Usage:
 #
-# portable_target_link_grpc (target
+# portable_target_link_protobuf (target
 #   [DLL_EXPORT_DECL string]
 #   [DLL_EXPORT_HEADER path]
 #   [PROTOC_BIN path]
@@ -27,8 +28,8 @@ find_program(PROTOC_BIN protoc)
 #   OUTPUT_DIR dir                # Base output directory
 #   SOURCES sources)              # Source file names
 #
-function (portable_target_link_grpc TARGET)
-    set(boolparm PROTOBUF_ONLY)
+function (portable_target_link_protobuf TARGET)
+    set(boolparm ENABLE_GRPC)
     set(singleparm
         DLL_EXPORT_DECL
         DLL_EXPORT_HEADER
@@ -45,29 +46,64 @@ function (portable_target_link_grpc TARGET)
     endif()
 
     if (NOT _arg_PROTOC_BIN)
-        if (PROTOC_BIN)
-            set(_arg_PROTOC_BIN ${PROTOC_BIN})
+        if (TARGET protoc)
+            set(_arg_PROTOC_BIN $<TARGET_FILE:protoc>)
+            _portable_target_status(${TARGET} "`protoc` location: used target specific path")
+            add_dependencies(${TARGET} protoc)
         else()
-            _portable_target_error(${TARGET} "`protoc` program not found and must be specified explicitly by `PROTOC_BIN` option")
+            if (SYSTEM_PROTOC_BIN)
+                if (EXISTS ${SYSTEM_PROTOC_BIN})
+                    set(_arg_PROTOC_BIN ${SYSTEM_PROTOC_BIN})
+                    _portable_target_status(${TARGET} "`protoc` location: ${_arg_PROTOC_BIN}")
+                else ()
+                    _portable_target_error(${TARGET} "`protoc` program not found at: ${SYSTEM_PROTOC_BIN}")
+                endif()
+            else()
+                _portable_target_error(${TARGET} "`protoc` not set, can be specified by `PROTOC_BIN` option")
+            endif()
         endif()
     endif()
 
-    if (EXISTS ${_arg_PROTOC_BIN})
-        _portable_target_status(${TARGET} "`protoc` location: ${_arg_PROTOC_BIN}")
-    else()
-        _portable_target_error(${TARGET} "`protoc` program not found at: ${_arg_PROTOC_BIN}")
+    if (TARGET protobuf)
+        portable_target_link_libraries(${TARGET} protobuf)
+        _portable_target_status(${TARGET} "Using `protobuf` TARGET for protobuf library")
+        portable_target_link_libraries(${TARGET} protobuf)
+    elseif(TARGET libprotobuf)
+        portable_target_link_libraries(${TARGET} libprotobuf)
+        _portable_target_status(${TARGET} "Using `libprotobuf` TARGET for protobuf library")
+        portable_target_link_libraries(${TARGET} libprotobuf)
+    else ()
+        find_package(Protobuf REQUIRED)
+
+        if (PROTOBUF_FOUND)
+            portable_target_link_libraries(${TARGET} ${PROTOBUF_LIBRARY})
+            portable_target_include_directories(${TARGET} ${PROTOBUF_INCLUDE_DIRS})
+        else ()
+            _portable_target_error(${TARGET} "`protobuf` not found")
+        endif()
+
+        _portable_target_status(${TARGET} "Using external package for protobuf library")
     endif()
 
-    if (NOT _arg_PROTOBUF_ONLY)
+    if (_arg_ENABLE_GRPC)
         if (NOT _arg_CPP_PLUGIN)
-            _portable_target_error(${TARGET} "C++ plugin must be specified by `CPP_PLUGIN` option")
+            if (TARGET grpc_cpp_plugin)
+                set(_arg_CPP_PLUGIN $<TARGET_FILE:grpc_cpp_plugin>)
+                _portable_target_status(${TARGET} "Using `grpc_cpp_plugin` TARGET for gRPC C++ plugin")
+            else ()
+                _portable_target_error(${TARGET} "gRPC C++ plugin not set, can be specified by `CPP_PLUGIN` option")
+            endif()
+        else ()
+            if (EXISTS ${_arg_CPP_PLUGIN})
+                _portable_target_status(${TARGET} "gRPC C++ plugin location: ${_arg_CPP_PLUGIN}")
+            else ()
+                _portable_target_error(${TARGET} "gRPC C++ plugin not found at: ${_arg_CPP_PLUGIN}")
+            endif()
         endif()
 
-        if (EXISTS ${_arg_CPP_PLUGIN})
-            _portable_target_status(${TARGET} "C++ plugin location: ${_arg_CPP_PLUGIN}")
-        else()
-            _portable_target_error(${TARGET} "C++ plugin not found at: ${_arg_CPP_PLUGIN}")
-        endif()
+        # Note: gRPC libraries with dependences:
+        #       grpc++_reflection grpc gpr address_sorting cares protobuf z
+        portable_target_link_libraries(${TARGET} grpc++)
     endif()
 
     if (NOT _arg_PROTO_PATH)
@@ -100,7 +136,7 @@ function (portable_target_link_grpc TARGET)
             _portable_target_error(${TARGET} "Proto file not found: ${_src}")
         endif()
 
-        if (NOT _arg_PROTOBUF_ONLY)
+        if (_arg_ENABLE_GRPC)
             list(APPEND _grpc_CPP_SOURCES "${_arg_OUTPUT_DIR}/${_basename}.grpc.pb.cc")
             list(APPEND _grpc_CPP_SOURCES "${_arg_OUTPUT_DIR}/${_basename}.grpc.pb.h")
         endif()
@@ -112,7 +148,7 @@ function (portable_target_link_grpc TARGET)
     ################################################################################
     # Generate gRPC-specific source codes
     ################################################################################
-    if (NOT _arg_PROTOBUF_ONLY)
+    if (_arg_ENABLE_GRPC)
         list(APPEND _protoc_OPTS "--grpc_out=\"${_arg_OUTPUT_DIR}\"")
         list(APPEND _protoc_OPTS "--plugin=protoc-gen-grpc=\"${_arg_CPP_PLUGIN}\"")
         list(APPEND _protoc_OPTS "--proto_path=\"${_arg_PROTO_PATH}\"")
@@ -154,12 +190,4 @@ function (portable_target_link_grpc TARGET)
             portable_target_compile_options(${TARGET} -include;${_arg_DLL_EXPORT_HEADER})
         endif()
     endif()
-
-    if (NOT _arg_PROTOBUF_ONLY)
-        # Note: gRPC libraries with dependences:
-        #       grpc++_reflection grpc gpr address_sorting cares protobuf z
-        portable_target_link_libraries(${TARGET} grpc++)
-    else()
-        portable_target_link_libraries(${TARGET} protobuf)
-    endif()
-endfunction(portable_target_link_grpc)
+endfunction(portable_target_link_protobuf)
