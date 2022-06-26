@@ -8,13 +8,15 @@
 ###############################################################################
 cmake_minimum_required(VERSION 3.11)
 include(${CMAKE_CURRENT_LIST_DIR}/../Functions.cmake)
-include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/category.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/compile_options.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 
 #
 # Usage:
 #
 # portable_target_add_library(<target>
+#       [CATEGORIES category...]
 #       [INTERFACE]
 #       [SHARED]
 #       [STATIC]
@@ -22,6 +24,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/compile_options.cmake)
 #       [NO_BIGOBJ]
 #       [ALIAS alias]
 #       [OUTPUT dir]
+#       [COMPONENT name])
 #
 # NO_UNICODE (MSVC specific option)
 #       Disable UNICODE support.
@@ -32,6 +35,10 @@ include(${CMAKE_CURRENT_LIST_DIR}/compile_options.cmake)
 #       See [https://docs.microsoft.com/en-us/cpp/build/reference
 #           /bigobj-increase-number-of-sections-in-dot-obj-file
 #           ?redirectedfrom=MSDN&view=msvc-160]
+#
+# COMPONENT name
+#       An installation component name with which the install rule is
+#       associated.
 #
 # If neither SHARED nor STATIC and no INTERFACE is specified, both are set to ON.
 #
@@ -46,8 +53,8 @@ function (portable_target_add_library TARGET)
     portable_target_get_property(STATIC_ALIAS_SUFFIX _static_alias_suffix)
 
     set(boolparm SHARED STATIC INTERFACE NO_UNICODE NO_BIGOBJ)
-    set(singleparm ALIAS OUTPUT)
-    set(multiparm)
+    set(singleparm ALIAS OUTPUT COMPONENT)
+    set(multiparm CATEGORIES)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
@@ -126,4 +133,14 @@ function (portable_target_add_library TARGET)
                 LIBRARY_OUTPUT_DIRECTORY "${_arg_OUTPUT}")
         endif()
     endif()
+
+    if (_arg_CATEGORIES)
+        portable_target_set_category(${TARGET} ${_arg_CATEGORIES})
+    endif()
+
+    if (_arg_COMPONENT)
+        set_target_properties(${TARGET}
+            PROPERTIES
+            COMPONENT "${_arg_COMPONENT}")
+    endif(_arg_COMPONENT)
 endfunction(portable_target_add_library)

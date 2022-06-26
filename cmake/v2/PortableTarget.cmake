@@ -44,6 +44,10 @@ _portable_target_status(${TARGET} "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}
 # SET                 Set named property.
 # GET                 Get named property.
 #
+# SET_CATEGORY        Set categories for target.
+# GET_CATEGORIES      Get list of categories.
+# CATEGORY_ITEMS      Get items for specified category.
+#
 # INCLUDE_PROJECT     Call `include()` method wrapped by function.
 #                     This useful when including `cmake` scripts that contains
 #                    `project` directive to avoid `PROJECT_NAME` variable
@@ -127,6 +131,19 @@ function (portable_target ACTION FIRST_ARG)
     elseif (ACTION STREQUAL "BUILD_APK")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/build_apk.cmake)
         portable_target_build_apk(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
+    elseif (ACTION STREQUAL "SET_CATEGORY")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/category.cmake)
+        portable_target_set_category(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
+    elseif (ACTION STREQUAL "GET_CATEGORIES")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/category.cmake)
+        set(_var ${ARGV1})
+        portable_target_get_categories(${_var})
+        set(${_var} ${${_var}} PARENT_SCOPE)
+    elseif (ACTION STREQUAL "CATEGORY_ITEMS")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/category.cmake)
+        set(_var ${ARGV2})
+        portable_target_category_items(${FIRST_ARG} ${_var})
+        set(${_var} ${${_var}} PARENT_SCOPE)
     else ()
         _portable_target_error("Bad action: [${ACTION}]")
     endif()
