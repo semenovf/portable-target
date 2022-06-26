@@ -52,6 +52,20 @@ function (portable_target_set_property PROPERTY_NAME PROPERTY_VALUE)
     set_property(GLOBAL PROPERTY PORTABLE_TARGET_PROP_${PROPERTY_NAME} ${PROPERTY_VALUE})
 endfunction(portable_target_set_property)
 
+function (portable_target_append_property PROPERTY_NAME PROPERTY_VALUE)
+    _portable_target_set_properties_defaults()
+
+    if (NOT PROPERTY_NAME)
+        _portable_target_error("PROPERTY_NAME must be specified")
+    endif()
+
+    if (NOT DEFINED PROPERTY_VALUE)
+        _portable_target_error("PROPERTY_VALUE must be specified")
+    endif()
+
+    set_property(GLOBAL APPEND PROPERTY PORTABLE_TARGET_PROP_${PROPERTY_NAME} ${PROPERTY_VALUE})
+endfunction(portable_target_append_property)
+
 #
 # Usage:
 #

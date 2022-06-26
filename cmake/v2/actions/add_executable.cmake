@@ -8,16 +8,18 @@
 ###############################################################################
 cmake_minimum_required(VERSION 3.11)
 include(${CMAKE_CURRENT_LIST_DIR}/../Functions.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/category.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 
 #
 # Usage:
 #
 # portable_target_add_executable(<name>
+#   [CATEGORIES category...]
 #   [NO_UNICODE]
 #   [NO_BIGOBJ]
 #   [OUTPUT dir]
-#   source...)
+#   [COMPONENT name])
 #
 # NO_UNICODE (MSVC specific option)
 #       Disable UNICODE support.
@@ -28,6 +30,10 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 #       See [https://docs.microsoft.com/en-us/cpp/build/reference
 #           /bigobj-increase-number-of-sections-in-dot-obj-file
 #           ?redirectedfrom=MSDN&view=msvc-160]
+#
+# COMPONENT name
+#       An installation component name with which the install rule is
+#       associated.
 #
 # NOTE WIN32 option for `add_executable()` must be controled by
 #      CMAKE_WIN32_EXECUTABLE variable.
@@ -43,8 +49,8 @@ function (portable_target_add_executable TARGET)
     _portable_target_set_properties_defaults()
 
     set(boolparm NO_UNICODE NO_BIGOBJ)
-    set(singleparm OUTPUT)
-    set(multiparm SOURCES)
+    set(singleparm OUTPUT COMPONENT)
+    set(multiparm CATEGORIES)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
@@ -75,5 +81,15 @@ function (portable_target_add_executable TARGET)
         set_target_properties(${TARGET}
             PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${_arg_OUTPUT}")
-    endif()
+    endif(_arg_OUTPUT)
+
+    if (_arg_CATEGORIES)
+        portable_target_set_category(${TARGET} ${_arg_CATEGORIES})
+    endif(_arg_CATEGORIES)
+
+    if (_arg_COMPONENT)
+        set_target_properties(${TARGET}
+            PROPERTIES
+            COMPONENT "${_arg_COMPONENT}")
+    endif(_arg_COMPONENT)
 endfunction(portable_target_add_executable)
