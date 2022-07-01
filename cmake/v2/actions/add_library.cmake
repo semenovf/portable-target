@@ -87,6 +87,11 @@ function (portable_target_add_library TARGET)
         set_target_properties(${TARGET}${_objlib_suffix} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
         if (_arg_SHARED)
+            # Enable generating .lib file
+            if (MSVC)
+                set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+            endif()
+
             add_library(${TARGET} SHARED $<TARGET_OBJECTS:${TARGET}${_objlib_suffix}>)
             set_target_properties(${TARGET} PROPERTIES POSITION_INDEPENDENT_CODE ON)
         endif()
