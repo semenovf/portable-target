@@ -20,5 +20,5 @@ function (portable_target_include_project PATH)
     include(${PATH})
 
     set(CMAKE_PROJECT_NAME ${_saved_CMAKE_PROJECT_NAME})
-    set(PROJECT_NAME ${_saved_PROJECT_NAME})
+    project(${_saved_PROJECT_NAME})
 endfunction(portable_target_include_project)
