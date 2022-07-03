@@ -14,5 +14,11 @@ cmake_minimum_required(VERSION 3.11)
 # portable_target_include_project(PATH)
 #
 function (portable_target_include_project PATH)
+    set(_saved_CMAKE_PROJECT_NAME ${CMAKE_PROJECT_NAME})
+    set(_saved_PROJECT_NAME ${PROJECT_NAME})
+
     include(${PATH})
+
+    set(CMAKE_PROJECT_NAME ${_saved_CMAKE_PROJECT_NAME})
+    set(PROJECT_NAME ${_saved_PROJECT_NAME})
 endfunction(portable_target_include_project)
