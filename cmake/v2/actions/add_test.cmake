@@ -15,13 +15,17 @@ include(${CMAKE_CURRENT_LIST_DIR}/../Functions.cmake)
 # portable_target_add_test(TARGET
 #       SOURCES sources...
 #       [LINK libs...]
+#       [ENV env]
 #       [ENABLE_COVERAGE ON | OFF])
+#
+# ENV env
+#       Set environment variables (see `set_tests_properties`).
 #
 function (portable_target_add_test TARGET)
     _portable_target_set_properties_defaults()
 
     set(boolparm)
-    set(singleparm ENABLE_COVERAGE)
+    set(singleparm ENABLE_COVERAGE ENV)
     set(multiparm SOURCES LINK)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
@@ -54,4 +58,31 @@ function (portable_target_add_test TARGET)
     endif()
 
     add_test(NAME ${TARGET} COMMAND ${TARGET})
+
+    if (MSVC)
+        if (_arg_LINK)
+            foreach(_lib ${_arg_LINK})
+                if (TARGET ${_lib})
+                    get_target_property(_lib_type ${_lib} TYPE)
+
+                    if (_lib_type STREQUAL "SHARED_LIBRARY")
+                        if (NOT _path_env)
+                            set(_path_env "$<TARGET_FILE_DIR:${_lib}>")
+                        else()
+                            set(_path_env "${_path_env};$<TARGET_FILE_DIR:${_lib}>")
+                        endif()
+                    endif()
+                endif()
+            endforeach()
+
+            if (_path_env)
+                set(_path_env "PATH=${_path_env}\\;%PATH%")
+                set_tests_properties(${TARGET} PROPERTIES ENVIRONMENT "${_path_env}")
+            endif()
+        endif()
+    endif()
+
+#    if (_arg_ENV)
+#        set_tests_properties(${TARGET} PROPERTIES ENVIRONMENT ${_arg_ENV})
+#    endif()
 endfunction(portable_target_add_test)
