@@ -22,6 +22,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 #       [STATIC]
 #       [NO_UNICODE]
 #       [NO_BIGOBJ]
+#       [NO_NOMINMAX]
 #       [ALIAS alias]
 #       [OUTPUT dir]
 #       [COMPONENT name])
@@ -35,6 +36,9 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 #       See [https://docs.microsoft.com/en-us/cpp/build/reference
 #           /bigobj-increase-number-of-sections-in-dot-obj-file
 #           ?redirectedfrom=MSDN&view=msvc-160]
+#
+# NO_NOMINMAX
+#       Disable avoid of min/max macros for MSVC.
 #
 # COMPONENT name
 #       An installation component name with which the install rule is
@@ -52,7 +56,7 @@ function (portable_target_add_library TARGET)
     portable_target_get_property(STATIC_SUFFIX _static_suffix)
     portable_target_get_property(STATIC_ALIAS_SUFFIX _static_alias_suffix)
 
-    set(boolparm SHARED STATIC INTERFACE NO_UNICODE NO_BIGOBJ)
+    set(boolparm SHARED STATIC INTERFACE NO_UNICODE NO_BIGOBJ NO_NOMINMAX)
     set(singleparm ALIAS OUTPUT COMPONENT)
     set(multiparm CATEGORIES)
 
@@ -79,6 +83,10 @@ function (portable_target_add_library TARGET)
 
         if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_UNICODE)
             target_compile_definitions(${TARGET}${_objlib_suffix} PRIVATE "/D_UNICODE /DUNICODE")
+        endif()
+
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_NOMINMAX)
+            target_compile_definitions(${TARGET}${_objlib_suffix} PRIVATE "/DNOMINMAX")
         endif()
 
         # Shared libraries need PIC

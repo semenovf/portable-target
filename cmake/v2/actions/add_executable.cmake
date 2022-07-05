@@ -18,6 +18,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 #   [CATEGORIES category...]
 #   [NO_UNICODE]
 #   [NO_BIGOBJ]
+#   [NO_NOMINMAX]
 #   [OUTPUT dir]
 #   [COMPONENT name])
 #
@@ -30,6 +31,9 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 #       See [https://docs.microsoft.com/en-us/cpp/build/reference
 #           /bigobj-increase-number-of-sections-in-dot-obj-file
 #           ?redirectedfrom=MSDN&view=msvc-160]
+#
+# NO_NOMINMAX
+#       Disable avoid of min/max macros for MSVC.
 #
 # COMPONENT name
 #       An installation component name with which the install rule is
@@ -48,7 +52,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 function (portable_target_add_executable TARGET)
     _portable_target_set_properties_defaults()
 
-    set(boolparm NO_UNICODE NO_BIGOBJ)
+    set(boolparm NO_UNICODE NO_BIGOBJ NO_NOMINMAX)
     set(singleparm OUTPUT COMPONENT)
     set(multiparm CATEGORIES)
 
@@ -73,6 +77,10 @@ function (portable_target_add_executable TARGET)
 
     if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_UNICODE)
         target_compile_definitions(${TARGET} PRIVATE "/D_UNICODE /DUNICODE")
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_NOMINMAX)
+        target_compile_definitions(${TARGET} PRIVATE "/DNOMINMAX")
     endif()
 
     if (_arg_OUTPUT)
