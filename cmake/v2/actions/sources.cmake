@@ -29,29 +29,19 @@ function (portable_target_sources TARGET)
     set(singleparm)
     set(multiparm)
 
+    if (NOT TARGET ${TARGET})
+        _portable_target_error( "Unknown TARGET: ${TARGET}")
+    endif()
+            
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
-    set(_real_target ${TARGET})
+    get_target_property(_BIND_STATIC ${TARGET} BIND_STATIC)
 
-    # see https://cmake.org/cmake/help/v3.11/prop_tgt/TYPE.html
-    # Valid types:
-    #  - STATIC_LIBRARY
-    #  - MODULE_LIBRARY
-    #  - SHARED_LIBRARY
-    #  - INTERFACE_LIBRARY
-    #  - EXECUTABLE
-    #  - OBJECT_LIBRARY
+    _portable_target_trace(${TARGET} "Sources: [${_arg_UNPARSED_ARGUMENTS}]")
+    target_sources(${TARGET} PRIVATE ${_arg_UNPARSED_ARGUMENTS})
 
-    # For library target sources must be assigned to OBJECT target
-    if (TARGET ${TARGET}${_objlib_suffix})
-        set(_real_target ${TARGET}${_objlib_suffix})
-        get_target_property(_target_type ${_real_target} TYPE)
-
-        if (NOT _target_type STREQUAL "OBJECT_LIBRARY")
-            _portable_target_error(${TARGET} "Expected OBJECT TYPE for '${TARGET}${_objlib_suffix}'")
-        endif()
+    if (_BIND_STATIC)
+        target_sources(${_BIND_STATIC} PRIVATE ${_arg_UNPARSED_ARGUMENTS})
     endif()
 
-    _portable_target_trace(${_real_target} "Sources: [${_arg_UNPARSED_ARGUMENTS}]")
-    target_sources(${_real_target} PRIVATE ${_arg_UNPARSED_ARGUMENTS})
 endfunction(portable_target_sources)

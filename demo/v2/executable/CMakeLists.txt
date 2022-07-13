@@ -20,12 +20,7 @@ endif()
 # Enable output of trace info
 portable_target(SET ENABLE_TRACE ON)
 portable_target(SET AGGRESSIVE_COMPILER_CHECK ON)
-
-portable_target(GET OBJLIB_SUFFIX _objlib_suffix)
-portable_target(GET STATIC_SUFFIX _static_suffix)
-portable_target(GET STATIC_ALIAS_SUFFIX _static_alias_suffix)
 portable_target(GET UNDEFINED_VAR _undefined_var "UNDEFINED VALUE")
-
 
 #
 # Workaround for
@@ -45,9 +40,6 @@ portable_target(SET LIBRARY_OUTPUT_DIRECTORY ${_output_dir})
 portable_target(SET RUNTIME_OUTPUT_DIRECTORY ${_output_dir})
 portable_target(SET OUTPUT_DIRECTORY ${_output_dir})
 
-_portable_target_trace("OBJLIB_SUFFIX      : [${_objlib_suffix}]")
-_portable_target_trace("STATIC_SUFFIX      : [${_static_suffix}]")
-_portable_target_trace("STATIC_ALIAS_SUFFIX: [${_static_alias_suffix}]")
 _portable_target_trace("UNDEFINED_VAR      : [${_undefined_var}]")
 
 portable_target(ADD_EXECUTABLE executable)
@@ -61,7 +53,7 @@ portable_target(SOURCES executable
 portable_target(SOURCES executable INTERFACE iface4.cpp)
 portable_target(INCLUDE_DIRS executable ./)
 
-portable_target(ADD_LIBRARY mylib)
+portable_target(ADD_SHARED mylib)
 portable_target(SOURCES mylib src.cpp)
 portable_target(DEFINITIONS mylib "-DDEFIN1=1 -DDEFIN2=0")
 portable_target(COMPILE_OPTIONS mylib AGGRESSIVE_CHECK ON)

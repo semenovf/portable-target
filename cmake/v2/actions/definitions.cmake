@@ -18,76 +18,19 @@ function (_definitions_helper TARGET)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
-    portable_target_get_property(OBJLIB_SUFFIX _objlib_suffix)
-    portable_target_get_property(STATIC_SUFFIX _static_suffix)
-
-    # see https://cmake.org/cmake/help/v3.11/prop_tgt/TYPE.html
-    # Valid types:
-    #  - STATIC_LIBRARY
-    #  - MODULE_LIBRARY
-    #  - SHARED_LIBRARY
-    #  - INTERFACE_LIBRARY
-    #  - EXECUTABLE
-    #  - OBJECT_LIBRARY
-
-    # For library target definitions must be assigned to OBJECT target
-    if (TARGET ${TARGET}${_objlib_suffix})
-        set(_objlib_target ${TARGET}${_objlib_suffix})
-        get_target_property(_target_type ${_objlib_target} TYPE)
-
-        if (NOT _target_type STREQUAL "OBJECT_LIBRARY")
-            _portable_target_error(${TARGET} "Expected OBJECT TYPE for '${_objlib_target}'")
-        endif()
-
-        set(_static_target ${TARGET}${_static_suffix})
-    endif()
-
-    if (_arg_INTERFACE)
+     if (_arg_INTERFACE)
         _portable_target_trace(${TARGET} "INTERFACE compile options: [${_arg_INTERFACE}]")
-
-        if (TARGET ${TARGET})
-            target_compile_definitions(${TARGET} INTERFACE ${_arg_INTERFACE})
-        endif()
-
-        if (_objlib_target AND TARGET ${_objlib_target})
-            target_compile_definitions(${_objlib_target} PRIVATE ${_arg_INTERFACE})
-        endif()
-
-        if (_static_target AND TARGET ${_static_target})
-            target_compile_definitions(${_static_target} INTERFACE ${_arg_INTERFACE})
-        endif()
+        target_compile_definitions(${TARGET} INTERFACE ${_arg_INTERFACE})
     endif()
 
     if (_arg_PUBLIC)
         _portable_target_trace(${TARGET} "PUBLIC compile options: [${_arg_PUBLIC}]")
-
-        if (TARGET ${TARGET})
-            target_compile_definitions(${TARGET} PUBLIC ${_arg_PUBLIC})
-        endif()
-
-        if (_objlib_target AND TARGET ${_objlib_target})
-            target_compile_definitions(${_objlib_target} PRIVATE ${_arg_PUBLIC})
-        endif()
-
-        if (_static_target AND TARGET ${_static_target})
-            target_compile_definitions(${_static_target} PUBLIC ${_arg_PUBLIC})
-        endif()
+        target_compile_definitions(${TARGET} PUBLIC ${_arg_PUBLIC})
     endif()
 
     if (_arg_PRIVATE)
         _portable_target_trace(${TARGET} "PRIVATE compile options: [${_arg_PRIVATE}]")
-
-        if (TARGET ${TARGET})
-            target_compile_definitions(${TARGET} PRIVATE ${_arg_PRIVATE})
-        endif()
-
-        if (_objlib_target AND TARGET ${_objlib_target})
-            target_compile_definitions(${_objlib_target} PRIVATE ${_arg_PRIVATE})
-        endif()
-
-        if (_static_target AND TARGET ${_static_target})
-            target_compile_definitions(${_static_target} PRIVATE ${_arg_PRIVATE})
-        endif()
+        target_compile_definitions(${TARGET} PRIVATE ${_arg_PRIVATE})
     endif()
 endfunction(_definitions_helper)
 
@@ -104,16 +47,23 @@ function (portable_target_definitions TARGET)
     set(singleparm)
     set(multiparm INTERFACE PUBLIC PRIVATE)
 
+    if (NOT TARGET ${TARGET})
+        _portable_target_error( "Unknown TARGET: ${TARGET}")
+    endif()
+
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
-    portable_target_get_property(OBJLIB_SUFFIX _objlib_suffix)
-
     if (_arg_UNPARSED_ARGUMENTS)
-        if (TARGET ${TARGET}${_objlib_suffix})
-            get_target_property(_target_type ${TARGET}${_objlib_suffix} TYPE)
-        else()
-            get_target_property(_target_type ${TARGET} TYPE)
-        endif()
+        # see https://cmake.org/cmake/help/v3.11/prop_tgt/TYPE.html
+        # Valid types:
+        #  - STATIC_LIBRARY
+        #  - MODULE_LIBRARY
+        #  - SHARED_LIBRARY
+        #  - INTERFACE_LIBRARY
+        #  - EXECUTABLE
+        #  - OBJECT_LIBRARY
+
+        get_target_property(_target_type ${TARGET} TYPE)
 
         if (_target_type STREQUAL "EXECUTABLE")
             list(APPEND _arg_PRIVATE ${_arg_UNPARSED_ARGUMENTS})

@@ -17,13 +17,13 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 #
 # portable_target_add_library(<target>
 #       [CATEGORIES category...]
-#       [INTERFACE]
-#       [SHARED]
-#       [STATIC]
+#       [SHARED | STATIC | INTERFACE]
 #       [NO_UNICODE]
 #       [NO_BIGOBJ]
 #       [NO_NOMINMAX]
 #       [ALIAS alias]
+#       [BIND_STATIC static_target [STATIC_ALIAS static_alias] [STATIC_EXPORTS export_def]]
+#       [EXPORTS export_def]
 #       [OUTPUT dir]
 #       [COMPONENT name])
 #
@@ -40,6 +40,17 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 # NO_NOMINMAX
 #       Disable avoid of min/max macros for MSVC.
 #
+# BIND_STATIC static_target
+#       Bind static library with shared (use configuration from parent target).
+#
+# STATIC_ALIAS
+#       Alias for bound static library.
+#
+# STATIC_EXPORTS
+#
+# EXPORTS export_def
+#       For SHARED only on MSVC platform.
+#
 # COMPONENT name
 #       An installation component name with which the install rule is
 #       associated.
@@ -52,98 +63,141 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 function (portable_target_add_library TARGET)
     _portable_target_set_properties_defaults()
 
-    portable_target_get_property(OBJLIB_SUFFIX _objlib_suffix)
-    portable_target_get_property(STATIC_SUFFIX _static_suffix)
-    portable_target_get_property(STATIC_ALIAS_SUFFIX _static_alias_suffix)
-
     set(boolparm SHARED STATIC INTERFACE NO_UNICODE NO_BIGOBJ NO_NOMINMAX)
-    set(singleparm ALIAS OUTPUT COMPONENT)
+    set(singleparm ALIAS OUTPUT COMPONENT BIND_STATIC STATIC_ALIAS EXPORTS STATIC_EXPORTS)
     set(multiparm CATEGORIES)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
-    # Explicit STATIC keyword do not ignore on Android
-    if (NOT _arg_SHARED AND NOT _arg_STATIC)
-        set(_arg_SHARED ON)
+    if (NOT _arg_SHARED AND NOT _arg_STATIC AND NOT _arg_INTERFACE)
+        if (BUILD_SHARED_LIBS)
+            _portable_target_warn(${TARGET} "Library type not specified, build SHARED")
+            set(_arg_SHARED ON)
+        else ()
+            if (CMAKE_SYSTEM_NAME STREQUAL "Android")
+                set(_arg_SHARED ON)
+            else()
+                if (NOT MSVC)
+                    set(_arg_SHARED ON)
+                    set(_arg_STATIC ON)
+                else ()
+                    _portable_target_error(${TARGET} "Library type must be specified")
+                endif()
+            endif()
+        endif()
+    endif()
 
-        if (CMAKE_SYSTEM_NAME STREQUAL "Android")
-            set(_arg_STATIC OFF)
+    # Check  mutually exclusive arguments
+    set(_exclusive_counter 0)
+    set(_all_types _arg_SHARED;_arg_STATIC;_arg_INTERFACE)
+
+    foreach(_opt IN LISTS _all_types)
+        if (${_opt})
+            math(EXPR _exclusive_counter "${_exclusive_counter} + 1")
+        endif()
+    endforeach()
+
+    if (NOT ${_exclusive_counter})
+        _portable_target_error(${TARGET} "Library type must be specified")
+    elseif(${_exclusive_counter} GREATER 1)
+        _portable_target_error(${TARGET} "More than one library type specified")
+    endif()
+    
+    if (_arg_SHARED)
+        add_library(${TARGET} SHARED)
+    elseif (_arg_STATIC)
+        add_library(${TARGET} STATIC)
+    elseif (_arg_INTERFACE)
+        add_library(${TARGET} INTERFACE)
+    else ()
+        _portable_target_error(${TARGET} "Oops! Unexpected variant")
+    endif ()
+
+    if (_arg_ALIAS)
+        add_library(${_arg_ALIAS} ALIAS ${TARGET})
+    endif()
+
+    if (_arg_BIND_STATIC AND (_arg_STATIC OR _arg_INTERFACE))
+        _portable_target_error(${TARGET} "Only SHARED library accepts BIND_STATIC")
+    endif()
+
+    # Bind static library
+    if (_arg_BIND_STATIC)
+        if (_arg_SHARED AND NOT CMAKE_SYSTEM_NAME STREQUAL "Android" )
+            add_library(${_arg_BIND_STATIC} STATIC)
+
+            if (_arg_STATIC_ALIAS)
+                add_library(${_arg_STATIC_ALIAS} ALIAS ${_arg_BIND_STATIC})
+            endif()
+            
+            set_target_properties(${TARGET} PROPERTIES BIND_STATIC ${_arg_BIND_STATIC})
         else()
-            set(_arg_STATIC ON)
+            # BIND_STATIC is not applicable so reset it.
+            set(_arg_BIND_STATIC)
         endif()
     endif()
 
     if (NOT _arg_INTERFACE)
-        # Make object files for STATIC and SHARED targets
-        add_library(${TARGET}${_objlib_suffix} OBJECT)
-
         if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_BIGOBJ)
-            target_compile_options(${TARGET}${_objlib_suffix} PRIVATE "/bigobj")
+            target_compile_options(${TARGET} PRIVATE "/bigobj")
+            if (_arg_BIND_STATIC)
+                target_compile_options(${_arg_BIND_STATIC} PRIVATE "/bigobj")
+            endif()
         endif()
 
         if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_UNICODE)
-            target_compile_definitions(${TARGET}${_objlib_suffix} PRIVATE "/D_UNICODE /DUNICODE")
+            target_compile_definitions(${TARGET} PRIVATE _UNICODE UNICODE)
+            if (_arg_BIND_STATIC)
+                target_compile_definitions(${_arg_BIND_STATIC} PRIVATE _UNICODE UNICODE)
+            endif()
         endif()
 
         if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_NOMINMAX)
-            target_compile_definitions(${TARGET}${_objlib_suffix} PRIVATE "/DNOMINMAX")
-        endif()
-
-        # Shared libraries need PIC
-        # For SHARED and MODULE libraries the POSITION_INDEPENDENT_CODE target property
-        # is set to ON automatically, but need for OBJECT type
-        set_target_properties(${TARGET}${_objlib_suffix} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-        if (_arg_SHARED)
-            # Enable generating .lib file
-            if (MSVC)
-                set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-            endif()
-
-            add_library(${TARGET} SHARED $<TARGET_OBJECTS:${TARGET}${_objlib_suffix}>)
-            set_target_properties(${TARGET} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-        endif()
-
-        if (_arg_STATIC)
-            add_library(${TARGET}${_static_suffix} STATIC $<TARGET_OBJECTS:${TARGET}${_objlib_suffix}>)
-        endif()
-
-        if (_arg_ALIAS)
-            if (_arg_SHARED)
-                add_library(${_arg_ALIAS} ALIAS ${TARGET})
-            endif()
-
-            if (_arg_STATIC)
-                add_library(${_arg_ALIAS}${_static_alias_suffix} ALIAS ${TARGET}${_static_suffix})
+            target_compile_definitions(${TARGET} PRIVATE NOMINMAX)
+            if (_arg_BIND_STATIC)
+                target_compile_definitions(${_arg_BIND_STATIC} PRIVATE NOMINMAX)
             endif()
         endif()
-    else ()
-        add_library(${TARGET} INTERFACE)
 
-        if (_arg_ALIAS)
-            add_library(${_arg_ALIAS} ALIAS ${TARGET})
-        endif()
-    endif()
-
-    if (CMAKE_SYSTEM_NAME STREQUAL "Android")
-        portable_target_compile_options(${TARGET} "-DANDROID=1")
-    endif()
-
-    # XXX_OUTPUT_DIRECTORY properties not applicable for INTERFACE library.
-    if (NOT _arg_INTERFACE)
+        # XXX_OUTPUT_DIRECTORY properties not applicable for INTERFACE library.        
         if (_arg_OUTPUT AND _arg_STATIC)
-            _portable_target_trace(${TARGET}${_static_suffix} "Archive output directory: [${_arg_OUTPUT}]")
+            _portable_target_trace(${TARGET} "Archive output directory: [${_arg_OUTPUT}]")
+            set_target_properties(${TARGET} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${_arg_OUTPUT}")
+        endif()
 
-            set_target_properties(${TARGET}${_static_suffix}
-                PROPERTIES
-                ARCHIVE_OUTPUT_DIRECTORY "${_arg_OUTPUT}")
+        if (_arg_OUTPUT AND _arg_BIND_STATIC)
+            _portable_target_trace(${_arg_BIND_STATIC} "Archive output directory: [${_arg_OUTPUT}]")
+            set_target_properties(${_arg_BIND_STATIC} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${_arg_OUTPUT}")
         endif()
 
         if (_arg_OUTPUT AND _arg_SHARED)
             _portable_target_trace(${TARGET} "Library output directory: [${_arg_OUTPUT}]")
-            set_target_properties(${TARGET}
-                PROPERTIES
-                LIBRARY_OUTPUT_DIRECTORY "${_arg_OUTPUT}")
+            set_target_properties(${TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${_arg_OUTPUT}")
+        endif()
+    endif()
+
+    if (CMAKE_SYSTEM_NAME STREQUAL "Android")
+        target_compile_definitions(${TARGET} "ANDROID=1")
+
+        if (_arg_BIND_STATIC)
+            target_compile_definitions(${_arg_BIND_STATIC} "ANDROID=1")
+        endif()        
+    endif()
+
+    if (_arg_EXPORTS AND MSVC)
+        if (_arg_SHARED)
+            _portable_target_trace(${TARGET} "Exports: [${_arg_EXPORTS}]")
+            target_compile_definitions(${TARGET} PRIVATE ${_arg_EXPORTS})
+        elseif (_arg_STATIC)
+            _portable_target_trace(${TARGET} "Exports: [${_arg_EXPORTS}]")
+            target_compile_definitions(${TARGET} PUBLIC ${_arg_EXPORTS})
+        endif()
+        
+        if(_arg_BIND_STATIC)
+            if (_arg_STATIC_EXPORTS)
+                _portable_target_trace(${_arg_BIND_STATIC} "Exports: [${_arg_STATIC_EXPORTS}]")
+                target_compile_definitions(${_arg_BIND_STATIC} PUBLIC ${_arg_STATIC_EXPORTS})
+            endif()
         endif()
     endif()
 

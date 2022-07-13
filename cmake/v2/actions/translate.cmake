@@ -132,17 +132,14 @@ function (portable_target_translate TARGET)
         LANG)
     set(multiparm LANGUAGES)
 
+    if (NOT TARGET ${TARGET})
+        _portable_target_error( "Unknown TARGET: ${TARGET}")
+    endif()
+
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
     if (NOT _arg_LANGUAGES)
         _portable_target_error(${TARGET} "No language(s) specified")
-    endif()
-
-    portable_target_get_property(OBJLIB_SUFFIX _objlib_suffix)
-
-    # For library target definitions must be assigned to OBJECT target
-    if (TARGET ${TARGET}${_objlib_suffix})
-        set(TARGET ${TARGET}${_objlib_suffix})
     endif()
 
     if (NOT _arg_SINGULAR_KEYWORD)

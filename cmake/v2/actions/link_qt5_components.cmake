@@ -43,19 +43,15 @@ function (portable_target_link_qt5_components TARGET)
     set(singleparm Qt5_ROOT Qt5_PLATFORM AUTOMOC AUTORCC AUTOUIC)
     set(multiparm INTERFACE PUBLIC PRIVATE)
 
+    if (NOT TARGET ${TARGET})
+        _portable_target_error( "Unknown TARGET: ${TARGET}")
+    endif()
+            
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
-
-    portable_target_get_property(STATIC_SUFFIX _static_suffix)
 
     # Automatically link Qt executables to qtmain target on Windows
     if (POLICY CMP0020)
         cmake_policy(SET CMP0020 NEW)
-    endif()
-
-    set(_primary_target ${TARGET})
-
-    if (TARGET ${TARGET}${_static_suffix})
-        set(_secondary_target ${TARGET}${_static_suffix})
     endif()
 
     set(Qt5_DEFAULT_COMPONENTS ${_arg_UNPARSED_ARGUMENTS})
@@ -206,15 +202,7 @@ function (portable_target_link_qt5_components TARGET)
     _portable_target_trace(${TARGET} "AUTORCC: [${_arg_AUTORCC}]")
     _portable_target_trace(${TARGET} "AUTOUIC: [${_arg_AUTOUIC}]")
 
-    portable_target_get_property(OBJLIB_SUFFIX _objlib_suffix)
-
-    if (TARGET ${TARGET}${_objlib_suffix})
-        set(_target ${TARGET}${_objlib_suffix})
-    else()
-        set(_target ${TARGET})
-    endif()
-
-    set_target_properties(${_target}
+    set_target_properties(${TARGET}
         PROPERTIES
             AUTOMOC ${_arg_AUTOMOC}
             AUTORCC ${_arg_AUTORCC}

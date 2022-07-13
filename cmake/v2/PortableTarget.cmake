@@ -29,9 +29,9 @@ _portable_target_status(${TARGET} "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}
 # ADD_EXECUTABLE
 # APPLICATION         Add executable or shared library for Android.
 #
-# ADD_LIBRARY
-# LIBRARY             Add both shared and static (with '-static' suffix by default)
-#                     libraries, or shared library only for Android).
+# ADD_SHARED          Add shared library.
+# ADD_STATIC          Add static library.
+# ADD_INTERFACE       Add interface library.
 #
 # DEFINITIONS         Add compile defintions (see target_compile_definitions).
 # INCLUDE_DIRS        Add include directories (see target_include_directories).
@@ -86,9 +86,15 @@ function (portable_target ACTION FIRST_ARG)
     elseif (ACTION STREQUAL "ADD_EXECUTABLE" OR ACTION STREQUAL "APPLICATION")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/add_executable.cmake)
         portable_target_add_executable(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
-    elseif (ACTION STREQUAL "ADD_LIBRARY" OR ACTION STREQUAL "LIBRARY")
+    elseif (ACTION STREQUAL "ADD_SHARED")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/add_library.cmake)
-        portable_target_add_library(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
+        portable_target_add_library(${FIRST_ARG} SHARED ${_arg_UNPARSED_ARGUMENTS})
+    elseif (ACTION STREQUAL "ADD_STATIC")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/add_library.cmake)
+        portable_target_add_library(${FIRST_ARG} STATIC ${_arg_UNPARSED_ARGUMENTS})
+    elseif (ACTION STREQUAL "ADD_INTERFACE")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/add_library.cmake)
+        portable_target_add_library(${FIRST_ARG} INTERFACE ${_arg_UNPARSED_ARGUMENTS})
     elseif (ACTION STREQUAL "ADD_TEST")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/add_test.cmake)
         portable_target_add_test(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
@@ -116,9 +122,6 @@ function (portable_target ACTION FIRST_ARG)
     elseif (ACTION STREQUAL "LINK_GRPC")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/link_protobuf.cmake)
         portable_target_link_protobuf(${FIRST_ARG} ENABLE_GRPC ${_arg_UNPARSED_ARGUMENTS})
-    elseif (ACTION STREQUAL "EXPORTS")
-        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/exports.cmake)
-        portable_target_exports(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
     elseif (ACTION STREQUAL "INCLUDE_PROJECT")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/include_project.cmake)
         portable_target_include_project(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})

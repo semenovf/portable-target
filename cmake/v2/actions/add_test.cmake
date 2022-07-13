@@ -21,6 +21,16 @@ include(${CMAKE_CURRENT_LIST_DIR}/../Functions.cmake)
 # ENV env
 #       Set environment variables (see `set_tests_properties`).
 #
+
+# see https://cmake.org/cmake/help/v3.11/prop_tgt/TYPE.html
+# Valid types:
+#  - STATIC_LIBRARY
+#  - MODULE_LIBRARY
+#  - SHARED_LIBRARY
+#  - INTERFACE_LIBRARY
+#  - EXECUTABLE
+#  - OBJECT_LIBRARY
+
 function (portable_target_add_test TARGET)
     _portable_target_set_properties_defaults()
 

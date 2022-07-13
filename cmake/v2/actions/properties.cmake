@@ -15,9 +15,6 @@ endfunction(_portable_target_set_property)
 
 #
 # Properties:
-#   OBJLIB_SUFFIX
-#   STATIC_SUFFIX
-#   STATIC_ALIAS_SUFFIX
 #
 function (_portable_target_set_properties_defaults)
     # Check if default values set
@@ -27,9 +24,8 @@ function (_portable_target_set_properties_defaults)
         # Mark of applying default values for properties
         set_property(GLOBAL PROPERTY PORTABLE_TARGET_PROP_DEFAULTS TRUE)
 
-        _portable_target_set_property(OBJLIB_SUFFIX "_OBJLIB")
-        _portable_target_set_property(STATIC_SUFFIX "-static")
-        _portable_target_set_property(STATIC_ALIAS_SUFFIX "::static")
+        # Set default properties here
+        # _portable_target_set_property(PROPERTY_NAME "PROPERTY_VALUE")
     endif()
 endfunction(_portable_target_set_properties_defaults)
 
