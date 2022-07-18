@@ -88,7 +88,8 @@ function (portable_target_add_executable TARGET)
 
         set_target_properties(${TARGET}
             PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY "${_arg_OUTPUT}")
+            RUNTIME_OUTPUT_DIRECTORY_DEBUG "${_arg_OUTPUT}"
+            RUNTIME_OUTPUT_DIRECTORY_RELEASE "${_arg_OUTPUT}")
     endif(_arg_OUTPUT)
 
     if (_arg_CATEGORIES)

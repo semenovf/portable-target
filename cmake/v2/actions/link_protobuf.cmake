@@ -187,7 +187,7 @@ function (portable_target_link_protobuf TARGET)
             portable_target_compile_options(${TARGET} "/FI\"${_arg_DLL_EXPORT_HEADER}\"")
         elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
                 OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-            portable_target_compile_options(${TARGET} -include;${_arg_DLL_EXPORT_HEADER})
+            portable_target_compile_options(${TARGET} "-include \"${_arg_DLL_EXPORT_HEADER}\"")
         endif()
     endif()
 endfunction(portable_target_link_protobuf)

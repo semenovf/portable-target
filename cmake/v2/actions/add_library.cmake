@@ -162,17 +162,25 @@ function (portable_target_add_library TARGET)
         # XXX_OUTPUT_DIRECTORY properties not applicable for INTERFACE library.        
         if (_arg_OUTPUT AND _arg_STATIC)
             _portable_target_trace(${TARGET} "Archive output directory: [${_arg_OUTPUT}]")
-            set_target_properties(${TARGET} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${_arg_OUTPUT}")
+            set_target_properties(${TARGET} PROPERTIES 
+                ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${_arg_OUTPUT}"
+                ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${_arg_OUTPUT}")
         endif()
 
         if (_arg_OUTPUT AND _arg_BIND_STATIC)
             _portable_target_trace(${_arg_BIND_STATIC} "Archive output directory: [${_arg_OUTPUT}]")
-            set_target_properties(${_arg_BIND_STATIC} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${_arg_OUTPUT}")
+            set_target_properties(${_arg_BIND_STATIC} PROPERTIES 
+                ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${_arg_OUTPUT}"
+                ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${_arg_OUTPUT}")
         endif()
 
         if (_arg_OUTPUT AND _arg_SHARED)
             _portable_target_trace(${TARGET} "Library output directory: [${_arg_OUTPUT}]")
-            set_target_properties(${TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${_arg_OUTPUT}")
+            set_target_properties(${TARGET} PROPERTIES 
+                LIBRARY_OUTPUT_DIRECTORY_DEBUG "${_arg_OUTPUT}"
+                LIBRARY_OUTPUT_DIRECTORY_RELEASE "${_arg_OUTPUT}"
+                ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${_arg_OUTPUT}"
+                ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${_arg_OUTPUT}")
         endif()
     endif()
 
