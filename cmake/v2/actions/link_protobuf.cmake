@@ -154,6 +154,7 @@ function (portable_target_link_protobuf TARGET)
         list(APPEND _protoc_OPTS "--proto_path=\"${_arg_PROTO_PATH}\"")
 
         add_custom_command(
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${_arg_OUTPUT_DIR}
             COMMAND ${_arg_PROTOC_BIN} ${_protoc_OPTS} ${_arg_SOURCES}
             WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
             OUTPUT ${_grpc_CPP_SOURCES}
@@ -174,6 +175,7 @@ function (portable_target_link_protobuf TARGET)
     endif()
 
     add_custom_command(
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${_arg_OUTPUT_DIR}
         COMMAND ${_arg_PROTOC_BIN} ${_protoc_OPTS} ${_arg_SOURCES}
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
         OUTPUT ${_protobuf_CPP_SOURCES}
@@ -187,7 +189,7 @@ function (portable_target_link_protobuf TARGET)
             portable_target_compile_options(${TARGET} "/FI\"${_arg_DLL_EXPORT_HEADER}\"")
         elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
                 OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-            portable_target_compile_options(${TARGET} "-include \"${_arg_DLL_EXPORT_HEADER}\"")
+            portable_target_compile_options(${TARGET} -include ${_arg_DLL_EXPORT_HEADER})
         endif()
     endif()
 endfunction(portable_target_link_protobuf)

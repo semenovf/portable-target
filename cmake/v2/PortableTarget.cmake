@@ -59,6 +59,8 @@ _portable_target_status(${TARGET} "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}
 #
 # BUILD_APK           Build Android package
 #
+# WINDEPLOY           Build package for Windows (using NSIS)
+#
 function (portable_target ACTION FIRST_ARG)
     set(boolparm)
     set(singleparm)
@@ -134,6 +136,9 @@ function (portable_target ACTION FIRST_ARG)
     elseif (ACTION STREQUAL "BUILD_APK")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/build_apk.cmake)
         portable_target_build_apk(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
+    elseif (ACTION STREQUAL "WINDEPLOY")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/windeploy.cmake)
+        portable_target_windeploy(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
     elseif (ACTION STREQUAL "SET_CATEGORY")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/category.cmake)
         portable_target_set_category(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
