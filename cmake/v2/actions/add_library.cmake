@@ -123,18 +123,13 @@ function (portable_target_add_library TARGET)
 
     # Bind static library
     if (_arg_BIND_STATIC)
-        if (_arg_SHARED AND NOT CMAKE_SYSTEM_NAME STREQUAL "Android" )
-            add_library(${_arg_BIND_STATIC} STATIC)
+        add_library(${_arg_BIND_STATIC} STATIC)
 
-            if (_arg_STATIC_ALIAS)
-                add_library(${_arg_STATIC_ALIAS} ALIAS ${_arg_BIND_STATIC})
-            endif()
-
-            set_target_properties(${TARGET} PROPERTIES BIND_STATIC ${_arg_BIND_STATIC})
-        else()
-            # BIND_STATIC is not applicable so reset it.
-            set(_arg_BIND_STATIC)
+        if (_arg_STATIC_ALIAS)
+            add_library(${_arg_STATIC_ALIAS} ALIAS ${_arg_BIND_STATIC})
         endif()
+
+        set_target_properties(${TARGET} PROPERTIES BIND_STATIC ${_arg_BIND_STATIC})
     endif()
 
     if (NOT _arg_INTERFACE)
@@ -185,10 +180,14 @@ function (portable_target_add_library TARGET)
     endif()
 
     if (CMAKE_SYSTEM_NAME STREQUAL "Android")
-        target_compile_definitions(${TARGET} "ANDROID=1")
+        if (_arg_INTERFACE)
+            target_compile_definitions(${TARGET} INTERFACE "ANDROID=1")
+        else()
+            target_compile_definitions(${TARGET} PRIVATE "ANDROID=1")
+        endif()
 
         if (_arg_BIND_STATIC)
-            target_compile_definitions(${_arg_BIND_STATIC} "ANDROID=1")
+            target_compile_definitions(${_arg_BIND_STATIC} PRIVATE "ANDROID=1")
         endif()
     endif()
 
