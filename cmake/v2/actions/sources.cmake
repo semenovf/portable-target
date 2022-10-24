@@ -32,13 +32,13 @@ function (portable_target_sources TARGET)
     if (NOT TARGET ${TARGET})
         _portable_target_error( "Unknown TARGET: ${TARGET}")
     endif()
-            
-    cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
-    get_target_property(_BIND_STATIC ${TARGET} BIND_STATIC)
+    cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
     _portable_target_trace(${TARGET} "Sources: [${_arg_UNPARSED_ARGUMENTS}]")
     target_sources(${TARGET} PRIVATE ${_arg_UNPARSED_ARGUMENTS})
+
+    get_target_property(_BIND_STATIC ${TARGET} BIND_STATIC)
 
     if (_BIND_STATIC)
         target_sources(${_BIND_STATIC} PRIVATE ${_arg_UNPARSED_ARGUMENTS})

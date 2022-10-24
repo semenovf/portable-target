@@ -43,8 +43,8 @@ endif()
 
 if (MSGCAT_BIN)
     _portable_target_status("`msgcat` program found at: ${MSGCAT_BIN}")
-#else()
-    #_portable_target_error("`msgcat` program not found (is mandatory)")
+else()
+    _portable_target_error("`msgcat` program not found (is mandatory)")
 endif()
 
 #
@@ -62,6 +62,8 @@ endif()
 #   [HEADER_NAME header_name]
 #   [SINGULAR_KEYWORD keyword]
 #   [PLURAL_KEYWORD keyword]
+#   [NOOP_KEYWORD keyword]
+#   [FORMAT_KEYWORD keyword]
 #   [COPYRIGHT_HOLDER holder]
 #   [PACKAGE_NAME package_name]
 #   [PACKAGE_VERSION package_version]
@@ -80,13 +82,16 @@ endif()
 #       ${CMAKE_BINARY_DIR}).
 #
 # SINGULAR_KEYWORD keyword
-#       Singular keyword (`TR_` is default).
+#       Singular keyword (`_` is default).
 #
 # PLURAL_KEYWORD keyword
-#       Plural keyword (`TRn_` is default).
+#       Plural keyword (`n_` is default).
 #
 # NOOP_KEYWORD keyword
-#       No-op keyword (`TRnoop_` is default).
+#       No-op keyword (`noop_` is default).
+#
+# FORMAT_KEYWORD keyword
+#       Special keyword for format strings (`f_` is default).
 #
 # COPYRIGHT_HOLDER holder
 #       Set copyright holder in output.
@@ -130,7 +135,7 @@ function (portable_target_translate TARGET)
         OUTPUT_SOURCE_DIR
         OUTPUT_BINARY_DIR
         LANG)
-    set(multiparm LANGUAGES)
+    set(multiparm LANGUAGES SOURCES)
 
     if (NOT TARGET ${TARGET})
         _portable_target_error( "Unknown TARGET: ${TARGET}")
@@ -152,6 +157,10 @@ function (portable_target_translate TARGET)
 
     if (NOT _arg_NOOP_KEYWORD)
         set(_arg_NOOP_KEYWORD "noop_")
+    endif()
+
+    if (NOT _arg_FORMAT_KEYWORD)
+        set(_arg_FORMAT_KEYWORD "f_")
     endif()
 
     #if (_arg_HEADER_NAME)
@@ -180,7 +189,20 @@ function (portable_target_translate TARGET)
         #target_include_directories(${TARGET} PUBLIC ${CMAKE_BINARY_DIR})
     #endif()
 
-    get_target_property(_target_sources ${TARGET} SOURCES)
+    get_target_property(_target_type ${TARGET} TYPE)
+
+    if (NOT _target_type STREQUAL "INTERFACE_LIBRARY")
+        get_target_property(_target_sources ${TARGET} SOURCES)
+    endif()
+
+    if (_arg_SOURCES)
+        if (_target_sources)
+            list(APPEND _target_sources ${_arg_SOURCES})
+        else()
+            set(_target_sources ${_arg_SOURCES})
+        endif()
+    endif()
+
     _portable_target_trace(${TARGET} "Sources for translation: [${_target_sources}]")
 
     set(_xgettext_args)
@@ -217,6 +239,7 @@ function (portable_target_translate TARGET)
     list(APPEND _xgettext_args "--keyword=${_arg_SINGULAR_KEYWORD}")
     list(APPEND _xgettext_args "--keyword=${_arg_PLURAL_KEYWORD}:1,2")
     list(APPEND _xgettext_args "--keyword=${_arg_NOOP_KEYWORD}")
+    list(APPEND _xgettext_args "--keyword=${_arg_FORMAT_KEYWORD}")
 
     _portable_target_trace(${TARGET} "xgettext args: [${_xgettext_args}]")
 
