@@ -102,7 +102,7 @@ function (portable_target_add_library TARGET)
     elseif(${_exclusive_counter} GREATER 1)
         _portable_target_error(${TARGET} "More than one library type specified")
     endif()
-    
+
     if (_arg_SHARED)
         add_library(${TARGET} SHARED)
     elseif (_arg_STATIC)
@@ -123,18 +123,13 @@ function (portable_target_add_library TARGET)
 
     # Bind static library
     if (_arg_BIND_STATIC)
-        if (_arg_SHARED AND NOT CMAKE_SYSTEM_NAME STREQUAL "Android" )
-            add_library(${_arg_BIND_STATIC} STATIC)
+        add_library(${_arg_BIND_STATIC} STATIC)
 
-            if (_arg_STATIC_ALIAS)
-                add_library(${_arg_STATIC_ALIAS} ALIAS ${_arg_BIND_STATIC})
-            endif()
-            
-            set_target_properties(${TARGET} PROPERTIES BIND_STATIC ${_arg_BIND_STATIC})
-        else()
-            # BIND_STATIC is not applicable so reset it.
-            set(_arg_BIND_STATIC)
+        if (_arg_STATIC_ALIAS)
+            add_library(${_arg_STATIC_ALIAS} ALIAS ${_arg_BIND_STATIC})
         endif()
+
+        set_target_properties(${TARGET} PROPERTIES BIND_STATIC ${_arg_BIND_STATIC})
     endif()
 
     if (NOT _arg_INTERFACE)
@@ -159,24 +154,24 @@ function (portable_target_add_library TARGET)
             endif()
         endif()
 
-        # XXX_OUTPUT_DIRECTORY properties not applicable for INTERFACE library.        
+        # XXX_OUTPUT_DIRECTORY properties not applicable for INTERFACE library.
         if (_arg_OUTPUT AND _arg_STATIC)
             _portable_target_trace(${TARGET} "Archive output directory: [${_arg_OUTPUT}]")
-            set_target_properties(${TARGET} PROPERTIES 
+            set_target_properties(${TARGET} PROPERTIES
                 ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${_arg_OUTPUT}"
                 ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${_arg_OUTPUT}")
         endif()
 
         if (_arg_OUTPUT AND _arg_BIND_STATIC)
             _portable_target_trace(${_arg_BIND_STATIC} "Archive output directory: [${_arg_OUTPUT}]")
-            set_target_properties(${_arg_BIND_STATIC} PROPERTIES 
+            set_target_properties(${_arg_BIND_STATIC} PROPERTIES
                 ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${_arg_OUTPUT}"
                 ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${_arg_OUTPUT}")
         endif()
 
         if (_arg_OUTPUT AND _arg_SHARED)
             _portable_target_trace(${TARGET} "Library output directory: [${_arg_OUTPUT}]")
-            set_target_properties(${TARGET} PROPERTIES 
+            set_target_properties(${TARGET} PROPERTIES
                 LIBRARY_OUTPUT_DIRECTORY_DEBUG "${_arg_OUTPUT}"
                 LIBRARY_OUTPUT_DIRECTORY_RELEASE "${_arg_OUTPUT}"
                 ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${_arg_OUTPUT}"
@@ -185,11 +180,15 @@ function (portable_target_add_library TARGET)
     endif()
 
     if (CMAKE_SYSTEM_NAME STREQUAL "Android")
-        target_compile_definitions(${TARGET} "ANDROID=1")
+        if (_arg_INTERFACE)
+            target_compile_definitions(${TARGET} INTERFACE "ANDROID=1")
+        else()
+            target_compile_definitions(${TARGET} PRIVATE "ANDROID=1")
+        endif()
 
         if (_arg_BIND_STATIC)
-            target_compile_definitions(${_arg_BIND_STATIC} "ANDROID=1")
-        endif()        
+            target_compile_definitions(${_arg_BIND_STATIC} PRIVATE "ANDROID=1")
+        endif()
     endif()
 
     if (_arg_EXPORTS AND MSVC)
@@ -200,12 +199,23 @@ function (portable_target_add_library TARGET)
             _portable_target_trace(${TARGET} "Exports: [${_arg_EXPORTS}]")
             target_compile_definitions(${TARGET} PUBLIC ${_arg_EXPORTS})
         endif()
-        
+
         if(_arg_BIND_STATIC)
             if (_arg_STATIC_EXPORTS)
                 _portable_target_trace(${_arg_BIND_STATIC} "Exports: [${_arg_STATIC_EXPORTS}]")
                 target_compile_definitions(${_arg_BIND_STATIC} PUBLIC ${_arg_STATIC_EXPORTS})
             endif()
+        endif()
+    endif()
+
+    # For link custom shared libraries with static library
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        if (_arg_STATIC)
+            target_compile_options(${TARGET} PRIVATE "-fPIC")
+        endif()
+
+        if (_arg_BIND_STATIC)
+            target_compile_options(${_arg_BIND_STATIC} PRIVATE "-fPIC")
         endif()
     endif()
 
