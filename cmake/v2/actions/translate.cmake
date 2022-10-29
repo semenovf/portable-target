@@ -15,36 +15,45 @@ find_program(MSGFMT_BIN   msgfmt)
 find_program(MSGINIT_BIN  msginit)
 find_program(MSGMERGE_BIN msgmerge)
 find_program(MSGCAT_BIN   msgcat)
-find_package(Intl REQUIRED)
+#find_package(Intl REQUIRED)
 
-if (XGETTEXT_BIN)
-    _portable_target_status("`xgettext` program found at: ${XGETTEXT_BIN}")
-else()
-    _portable_target_error("`xgettext` program not found (is mandatory)")
-endif()
+if (NOT DEFINED TRANSLATION_GENERATION_DISABLED)
+    if (XGETTEXT_BIN)
+        _portable_target_status("`xgettext` program found at: ${XGETTEXT_BIN}")
+    else()
+        list(APPEND _translation_tools_not_found "xgettext")
+    endif()
 
-if (MSGFMT_BIN)
-    _portable_target_status("`msgfmt` program found at: ${MSGFMT_BIN}")
-else()
-    _portable_target_error("`msgfmt` program not found (is mandatory)")
-endif()
+    if (MSGFMT_BIN)
+        _portable_target_status("`msgfmt` program found at: ${MSGFMT_BIN}")
+    else()
+        list(APPEND _translation_tools_not_found "msgfmt")
+    endif()
 
-if (MSGINIT_BIN)
-    _portable_target_status("`msginit` program found at: ${MSGINIT_BIN}")
-else()
-    _portable_target_error("`msginit` program not found (is mandatory)")
-endif()
+    if (MSGINIT_BIN)
+        _portable_target_status("`msginit` program found at: ${MSGINIT_BIN}")
+    else()
+        list(APPEND _translation_tools_not_found "msginit")
+    endif()
 
-if (MSGMERGE_BIN)
-    _portable_target_status("`msgmerge` program found at: ${MSGMERGE_BIN}")
-else()
-    _portable_target_error("`msgmerge` program not found (is mandatory)")
-endif()
+    if (MSGMERGE_BIN)
+        _portable_target_status("`msgmerge` program found at: ${MSGMERGE_BIN}")
+    else()
+        list(APPEND _translation_tools_not_found "msgmerge")
+    endif()
 
-if (MSGCAT_BIN)
-    _portable_target_status("`msgcat` program found at: ${MSGCAT_BIN}")
-else()
-    _portable_target_error("`msgcat` program not found (is mandatory)")
+    if (MSGCAT_BIN)
+        _portable_target_status("`msgcat` program found at: ${MSGCAT_BIN}")
+    else()
+        list(APPEND _translation_tools_not_found "msgcat")
+    endif()
+
+    if (DEFINED _translation_tools_not_found)
+        _portable_target_warn("One or more `gettext` tools not found: ${_translation_tools_not_found}")
+        _portable_target_warn("File translation generation disabled")
+    endif()
+
+    set(TRANSLATION_GENERATION_DISABLED ${_translation_tools_ready} CACHE BOOL "")
 endif()
 
 #
@@ -72,6 +81,10 @@ endif()
 #
 
 function (_portable_target_translate_amalgamate TARGET)
+    if (TRANSLATION_GENERATION_DISABLED)
+        return()
+    endif()
+
     set(boolparm)
     set(singleparm OUTPUT_DIR BASENAME)
     set(multiparm)
@@ -90,8 +103,6 @@ function (_portable_target_translate_amalgamate TARGET)
 
     if (_translate_languages)
         foreach (_lang ${_translate_languages})
-            #_portable_target_trace("" "LANG: ${_lang}")
-
             portable_target_get_property(_TRANSLATE_LANGUAGES_${_lang} _po_files)
 
             if (_po_files)
@@ -207,6 +218,10 @@ endfunction(_portable_target_translate_amalgamate)
 #
 #
 function (_portable_target_translate_update PARENT_TARGET)
+    if (TRANSLATION_GENERATION_DISABLED)
+        return()
+    endif()
+
     set(boolparm ADD_COMMENTS SORT_OUTPUT NO_SOURCE_LOCATION)
     set(singleparm
         COPYRIGHT_HOLDER
@@ -233,11 +248,7 @@ function (_portable_target_translate_update PARENT_TARGET)
     endif()
 
     if (_arg_SOURCES)
-        if (_target_sources)
-            list(APPEND _target_sources ${_arg_SOURCES})
-        else()
-            set(_target_sources ${_arg_SOURCES})
-        endif()
+        list(APPEND _target_sources ${_arg_SOURCES})
     endif()
 
     _portable_target_trace(${PARENT_TARGET} "Sources for translation: [${_target_sources}]")
@@ -394,6 +405,7 @@ function (_portable_target_translate_update PARENT_TARGET)
         endforeach() # foreach LANGUAGES
 
         set(TRANSLATE_TARGET "${PARENT_TARGET}-translate")
+
         add_custom_target(${TRANSLATE_TARGET} DEPENDS ${_po_files})
         add_dependencies(${PARENT_TARGET} ${TRANSLATE_TARGET})
 
