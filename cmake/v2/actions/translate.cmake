@@ -53,7 +53,11 @@ if (NOT DEFINED TRANSLATION_GENERATION_DISABLED)
         _portable_target_warn("File translation generation disabled")
     endif()
 
-    set(TRANSLATION_GENERATION_DISABLED ${_translation_tools_ready} CACHE BOOL "")
+    if (_translation_tools_not_found)
+        set(TRANSLATION_GENERATION_DISABLED TRUE CACHE BOOL "")
+    else()
+        set(TRANSLATION_GENERATION_DISABLED FALSE CACHE BOOL "")
+    endif()
 endif()
 
 #
@@ -335,7 +339,11 @@ function (_portable_target_translate_update PARENT_TARGET)
             ERROR_STRIP_TRAILING_WHITESPACE)
 
         if (_xgettext_result)
-            _portable_target_error(${PARENT_TARGET} "${_xgettext_error}")
+            if (NOT _xgettext_result MATCHES "^[0-9]+$")
+                _portable_target_error(${PARENT_TARGET} "${XGETTEXT_BIN}: ${_xgettext_result}: ${_xgettext_error}")
+            else ()
+                _portable_target_error(${PARENT_TARGET} "${XGETTEXT_BIN}: ${_xgettext_error} [error code: ${_xgettext_result}]")
+            endif ()
         endif()
     endif()
 
