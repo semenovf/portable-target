@@ -15,9 +15,14 @@ set(PORTABLE_TARGET__ENABLED TRUE)
 set(_PORTABLE_TARGET_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR})
 include(${_PORTABLE_TARGET_ROOT_DIR}/Functions.cmake)
 
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
+
 _portable_target_status(${TARGET} "Cross-compiling     : ${CMAKE_CROSSCOMPILING}")
 _portable_target_status(${TARGET} "CMAKE_CXX_COMPILER  : ${CMAKE_CXX_COMPILER}")
 _portable_target_status(${TARGET} "CMAKE_TOOLCHAIN_FILE: ${CMAKE_TOOLCHAIN_FILE}")
+_portable_target_status(${TARGET} "CMAKE_BUILD_TYPE    : ${CMAKE_BUILD_TYPE}")
 
 #
 # Usage:

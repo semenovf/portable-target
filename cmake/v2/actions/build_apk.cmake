@@ -392,5 +392,7 @@ function (portable_target_build_apk TARGET)
             ${INSTALL_OPTIONS}
             ${SIGN_OPTIONS})
 
-    add_dependencies(${TARGET}_apk ${_arg_DEPENDS})
+    if (_arg_DEPENDS)
+        add_dependencies(${TARGET}_apk ${_arg_DEPENDS})
+    endif()
 endfunction(portable_target_build_apk)

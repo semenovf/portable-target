@@ -2,7 +2,68 @@
 CMake-based scripts for build portable applications.
 Tested on Linux, Windows, Android
 
-## Android
+# Common requirements
+
+## Linux
+
+Below steps demonstrates working configuration
+
+```sh
+$ sudo apt install cmake
+
+# Used by Ninja build system generator.
+$ sudo apt install ninja-build
+```
+
+# Android development
+
+## Requirements
+
+### Ubuntu/Debian
+
+1. Install Android SDKs (using Android Studio installer as an option)  
+   and NDK version 22.1.xxx (22.1.7171670 e.g.) or NDK (Obsolete) that__ 
+   listed in `SDK Tools` (need to off flag `Hide Obsolete Packages` to  
+   view all available tools).
+2. Install Qt framework 5.13.2 by installer.
+3. Install Open JDK: `$ sudo apt-get install openjdk-8-jdk`
+4. Set development environment:
+
+```sh
+# 1. Set JAVA_HOME environment variable.
+# NOTE. Need log out and log in to come into force.
+$ echo export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 >> ~/.profile
+
+# 2. Set ANDROID_SDK environment variable
+# NOTE. Need log out and log in to come into force.
+$ echo export ANDROID_SDK=$HOME/Android/Sdk >> ~/.profile
+
+# 3. Set ANDROID_NDK environment variable (this step can be omitted if
+# obsolete NDK was installed and ${ANDROID_SDK} contains not empty
+# `ndk-bundle` subdirectory).
+# NOTE. Need log out and log in to come into force.
+$ echo export ANDROID_NDK=${ANDROID_SDK}/ndk/22.1.xxx >> ~/.profile
+```
+
+5. Modify `PATH` in `~/.profile`:
+`PATH="$ANDROID_SDK/tools:$ANDROID_SDK/tools/bin:$ANDROID_SDK/platform-tools:$PATH"`
+
+## Building package
+
+### Ubuntu/Debian
+
+```
+$ mkdir build
+$ cd build
+$ ANDROID=ON \
+    Qt5_PLATFORM=android_x86_64 \
+    Qt5_ROOT=/opt/Qt5.13.2/5.13.2 \
+    ANDROID_ABI=x86_64 \
+    cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=../cmake/v2/android/AndroidToolchain.cmake ..
+$ cmake --build .
+```
+
+## Troubleshooting
 ### Warnings and errors while building and packaging
 
 1. #### QML import could not be resolved in ...

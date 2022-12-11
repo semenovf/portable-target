@@ -13,38 +13,34 @@
 # ### Building for ANDROID
 # $ cmake -G <Generator> -DANDROID=ON ...
 ################################################################################
-cmake_minimum_required (VERSION 3.5)
+cmake_minimum_required (VERSION 3.11)
+project(FileDialog CXX C)
 
 # Set ON if need add current directory to list of directories to be searched
 # for header files during preprocessing
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-include(${CMAKE_SOURCE_DIR}/cmake/PortableTarget.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/v2/PortableTarget.cmake)
 
-set(SOURCES main.cpp main.qrc)
-set(Qt5_COMPONENTS )
+portable_target(ADD_EXECUTABLE ${PROJECT_NAME})
+portable_target(SOURCES ${PROJECT_NAME} main.cpp main.qrc)
+portable_target(LINK_QT5_COMPONENTS ${PROJECT_NAME} Core Gui Network Qml)
 
-portable_target_v1(FileDialog
-    Qt5_COMPONENTS
-        Core
-        Widgets
-        Gui
-        Network
-        Qml
-    SOURCES ${SOURCES}
-
-# Android specific parameters
-    ANDROID_PACKAGE_NAME "ru.jobquest.FileDialog"
-    ANDROID_APP_NAME "File Dialog"
-    ANDROID_APP_VERSION 2
-    ANDROID_PERMISSIONS
-        INTERNET
-        ACCESS_NETWORK_STATE
-        RECORD_AUDIO
-        WAKE_LOCK
-        ACCESS_FINE_LOCATION
-        WRITE_EXTERNAL_STORAGE
-        READ_EXTERNAL_STORAGE
-        CAMERA
-    #ANDROID_INSTALL
-)
+if (ANDROID)
+portable_target(BUILD_APK ${PROJECT_NAME}
+        VERBOSE ON
+        #INSTALL ON
+        PACKAGE_NAME "ru.jobquest.${PROJECT_NAME}"
+        APP_NAME "File Dialog"
+        VERSION_MAJOR 2
+        VERSION_MINOR 0
+        SCREEN_ORIENTATION "sensorLandscape"
+        CONFIG_CHANGES="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|locale|fontScale|keyboard|keyboardHidden|navigation"
+        PERMISSIONS
+            INTERNET
+            ACCESS_NETWORK_STATE
+            WAKE_LOCK
+            ACCESS_FINE_LOCATION
+            WRITE_EXTERNAL_STORAGE
+            READ_EXTERNAL_STORAGE)
+endif(ANDROID)
