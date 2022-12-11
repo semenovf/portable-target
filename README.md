@@ -22,7 +22,7 @@ $ sudo apt install ninja-build
 ### Ubuntu/Debian
 
 1. Install Android SDKs (using Android Studio installer as an option)  
-   and NDK version 22.1.xxx (22.1.7171670 e.g.) or NDK (Obsolete) that__ 
+   and NDK version 22.1.xxx (22.1.7171670 e.g.) or NDK (Obsolete) that  
    listed in `SDK Tools` (need to off flag `Hide Obsolete Packages` to  
    view all available tools).
 2. Install Qt framework 5.13.2 by installer.
@@ -61,6 +61,9 @@ $ ANDROID=ON \
     ANDROID_ABI=x86 \
     cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=../cmake/v2/android/AndroidToolchain.cmake ..
 $ cmake --build .
+
+# Run emulator and then execute the below command to install package
+$ adb install -t -r demo/android-qt/android-build/build/outputs/apk/debug/android-build-debug.apk
 ```
 
 ## Troubleshooting
@@ -94,3 +97,7 @@ If you are not using NDK, unset the NDK variable from ANDROID_NDK_HOME or local.
 ```
 `No ideas for reslolve it yet.`<br/>
 `No critical influence on the result was found.`
+
+3. #### Failure [INSTALL_FAILED_TEST_ONLY] while `adb install`
+Use `-t` option after `adb install`: `adb install -t -r path-to-package.apk`.  
+See [ADB Install Fails With INSTALL_FAILED_TEST_ONLY](https://stackoverflow.com/questions/25274296/adb-install-fails-with-install-failed-test-only)
