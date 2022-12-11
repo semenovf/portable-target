@@ -54,7 +54,7 @@ _mandatory_var_env(ANDROID_SDK
 string(REPLACE "\\" "/" ANDROID_SDK ${ANDROID_SDK})
 
 if (NOT EXISTS ${ANDROID_SDK})
-    _portable_target_error("Android SDK directory not found: ${ANDROID_SDK}")
+    _portable_target_error("Android SDK directory not found: ${ANDROID_SDK}, set ANDROID_SDK correctly")
 endif()
 
 _mandatory_var_env(ANDROID_NDK
@@ -66,7 +66,7 @@ _mandatory_var_env(ANDROID_NDK
 string(REPLACE "\\" "/" ANDROID_NDK ${ANDROID_NDK})
 
 if (NOT EXISTS ${ANDROID_NDK})
-    _portable_target_error("Android NDK directory not found: ${ANDROID_NDK}")
+    _portable_target_error("Android NDK directory not found: ${ANDROID_NDK}, set ANDROID_NDK correctly")
 endif()
 
 _mandatory_var_env(ANDROID_TOOLCHAIN_FILE

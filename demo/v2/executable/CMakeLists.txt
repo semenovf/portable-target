@@ -61,9 +61,9 @@ portable_target(COMPILE_OPTIONS mylib AGGRESSIVE_CHECK ON)
 # portable_target(LIBRARY mylib1 STATIC)
 portable_target(LINK executable mylib)
 
-portable_target(LINK_QT5_COMPONENTS executable REQUIRED
-    Core
-    INTERFACE Xml
-    PUBLIC Network
-    PRIVATE Sql
-    AUTOUIC)
+#portable_target(LINK_QT5_COMPONENTS executable REQUIRED
+    #Core
+    #INTERFACE Xml
+    #PUBLIC Network
+    #PRIVATE Sql
+    #AUTOUIC)
