@@ -56,9 +56,9 @@ $ echo export ANDROID_NDK=${ANDROID_SDK}/ndk/22.1.xxx >> ~/.profile
 $ mkdir build
 $ cd build
 $ ANDROID=ON \
-    Qt5_PLATFORM=android_x86_64 \
+    Qt5_PLATFORM=android_x86 \
     Qt5_ROOT=/opt/Qt5.13.2/5.13.2 \
-    ANDROID_ABI=x86_64 \
+    ANDROID_ABI=x86 \
     cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=../cmake/v2/android/AndroidToolchain.cmake ..
 $ cmake --build .
 ```
