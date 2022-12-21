@@ -122,18 +122,18 @@ function (portable_target_windeploy PRE_BUILD_TARGET)
 
     if (_arg_WINDEPLOYQT)
         if (NOT _arg_WINDEPLOYQT_EXECUTABLE)
-            _mandatory_var_env(Qt5_ROOT
-                Qt5_ROOT
+            _mandatory_var_env(QT5_ROOT
+                QT5_ROOT
                 "Qt5 Root directory")
 
-            _mandatory_var_env(Qt5_PLATFORM
-                Qt5_PLATFORM
+            _mandatory_var_env(QT5_PLATFORM
+                QT5_PLATFORM
                 "Qt5 Platform directory")
 
-            set(_arg_WINDEPLOYQT_EXECUTABLE "${Qt5_ROOT}/${Qt5_PLATFORM}/bin/windeployqt.exe")
-            set(Qt5_BIN_DIR "${Qt5_ROOT}/${Qt5_PLATFORM}/bin")
+            set(_arg_WINDEPLOYQT_EXECUTABLE "${QT5_ROOT}/${QT5_PLATFORM}/bin/windeployqt.exe")
+            set(QT5_BIN_DIR "${QT5_ROOT}/${QT5_PLATFORM}/bin")
         else()
-            get_filename_component(Qt5_BIN_DIR ${_arg_WINDEPLOYQT_EXECUTABLE} DIRECTORY)
+            get_filename_component(QT5_BIN_DIR ${_arg_WINDEPLOYQT_EXECUTABLE} DIRECTORY)
         endif()
 
         if (NOT EXISTS ${_arg_WINDEPLOYQT_EXECUTABLE})
@@ -146,8 +146,8 @@ function (portable_target_windeploy PRE_BUILD_TARGET)
             list(APPEND _windeployqt_args --release)
         else ()
             # NOTE --release-with-debug-info is OBSOLETE in latest Qt5 distributions
-		    list(APPEND _windeployqt_args --debug)
-	    endif()
+            list(APPEND _windeployqt_args --debug)
+        endif()
 
         if (_arg_VERBOSE)
             list(APPEND _windeployqt_args --verbose 2)
@@ -168,13 +168,13 @@ function (portable_target_windeploy PRE_BUILD_TARGET)
             endif()
 
             foreach (_qt_extra_lib ${_arg_WINDEPLOYQT_EXTRA_LIBS})
-                set(_qt_extra_lib_path "${Qt5_BIN_DIR}/Qt5${_qt_extra_lib}${_qt_extra_lib_suffix}.dll")
+                set(_qt_extra_lib_path "${QT5_BIN_DIR}/QT5${_qt_extra_lib}${_qt_extra_lib_suffix}.dll")
 
                 if (NOT EXISTS ${_qt_extra_lib_path})
-                    set(_qt_extra_lib_path "${Qt5_BIN_DIR}/Qt5${_qt_extra_lib}${_qt_extra_lib_suffix}_p.dll")
+                    set(_qt_extra_lib_path "${QT5_BIN_DIR}/QT5${_qt_extra_lib}${_qt_extra_lib_suffix}_p.dll")
 
                     if (NOT EXISTS ${_qt_extra_lib_path})
-                        _portable_target_error(${LOG_PREFIX} "${_qt_extra_lib}: no corresponding library found at: ${Qt5_BIN_DIR}")
+                        _portable_target_error(${LOG_PREFIX} "${_qt_extra_lib}: no corresponding library found at: ${QT5_BIN_DIR}")
                     endif()
                 endif()
 
@@ -191,7 +191,7 @@ function (portable_target_windeploy PRE_BUILD_TARGET)
         #endif()
 
         if (_arg_WINDEPLOYQT_QML_MODULES)
-            set(_qml_dir "${Qt5_BIN_DIR}/../qml")
+            set(_qml_dir "${QT5_BIN_DIR}/../qml")
 
             if (NOT EXISTS ${_qml_dir})
                 _portable_target_error(${LOG_PREFIX} "QML directory not found at: ${_qml_dir}")

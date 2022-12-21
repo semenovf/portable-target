@@ -19,11 +19,11 @@ include(${CMAKE_CURRENT_LIST_DIR}/link_libraries.cmake)
 # portable_target_link_qt5_components(target
 #   [component...]           # INTERFACE, PUBLIC or PRIVATE depends on target type
 #   [REQUIRED]
-#   [Qt5_ROOT dir]           # Must point to Qt5 official distribution
+#   [QT5_ROOT dir]           # Must point to Qt5 official distribution
 #                            # directory. If not specified set to
-#                            # PORTABLE_TARGET_Qt5_ROOT or uses system platform
-#   [Qt5_PLATFORM platform]  # If not specified set to
-#                            # PORTABLE_TARGET_Qt5_PLATFORM or uses
+#                            # PORTABLE_TARGET_QT5_ROOT or uses system platform
+#   [QT5_PLATFORM platform]  # If not specified set to
+#                            # PORTABLE_TARGET_QT5_PLATFORM or uses
 #                            # system platform
 #   [AUTOMOC ON|OFF]         # (default is ON)
 #   [AUTORCC ON|OFF]         # (default is ON)
@@ -40,13 +40,13 @@ include(${CMAKE_CURRENT_LIST_DIR}/link_libraries.cmake)
 #
 function (portable_target_link_qt5_components TARGET)
     set(boolparm REQUIRED)
-    set(singleparm Qt5_ROOT Qt5_PLATFORM AUTOMOC AUTORCC AUTOUIC)
+    set(singleparm QT5_ROOT QT5_PLATFORM AUTOMOC AUTORCC AUTOUIC)
     set(multiparm INTERFACE PUBLIC PRIVATE)
 
     if (NOT TARGET ${TARGET})
         _portable_target_error( "Unknown TARGET: ${TARGET}")
     endif()
-            
+
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
     # Automatically link Qt executables to qtmain target on Windows
@@ -54,47 +54,47 @@ function (portable_target_link_qt5_components TARGET)
         cmake_policy(SET CMP0020 NEW)
     endif()
 
-    set(Qt5_DEFAULT_COMPONENTS ${_arg_UNPARSED_ARGUMENTS})
-    set(Qt5_INTERFACE_COMPONENTS ${_arg_INTERFACE})
-    set(Qt5_PUBLIC_COMPONENTS ${_arg_PUBLIC})
-    set(Qt5_PRIVATE_COMPONENTS ${_arg_PRIVATE})
+    set(QT5_DEFAULT_COMPONENTS ${_arg_UNPARSED_ARGUMENTS})
+    set(QT5_INTERFACE_COMPONENTS ${_arg_INTERFACE})
+    set(QT5_PUBLIC_COMPONENTS ${_arg_PUBLIC})
+    set(QT5_PRIVATE_COMPONENTS ${_arg_PRIVATE})
 
-    _optional_var_env(_arg_Qt5_PLATFORM
-        Qt5_PLATFORM
+    _optional_var_env(_arg_QT5_PLATFORM
+        QT5_PLATFORM
         "Qt5 target platform")
 
-    _optional_var_env(_arg_Qt5_ROOT
-        Qt5_ROOT
+    _optional_var_env(_arg_QT5_ROOT
+        QT5_ROOT
         "Qt5 root directory")
 
-    if (_arg_Qt5_ROOT)
-        if (NOT _arg_Qt5_PLATFORM)
+    if (_arg_QT5_ROOT)
+        if (NOT _arg_QT5_PLATFORM)
             _portable_target_error(${TARGET} "Qt5 platform must be specified")
         endif()
 
-        if (NOT EXISTS ${_arg_Qt5_ROOT})
+        if (NOT EXISTS ${_arg_QT5_ROOT})
             _portable_target_error(${TARGET}
-                "Bad Qt5 location: '${_arg_Qt5_ROOT}', check Qt5_ROOT parameter")
+                "Bad Qt5 location: '${_arg_QT5_ROOT}', check QT5_ROOT parameter")
         endif()
 
-        set(Qt5_DIR "${_arg_Qt5_ROOT}/${_arg_Qt5_PLATFORM}/lib/cmake/Qt5")
+        set(Qt5_DIR "${_arg_QT5_ROOT}/${_arg_QT5_PLATFORM}/lib/cmake/Qt5")
         portable_target_set_property(Qt5_DIR ${Qt5_DIR})
 
         if (NOT EXISTS ${Qt5_DIR})
             _portable_target_error(${TARGET}
-                "Bad Qt5_DIR location: '${Qt5_DIR}', check Qt5_PLATFORM parameter or may be need modification of this function")
+                "Bad Qt5_DIR location: '${Qt5_DIR}', check QT5_PLATFORM parameter or may be need modification of this function")
         endif()
 
-        set(Qt5Core_DIR "${_arg_Qt5_ROOT}/${_arg_Qt5_PLATFORM}/lib/cmake/Qt5Core")
+        set(Qt5Core_DIR "${_arg_QT5_ROOT}/${_arg_QT5_PLATFORM}/lib/cmake/Qt5Core")
 
         if (NOT EXISTS ${Qt5Core_DIR})
             _portable_target_error(${TARGET}
                 "Bad Qt5Core location: '${Qt5Core_DIR}', need modification of this function")
         endif()
 
-        _portable_target_status(${TARGET} "Qt5 location: ${_arg_Qt5_ROOT}")
+        _portable_target_status(${TARGET} "Qt5 location: ${_arg_QT5_ROOT}")
 
-        set(QT_QMAKE_EXECUTABLE "${_arg_Qt5_ROOT}/${_arg_Qt5_PLATFORM}/bin/qmake${CMAKE_EXECUTABLE_SUFFIX}")
+        set(QT_QMAKE_EXECUTABLE "${_arg_QT5_ROOT}/${_arg_QT5_PLATFORM}/bin/qmake${CMAKE_EXECUTABLE_SUFFIX}")
 
         if (NOT EXISTS ${QT_QMAKE_EXECUTABLE})
             _portable_target_error(${TARGET}
@@ -105,34 +105,34 @@ function (portable_target_link_qt5_components TARGET)
     endif()
 
     if (CMAKE_SYSTEM_NAME STREQUAL "Android")
-        #list(APPEND Qt5_COMPONENTS MultimediaQuick QuickParticles AndroidExtras)
-        list(APPEND Qt5_DEFAULT_COMPONENTS AndroidExtras)
+        #list(APPEND QT5_COMPONENTS MultimediaQuick QuickParticles AndroidExtras)
+        list(APPEND QT5_DEFAULT_COMPONENTS AndroidExtras)
     endif()
 
-    set(Qt5_COMPONENTS
-        ${Qt5_DEFAULT_COMPONENTS}
-        ${Qt5_INTERFACE_COMPONENTS}
-        ${Qt5_PUBLIC_COMPONENTS}
-        ${Qt5_PRIVATE_COMPONENTS})
+    set(QT5_COMPONENTS
+        ${QT5_DEFAULT_COMPONENTS}
+        ${QT5_INTERFACE_COMPONENTS}
+        ${QT5_PUBLIC_COMPONENTS}
+        ${QT5_PRIVATE_COMPONENTS})
 
-    if (NOT Qt5_COMPONENTS)
+    if (NOT QT5_COMPONENTS)
         _portable_target_error(${TARGET} "No Qt5 components specified")
     endif()
 
-    _portable_target_trace(${TARGET} "Qt5 components: [${Qt5_COMPONENTS}]")
+    _portable_target_trace(${TARGET} "Qt5 components: [${QT5_COMPONENTS}]")
 
     # Set location of Qt5 modules if need
-    foreach(_item IN LISTS Qt5_COMPONENTS)
-        if (_arg_Qt5_ROOT)
-            set(Qt5${_item}_DIR "${_arg_Qt5_ROOT}/${_arg_Qt5_PLATFORM}/lib/cmake/Qt5${_item}")
+    foreach(_item IN LISTS QT5_COMPONENTS)
+        if (_arg_QT5_ROOT)
+            set(Qt5${_item}_DIR "${_arg_QT5_ROOT}/${_arg_QT5_PLATFORM}/lib/cmake/Qt5${_item}")
             _portable_target_status(${TARGET} "Qt5::${_item} location: ${Qt5${_item}_DIR}")
         endif()
     endforeach()
 
     if (_arg_REQUIRED)
-        find_package(Qt5 COMPONENTS ${Qt5_COMPONENTS} REQUIRED)
+        find_package(Qt5 COMPONENTS ${QT5_COMPONENTS} REQUIRED)
     else()
-        find_package(Qt5 COMPONENTS ${Qt5_COMPONENTS})
+        find_package(Qt5 COMPONENTS ${QT5_COMPONENTS})
     endif()
 
     _portable_target_status(${TARGET} "Qt5 version found: ${Qt5Core_VERSION} (compare with required)")
@@ -145,22 +145,22 @@ function (portable_target_link_qt5_components TARGET)
     set_property(DIRECTORY PROPERTY Qt5Core_VERSION_MAJOR ${Qt5Core_VERSION_MAJOR})
     set_property(DIRECTORY PROPERTY Qt5Core_VERSION_MINOR ${Qt5Core_VERSION_MINOR})
 
-    foreach(_item IN LISTS Qt5_DEFAULT_COMPONENTS)
+    foreach(_item IN LISTS QT5_DEFAULT_COMPONENTS)
         list(APPEND _default_libraries "Qt5::${_item}")
         list(APPEND _default_include_directories "${Qt5${_item}_INCLUDE_DIRS}")
     endforeach()
 
-    foreach(_item IN LISTS Qt5_INTERFACE_COMPONENTS)
+    foreach(_item IN LISTS QT5_INTERFACE_COMPONENTS)
         list(APPEND _interface_libraries "Qt5::${_item}")
         list(APPEND _interface_include_directories "${Qt5${_item}_INCLUDE_DIRS}")
     endforeach()
 
-    foreach(_item IN LISTS Qt5_PUBLIC_COMPONENTS)
+    foreach(_item IN LISTS QT5_PUBLIC_COMPONENTS)
         list(APPEND _public_libraries "Qt5::${_item}")
         list(APPEND _public_include_directories "${Qt5${_item}_INCLUDE_DIRS}")
     endforeach()
 
-    foreach(_item IN LISTS Qt5_PRIVATE_COMPONENTS)
+    foreach(_item IN LISTS QT5_PRIVATE_COMPONENTS)
         list(APPEND _private_libraries "Qt5::${_item}")
         list(APPEND _private_include_directories "${Qt5${_item}_INCLUDE_DIRS}")
     endforeach()

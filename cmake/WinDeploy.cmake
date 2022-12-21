@@ -143,8 +143,8 @@ function (portable_windeploy PRE_BUILD_TARGET)
             list(APPEND _windeployqt_args --release)
         else ()
             # NOTE --release-with-debug-info is OBSOLETE in latest Qt5 distributions
-		    list(APPEND _windeployqt_args --debug)
-	    endif()
+            list(APPEND _windeployqt_args --debug)
+        endif()
 
         if (_arg_VERBOSE)
             list(APPEND _windeployqt_args --verbose 2)
