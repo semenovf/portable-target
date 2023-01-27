@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright (c) 2021,2022 Vladislav Trifochkin
+# Copyright (c) 2021-2023 Vladislav Trifochkin
 #
 # This file is part of `portable-target`.
 #
@@ -11,7 +11,8 @@ include(${CMAKE_CURRENT_LIST_DIR}/../Functions.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/../android/AndroidExtraOpenSSL.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 
-set(QTDEPLOY_JSON_IN_FILE ${CMAKE_CURRENT_LIST_DIR}/../android/qtdeploy.json.in)
+set(QTDEPLOY_JSON_IN_FILE_DIR ${CMAKE_CURRENT_LIST_DIR}/../android)
+set(QTDEPLOY_JSON_IN_FILE ${QTDEPLOY_JSON_IN_FILE_DIR}/qtdeploy.json.in)
 
 #
 # Checked environment
@@ -26,8 +27,11 @@ set(QTDEPLOY_JSON_IN_FILE ${CMAKE_CURRENT_LIST_DIR}/../android/qtdeploy.json.in)
 #       [ANDROIDDEPLOYQT_EXECUTABLE path]
 #       [PACKAGE_NAME package-name]
 #       [APP_NAME app-name]
-#       [VERSION_MAJOR app-version]
-#       [VERSION_MINOR app-version]
+#       [STL_PREFIX prefix]
+#       [QTDEPLOY_JSON_IN_FILE path]
+#       [VERSION_MAJOR major-version]
+#       [VERSION_MINOR minor-version]
+#       [VERSION_PATCH patch-version]
 #       [SCREEN_ORIENTATION orientation]
 #       [CONFIG_CHANGES config-changes ]
 #       [PERMISSIONS permissions]
@@ -48,6 +52,9 @@ set(QTDEPLOY_JSON_IN_FILE ${CMAKE_CURRENT_LIST_DIR}/../android/qtdeploy.json.in)
 #
 # APP_NAME app-name
 #       Android application name (label). Default is ${TARGET}.
+#
+# STL_PREFIX prefix
+#       Prefix to generate path to STL library
 #
 # VERSION_MAJOR major-version
 #       Android application major version number. Default is 1.
@@ -93,27 +100,29 @@ function (portable_target_build_apk TARGET)
 
     set(singleparm
         ANDROIDDEPLOYQT_EXECUTABLE
-        PACKAGE_NAME
         APP_NAME
+        STL_PREFIX
+        CONFIG_CHANGES
+        INSTALL
+        #KEYSTORE_PASSWORD
+        PACKAGE_NAME
+        QTDEPLOY_JSON_IN_FILE
+        SCREEN_ORIENTATION
+        SSL_ROOT
+        VERBOSE
         VERSION_MAJOR
         VERSION_MINOR
-        SCREEN_ORIENTATION
-        CONFIG_CHANGES
-        SSL_ROOT
-        INSTALL
-        VERBOSE
-        #KEYSTORE_PASSWORD
-    )
+        VERSION_PATCH)
 
     set(multiparm
-        PERMISSIONS
         DEPENDS
         #KEYSTORE
-    )
+        PERMISSIONS)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
     set(ANDROID_APP_PATH "$<TARGET_FILE:${TARGET}>")
+    set(ANDROID_APP_BASENAME "$<TARGET_FILE_BASE_NAME:${TARGET}>")
 
     if (_arg_APP_NAME OR _arg_VERSION_MAJOR OR _arg_VERSION_MINOR)
         if (NOT _arg_PACKAGE_NAME)
@@ -133,6 +142,10 @@ function (portable_target_build_apk TARGET)
         set(_arg_VERSION_MINOR 0)
     endif()
 
+    if (NOT _arg_VERSION_PATCH)
+        set(_arg_VERSION_PATCH 0)
+    endif()
+
     if (NOT _arg_SCREEN_ORIENTATION)
         set(_arg_SCREEN_ORIENTATION "unspecified")
     endif()
@@ -141,7 +154,19 @@ function (portable_target_build_apk TARGET)
         set(_arg_CONFIG_CHANGES "")
     endif()
 
+    if (NOT _arg_QTDEPLOY_JSON_IN_FILE)
+        set(_arg_QTDEPLOY_JSON_IN_FILE ${QTDEPLOY_JSON_IN_FILE})
+    endif()
+
     portable_target_get_property(Qt5_DIR _qt5_dir)
+    portable_target_get_property(Qt5_VERSION _qt5_version)
+
+    # Check if QTDEPLOY_JSON_IN_FILE is path or filename
+    get_filename_component(_json_in_file ${_arg_QTDEPLOY_JSON_IN_FILE} NAME)
+
+    if (${_json_in_file} STREQUAL ${_arg_QTDEPLOY_JSON_IN_FILE})
+        set(_arg_QTDEPLOY_JSON_IN_FILE "${QTDEPLOY_JSON_IN_FILE_DIR}/${_json_in_file}")
+    endif()
 
     if (_qt5_dir)
         if (NOT _arg_ANDROIDDEPLOYQT_EXECUTABLE)
@@ -154,6 +179,26 @@ function (portable_target_build_apk TARGET)
 
         # Used by `qtdeploy.json.in`
         get_filename_component(ANDROID_QT_ROOT "${_arg_ANDROIDDEPLOYQT_EXECUTABLE}/../.." ABSOLUTE)
+    endif()
+
+
+    if (NOT _arg_STL_PREFIX)
+        if (${ANDROID_STL} MATCHES "^[ ]*c\\+\\+_shared[ ]*$")
+            set(_arg_STL_PREFIX "llvm-libc++")
+        else()
+            _portable_target_error("Unable to deduce STL_PREFIX, STL_PREFIX must be specified")
+        endif()
+    endif()
+
+    # Used by `qtdeploy.json.in`
+    if (${_qt5_version} VERSION_GREATER_EQUAL 5.14)
+        set(ANDROID_STL_DIR "${ANDROID_NDK}/sources/cxx-stl/${_arg_STL_PREFIX}/libs")
+    else()
+        set(ANDROID_STL_PATH "${ANDROID_NDK}/sources/cxx-stl/${_arg_STL_PREFIX}/libs/${ANDROID_ABI}/lib${ANDROID_STL}.so")
+    endif()
+
+    if (NOT EXISTS ${ANDROID_STL_PATH})
+        _portable_target_error("Android STL path not found: ${ANDROID_STL_PATH}")
     endif()
 
     if (NOT _arg_INSTALL)
@@ -185,8 +230,9 @@ function (portable_target_build_apk TARGET)
     set(ANDROID_APP_NAME ${_arg_APP_NAME})
 
     # Used by `AndroidManifest.xml.in`
-    set(ANDROID_APP_VERSION "${_arg_VERSION_MAJOR}.${_arg_VERSION_MINOR}")
-    math(EXPR ANDROID_APP_VERSION_CODE "${_arg_VERSION_MAJOR} * 1000 + ${_arg_VERSION_MINOR}")
+    set(ANDROID_APP_VERSION "${_arg_VERSION_MAJOR}.${_arg_VERSION_MINOR}.${_arg_VERSION_PATCH}")
+    math(EXPR ANDROID_APP_VERSION_CODE "${_arg_VERSION_MAJOR} * 1000000 + ${_arg_VERSION_MINOR} * 1000 + ${_arg_VERSION_PATCH}")
+
     # Whether your application's processes should be created with a large Dalvik
     # heap (see https://developer.android.com/guide/topics/manifest/application-element#largeHeap for details).
     set(ANDROID_APP_LARGE_HEAP "true")
@@ -252,7 +298,7 @@ function (portable_target_build_apk TARGET)
     # Find suitable AndroidManifest.xml.in
     set(_AndroidManifest_xml_in "AndroidManifest.xml.in")
 
-    foreach(_sdk_version 21;22;23;24;25;26;27;28;29;30;31;32)
+    foreach(_sdk_version 21;22;23;24;25;26;27;28;29;30;31;32;33)
         if (${_sdk_version} GREATER ${ANDROID_MIN_SDK_VERSION})
             break()
         endif()
@@ -303,12 +349,9 @@ function (portable_target_build_apk TARGET)
     endif()
 
     # Create the configuration file that will feed androiddeployqt
-    # NOTE ANDROID_NDK_HOST_SYSTEM_NAME not set yet
-    # configure_file(${QTDEPLOY_JSON_IN_FILE} ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json @ONLY)
-
-    # Create the configuration file that will feed androiddeployqt
     # Replace placeholder variables at generation time
-    configure_file(${QTDEPLOY_JSON_IN_FILE} ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json.in @ONLY)
+    configure_file(${_arg_QTDEPLOY_JSON_IN_FILE} ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json.in @ONLY)
+
     # Evaluate generator expressions at build time
     file(GENERATE
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json
@@ -357,14 +400,22 @@ function (portable_target_build_apk TARGET)
     endif()
 
     set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/android-build/libs/${ANDROID_ABI})
-#     file(MAKE_DIRECTORY ${OUTPUT_DIR})
 
     _portable_apk_status(${TARGET} "Android Min SDK version: ${ANDROID_MIN_SDK_VERSION}")
     _portable_apk_status(${TARGET} "Android Target SDK version: ${ANDROID_TARGET_SDK_VERSION}")
     _portable_apk_status(${TARGET} "Android SDK build tools revision: ${ANDROID_SDK_BUILDTOOLS_REVISION}")
     _portable_apk_status(${TARGET} "Android Qt root         : ${ANDROID_QT_ROOT}")
+
+    if (${_qt5_version} VERSION_GREATER_EQUAL 5.14)
+        _portable_apk_status(${TARGET} "Android STL dir         : ${ANDROID_STL_DIR}")
+    else()
+        _portable_apk_status(${TARGET} "Android STL path        : ${ANDROID_STL_PATH}")
+    endif()
+
     _portable_apk_status(${TARGET} "androiddeployqt path    : ${_arg_ANDROIDDEPLOYQT_EXECUTABLE}")
+    _portable_apk_status(${TARGET} "Qt deploy JSON template : ${_arg_QTDEPLOY_JSON_IN_FILE}")
     _portable_apk_status(${TARGET} "Target path             : ${ANDROID_APP_PATH}")
+    _portable_apk_status(${TARGET} "Target basename         : ${ANDROID_APP_BASENAME}")
     _portable_apk_status(${TARGET} "Package name            : ${ANDROID_PACKAGE_NAME}")
     _portable_apk_status(${TARGET} "Application name        : \"${ANDROID_APP_NAME}\"")
     _portable_apk_status(${TARGET} "Application version     : ${ANDROID_APP_VERSION}")
@@ -376,12 +427,22 @@ function (portable_target_build_apk TARGET)
     # Create a custom command that will run the androiddeployqt utility
     # to prepare the Android package
     #---------------------------------------------------------------------------
+    # TODO A more precise definition is required to get TEMP_APK_PATH
+    set(_temp_apk_path "${CMAKE_CURRENT_BINARY_DIR}/android-build/build/outputs/apk/debug/android-build-debug.apk")
+    set(_target_apk_path "${CMAKE_BINARY_DIR}/${_arg_APP_NAME}_${ANDROID_APP_VERSION}_${ANDROID_ABI}.apk")
+
+    if (${_qt5_version} VERSION_GREATER_EQUAL 5.14)
+        set(_android_app_output_path ${OUTPUT_DIR}/lib${ANDROID_APP_BASENAME}_${ANDROID_ABI}.so)
+    else()
+        set(_android_app_output_path ${OUTPUT_DIR}/lib${ANDROID_APP_BASENAME}.so)
+    endif()
+
     add_custom_target(
         ${TARGET}_apk
         ALL
         COMMAND ${CMAKE_COMMAND} -E remove_directory ${OUTPUT_DIR} # it seems that recompiled libraries are not copied if we don't remove them first
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
-        COMMAND ${CMAKE_COMMAND} -E copy ${ANDROID_APP_PATH} ${OUTPUT_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy ${ANDROID_APP_PATH} ${_android_app_output_path}
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/android-sources ${ANDROID_APP_PACKAGE_SOURCE_ROOT}
         COMMAND ${_arg_ANDROIDDEPLOYQT_EXECUTABLE}
             ${VERBOSE}
@@ -390,7 +451,8 @@ function (portable_target_build_apk TARGET)
             --gradle
             --android-platform ${ANDROID_PLATFORM}
             ${INSTALL_OPTIONS}
-            ${SIGN_OPTIONS})
+            ${SIGN_OPTIONS}
+        COMMAND ${CMAKE_COMMAND} -E copy ${_temp_apk_path} ${_target_apk_path})
 
     if (_arg_DEPENDS)
         add_dependencies(${TARGET}_apk ${_arg_DEPENDS})

@@ -1,22 +1,26 @@
 {
- "description": "This file is to be read by androiddeployqt",
- "application-binary": "@ANDROID_APP_PATH@",
- "ndk": "@ANDROID_NDK@",
- "ndk-host": "@ANDROID_NDK_HOST_SYSTEM_NAME@",
- "qml-root-path": "@CMAKE_SOURCE_DIR@",
- "qt": "@ANDROID_QT_ROOT@",
- "sdk": "@ANDROID_SDK@",
- "sdkBuildToolsRevision": "@ANDROID_SDK_BUILDTOOLS_REVISION@",
- "stdcpp-path": "@ANDROID_STL_PATH@",
- "target-architecture": "@ANDROID_ABI@",
- "tool-prefix": "@ANDROID_TOOLCHAIN_PREFIX@",
- "toolchain-prefix": "@ANDROID_TOOLCHAIN_PREFIX@",
+ "description": "This file is to be read by androiddeployqt for Qt 5.14 or greater"
+    , "application-binary": "@ANDROID_APP_BASENAME@"
+    , "ndk": "@ANDROID_NDK@"
+    , "ndk-host": "@ANDROID_NDK_HOST_SYSTEM_NAME@"
+    , "qml-root-path": "@CMAKE_SOURCE_DIR@"
+    , "qt": "@ANDROID_QT_ROOT@"
+    , "sdk": "@ANDROID_SDK@"
+    , "sdkBuildToolsRevision": "@ANDROID_SDK_BUILDTOOLS_REVISION@"
+    , "stdcpp-path": "@ANDROID_STL_DIR@"
+    , "tool-prefix": "@ANDROID_TOOLCHAIN_PREFIX@"
+    , "toolchain-prefix": "@ANDROID_TOOLCHAIN_PREFIX@"
+    , "android-extra-libs": "@ANDROID_APP_EXTRA_LIBS@"
+    , "useLLVM": @ANDROID_USE_LLVM@
+    , "android-package": "@ANDROID_PACKAGE_NAME@"
+    , "android-app-name": "@ANDROID_APP_NAME@"
+    , "android-package-source-directory": "@ANDROID_APP_PACKAGE_SOURCE_ROOT@"
 
- "android-extra-libs": "@ANDROID_APP_EXTRA_LIBS@",
- "useLLVM": @ANDROID_USE_LLVM@,
-
- "--toolchain-version": "@ANDROID_TOOLCHAIN_VERSION@",
- "android-package": "@ANDROID_PACKAGE_NAME@",
- "android-app-name": "@ANDROID_APP_NAME@",
- "android-package-source-directory": "@ANDROID_APP_PACKAGE_SOURCE_ROOT@"
+    , "architectures": { "@ANDROID_ABI@": "@ANDROID_ABI@" }
+    , "extraPrefixDirs": "@ANDROID_APP_EXTRA_PREFIX_DIRS@"
+    , "--android-extra-plugins": "@ANDROID_APP_EXTRA_PLUGINS@"
+    , "android-version-name": "@ANDROID_APP_VERSION_NAME@"
+    , "android-version-code": "@ANDROID_APP_VERSION_CODE@"
+    , "--qml-import-paths": "@ANDROID_APP_QML_IMPORT_PATH@"
+    , "--deployment-dependencies": "@ANDROID_APP_DEPLOYMENT_DEPENDENCIES@"
 }

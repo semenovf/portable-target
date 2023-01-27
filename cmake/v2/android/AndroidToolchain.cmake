@@ -116,7 +116,7 @@ _mandatory_var_env(ANDROID_MIN_SDK_VERSION
 _mandatory_var_env(ANDROID_TARGET_SDK_VERSION
     ANDROID_TARGET_SDK_VERSION
     "Android target SDK version"
-    28)
+    ${ANDROID_MIN_SDK_VERSION})
 
 # ANDROID_PLATFORM is equivalent to one of the directories from list:
 #       `ls -1 ${ANDROID_NDK}/platforms` (android-16, .. , android-21, android-22, .. , android-30 etc)
@@ -130,39 +130,19 @@ _mandatory_var_env(ANDROID_STL
     "Android STL"
     "c++_shared")
 
-_optional_var_env(ANDROID_STL_PREFIX
-    ANDROID_STL_PREFIX
-    "Android STL prefix")
-
-if (NOT ANDROID_STL_PREFIX)
-    if (${ANDROID_STL} MATCHES "^[ ]*c\\+\\+_shared[ ]*$")
-        set(ANDROID_STL_PREFIX "llvm-libc++")
-    else()
-        _portable_target_error("Unable to deduce ANDROID_STL_PREFIX, ANDROID_STL_PREFIX must be specified")
-    endif()
-endif()
-
-# Used by `qtdeploy.json.in`
-set(ANDROID_STL_PATH
-    "${ANDROID_NDK}/sources/cxx-stl/${ANDROID_STL_PREFIX}/libs/${ANDROID_ABI}/lib${ANDROID_STL}.so")
-
-if (NOT EXISTS ${ANDROID_STL_PATH})
-    _portable_target_error("Android STL path not found: ${ANDROID_STL_PATH}")
-endif()
-
-_portable_target_status("CMAKE command          : ${CMAKE_COMMAND}")
-_portable_target_status("CMAKE version          : ${CMAKE_VERSION}")
-_portable_target_status("Java HOME directory    : ${JAVA_HOME}")
-_portable_target_status("Android SDK directory  : ${ANDROID_SDK}")
-_portable_target_status("Android NDK directory  : ${ANDROID_NDK}")
-_portable_target_status("Android toolchain file : ${ANDROID_TOOLCHAIN_FILE}")
-_portable_target_status("Android toolchain      : ${ANDROID_TOOLCHAIN}")
-_portable_target_status("Android ABI            : ${ANDROID_ABI}")
-_portable_target_status("Android platform       : ${ANDROID_PLATFORM}")
-_portable_target_status("Android Min SDK Version: ${ANDROID_MIN_SDK_VERSION}")
-_portable_target_status("Android STL            : ${ANDROID_STL}")
-_portable_target_status("Android STL path       : ${ANDROID_STL_PATH}")
-_portable_target_status("Strip program          : ${CMAKE_STRIP}")
+_portable_target_status("CMAKE command             : ${CMAKE_COMMAND}")
+_portable_target_status("CMAKE version             : ${CMAKE_VERSION}")
+_portable_target_status("Java HOME directory       : ${JAVA_HOME}")
+_portable_target_status("Android SDK directory     : ${ANDROID_SDK}")
+_portable_target_status("Android NDK directory     : ${ANDROID_NDK}")
+_portable_target_status("Android toolchain file    : ${ANDROID_TOOLCHAIN_FILE}")
+_portable_target_status("Android toolchain         : ${ANDROID_TOOLCHAIN}")
+_portable_target_status("Android ABI               : ${ANDROID_ABI}")
+_portable_target_status("Android platform          : ${ANDROID_PLATFORM}")
+_portable_target_status("Android Min SDK Version   : ${ANDROID_MIN_SDK_VERSION}")
+_portable_target_status("Android Target SDK Version: ${ANDROID_TARGET_SDK_VERSION}")
+_portable_target_status("Android STL base name     : ${ANDROID_STL}")
+_portable_target_status("Strip program             : ${CMAKE_STRIP}")
 
 # Include actual toolchain file
 include(${ANDROID_TOOLCHAIN_FILE})
