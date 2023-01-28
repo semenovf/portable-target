@@ -104,7 +104,7 @@ function (portable_target_build_apk TARGET)
         STL_PREFIX
         CONFIG_CHANGES
         INSTALL
-        #KEYSTORE_PASSWORD
+        KEYSTORE_PASSWORD
         PACKAGE_NAME
         QTDEPLOY_JSON_IN_FILE
         SCREEN_ORIENTATION
@@ -116,7 +116,7 @@ function (portable_target_build_apk TARGET)
 
     set(multiparm
         DEPENDS
-        #KEYSTORE
+        KEYSTORE
         PERMISSIONS)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
@@ -246,6 +246,12 @@ function (portable_target_build_apk TARGET)
         set(ANDROID_APP_IS_DEBUGGABLE "false")
         #set(SIGN_OPTIONS --release)
         #set(SIGN_OPTIONS --release --jarsigner --sign /home/wladt/TacticalPad2Cert.keystore --storepass 12345678 --keypass 12345678)
+
+        # TODO Check for older versions. It depends on androiddeployqt version
+        if (${_qt5_version} VERSION_GREATER_EQUAL 5.14)
+            set(SIGN_OPTIONS --sign ${_arg_KEYSTORE} release --storepass
+                ${_arg_KEYSTORE_PASSWORD} --keypass ${_arg_KEYSTORE_PASSWORD})
+        endif()
     endif()
 
     # TODO check if the apk must be signed
@@ -429,8 +435,13 @@ function (portable_target_build_apk TARGET)
     # to prepare the Android package
     #---------------------------------------------------------------------------
     # TODO A more precise definition is required to get TEMP_APK_PATH
-    set(_temp_apk_path "${CMAKE_CURRENT_BINARY_DIR}/android-build/build/outputs/apk/debug/android-build-debug.apk")
-    set(_target_apk_path "${CMAKE_BINARY_DIR}/${_arg_APP_NAME}_${ANDROID_APP_VERSION}_${ANDROID_ABI}.apk")
+    if (${ANDROID_APP_IS_DEBUGGABLE} STREQUAL "true")
+        set(_temp_apk_path "${CMAKE_CURRENT_BINARY_DIR}/android-build/build/outputs/apk/debug/android-build-debug.apk")
+        set(_target_apk_path "${CMAKE_BINARY_DIR}/${_arg_APP_NAME}_${ANDROID_APP_VERSION}_${ANDROID_ABI}_debug.apk")
+    else()
+        set(_temp_apk_path "${CMAKE_CURRENT_BINARY_DIR}/android-build/build/outputs/apk/release/android-build-release-signed.apk")
+        set(_target_apk_path "${CMAKE_BINARY_DIR}/${_arg_APP_NAME}_${ANDROID_APP_VERSION}_${ANDROID_ABI}.apk")
+    endif()
 
     if (${_qt5_version} VERSION_GREATER_EQUAL 5.14)
         set(_android_app_output_path ${OUTPUT_DIR}/lib${ANDROID_APP_BASENAME}_${ANDROID_ABI}.so)
