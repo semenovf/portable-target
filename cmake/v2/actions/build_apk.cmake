@@ -297,22 +297,23 @@ function (portable_target_build_apk TARGET)
 
     # Find suitable AndroidManifest.xml.in
     set(_AndroidManifest_xml_in "AndroidManifest.xml.in")
+    set(_android_sources_dir "${CMAKE_CURRENT_SOURCE_DIR}/android-sources")
 
     foreach(_sdk_version 21;22;23;24;25;26;27;28;29;30;31;32;33)
-        if (${_sdk_version} GREATER ${ANDROID_MIN_SDK_VERSION})
+        if (${_sdk_version} GREATER ${ANDROID_TARGET_SDK_VERSION})
             break()
         endif()
 
-        if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/AndroidManifest-${_sdk_version}.xml.in")
+        if (EXISTS "${_android_sources_dir}/AndroidManifest-${_sdk_version}.xml.in")
             set(_AndroidManifest_xml_in "AndroidManifest-${_sdk_version}.xml.in")
         endif()
     endforeach()
 
-    if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${_AndroidManifest_xml_in})
-        _portable_apk_error(${TARGET} "${_AndroidManifest_xml_in} not found at: ${CMAKE_CURRENT_SOURCE_DIR}"
+    if (NOT EXISTS ${_android_sources_dir}/${_AndroidManifest_xml_in})
+        _portable_apk_error(${TARGET} "${_AndroidManifest_xml_in} not found at: ${_android_sources_dir}"
             "\n\tAndroidManifest.xml.in can be copied from portable_target/android directory")
     else()
-        _portable_apk_status(${TARGET} "${_AndroidManifest_xml_in} found at: ${CMAKE_CURRENT_SOURCE_DIR}")
+        _portable_apk_status(${TARGET} "${_AndroidManifest_xml_in} found at: ${_android_sources_dir}")
     endif()
 
     # Create a subdirectory for the extra package sources
@@ -320,7 +321,7 @@ function (portable_target_build_apk TARGET)
     set(ANDROID_APP_PACKAGE_SOURCE_ROOT "${CMAKE_CURRENT_BINARY_DIR}/android-sources")
 
     # Generate a manifest from the template
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${_AndroidManifest_xml_in} ${ANDROID_APP_PACKAGE_SOURCE_ROOT}/AndroidManifest.xml @ONLY)
+    configure_file(${_android_sources_dir}/${_AndroidManifest_xml_in} ${ANDROID_APP_PACKAGE_SOURCE_ROOT}/AndroidManifest.xml @ONLY)
 
     # Set "useLLVM" parameter in qtdeploy.json to default value 'false'
     set(ANDROID_USE_LLVM "false")
@@ -443,7 +444,7 @@ function (portable_target_build_apk TARGET)
         COMMAND ${CMAKE_COMMAND} -E remove_directory ${OUTPUT_DIR} # it seems that recompiled libraries are not copied if we don't remove them first
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
         COMMAND ${CMAKE_COMMAND} -E copy ${ANDROID_APP_PATH} ${_android_app_output_path}
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/android-sources ${ANDROID_APP_PACKAGE_SOURCE_ROOT}
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${_android_sources_dir}/sources ${ANDROID_APP_PACKAGE_SOURCE_ROOT}
         COMMAND ${_arg_ANDROIDDEPLOYQT_EXECUTABLE}
             ${VERBOSE}
             --output ${CMAKE_CURRENT_BINARY_DIR}/android-build
