@@ -13,6 +13,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 
 set(QTDEPLOY_JSON_IN_FILE_DIR ${CMAKE_CURRENT_LIST_DIR}/../android)
 set(QTDEPLOY_JSON_IN_FILE ${QTDEPLOY_JSON_IN_FILE_DIR}/qtdeploy.json.in)
+set(BUILD_GRADLE_IN_FILE ${CMAKE_CURRENT_LIST_DIR}/../android/build.gradle.in)
 
 #
 # Checked environment
@@ -193,12 +194,16 @@ function (portable_target_build_apk TARGET)
     # Used by `qtdeploy.json.in`
     if (${_qt5_version} VERSION_GREATER_EQUAL 5.14)
         set(ANDROID_STL_DIR "${ANDROID_NDK}/sources/cxx-stl/${_arg_STL_PREFIX}/libs")
+
+        if (NOT EXISTS ${ANDROID_STL_DIR})
+            _portable_target_error("Android STL dir not found: ${ANDROID_STL_DIR}")
+        endif()
     else()
         set(ANDROID_STL_PATH "${ANDROID_NDK}/sources/cxx-stl/${_arg_STL_PREFIX}/libs/${ANDROID_ABI}/lib${ANDROID_STL}.so")
-    endif()
 
-    if (NOT EXISTS ${ANDROID_STL_PATH})
-        _portable_target_error("Android STL path not found: ${ANDROID_STL_PATH}")
+        if (NOT EXISTS ${ANDROID_STL_PATH})
+            _portable_target_error("Android STL path not found: ${ANDROID_STL_PATH}")
+        endif()
     endif()
 
     if (NOT _arg_INSTALL)
@@ -243,24 +248,19 @@ function (portable_target_build_apk TARGET)
             OR ${CMAKE_BUILD_TYPE} MATCHES "[Rr][Ee][Ll][Ww][Ii][Tt][Hh][Dd][Ee][Bb][Ii][Nn][Ff][Oo]")
         set(ANDROID_APP_IS_DEBUGGABLE "true")
     else()
-        set(ANDROID_APP_IS_DEBUGGABLE "false")
-        #set(SIGN_OPTIONS --release)
-        #set(SIGN_OPTIONS --release --jarsigner --sign /home/wladt/TacticalPad2Cert.keystore --storepass 12345678 --keypass 12345678)
-
         # TODO Check for older versions. It depends on androiddeployqt version
         if (${_qt5_version} VERSION_GREATER_EQUAL 5.14)
-            set(SIGN_OPTIONS --sign ${_arg_KEYSTORE} release --storepass
-                ${_arg_KEYSTORE_PASSWORD} --keypass ${_arg_KEYSTORE_PASSWORD})
+            if (_arg_KEYSTORE AND _arg_KEYSTORE_PASSWORD)
+                set(SIGN_OPTIONS --sign ${_arg_KEYSTORE} release --storepass
+                    ${_arg_KEYSTORE_PASSWORD} --keypass ${_arg_KEYSTORE_PASSWORD})
+                set(ANDROID_APP_IS_DEBUGGABLE "false")
+            else()
+                set(ANDROID_APP_IS_DEBUGGABLE "true")
+            endif()
+        else()
+            set(ANDROID_APP_IS_DEBUGGABLE "true")
         endif()
     endif()
-
-    # TODO check if the apk must be signed
-#     if(ARG_KEYSTORE)
-#         set(SIGN_OPTIONS --release --sign ${ARG_KEYSTORE} --tsa http://timestamp.digicert.com)
-#         if(ARG_KEYSTORE_PASSWORD)
-#             set(SIGN_OPTIONS ${SIGN_OPTIONS} --storepass ${ARG_KEYSTORE_PASSWORD})
-#         endif()
-#     endif()
 
     # Set the list of dependant libraries
     if (_arg_DEPENDS OR _android_ssl_extra_libs)
@@ -363,6 +363,12 @@ function (portable_target_build_apk TARGET)
     file(GENERATE
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json
         INPUT ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json.in)
+
+    # Create gradle configuration
+    configure_file(${BUILD_GRADLE_IN_FILE} ${CMAKE_CURRENT_BINARY_DIR}/build.gradle.in @ONLY)
+    file(GENERATE
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/android-build/build.gradle
+        INPUT ${CMAKE_CURRENT_BINARY_DIR}/build.gradle.in)
 
     # Workaround for `androiddeployqt` bug with `llvm-strip` options.
     # This bug takes places in Qt5.13.2 and older versions, but is already fixed
