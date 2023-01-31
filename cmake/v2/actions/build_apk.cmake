@@ -412,8 +412,6 @@ function (portable_target_build_apk TARGET)
         set(VERBOSITY_YESNO "NO")
     endif()
 
-    set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/android-build/libs/${ANDROID_ABI})
-
     _portable_apk_status(${TARGET} "Android Min SDK version: ${ANDROID_MIN_SDK_VERSION}")
     _portable_apk_status(${TARGET} "Android Target SDK version: ${ANDROID_TARGET_SDK_VERSION}")
     _portable_apk_status(${TARGET} "Android SDK build tools revision: ${ANDROID_SDK_BUILDTOOLS_REVISION}")
@@ -449,17 +447,19 @@ function (portable_target_build_apk TARGET)
         set(_target_apk_path "${CMAKE_BINARY_DIR}/${_arg_APP_NAME}_${ANDROID_APP_VERSION}_${ANDROID_ABI}.apk")
     endif()
 
+    set(_output_dir ${CMAKE_CURRENT_BINARY_DIR}/android-build/libs/${ANDROID_ABI})
+
     if (${_qt5_version} VERSION_GREATER_EQUAL 5.14)
-        set(_android_app_output_path ${OUTPUT_DIR}/lib${ANDROID_APP_BASENAME}_${ANDROID_ABI}.so)
+        set(_android_app_output_path ${_output_dir}/lib${ANDROID_APP_BASENAME}_${ANDROID_ABI}.so)
     else()
-        set(_android_app_output_path ${OUTPUT_DIR}/lib${ANDROID_APP_BASENAME}.so)
+        set(_android_app_output_path ${_output_dir}/lib${ANDROID_APP_BASENAME}.so)
     endif()
 
     add_custom_target(
         ${TARGET}_apk
         ALL
-        COMMAND ${CMAKE_COMMAND} -E remove_directory ${OUTPUT_DIR} # it seems that recompiled libraries are not copied if we don't remove them first
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
+        COMMAND ${CMAKE_COMMAND} -E remove_directory ${_output_dir} # it seems that recompiled libraries are not copied if we don't remove them first
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${_output_dir}
         COMMAND ${CMAKE_COMMAND} -E copy ${ANDROID_APP_PATH} ${_android_app_output_path}
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${_android_sources_dir}/sources ${ANDROID_APP_PACKAGE_SOURCE_ROOT}
         COMMAND ${_arg_ANDROIDDEPLOYQT_EXECUTABLE}
