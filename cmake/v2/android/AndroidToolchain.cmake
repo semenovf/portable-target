@@ -123,7 +123,7 @@ _mandatory_var_env(ANDROID_TARGET_SDK_VERSION
 _mandatory_var_env(ANDROID_PLATFORM
     ANDROID_PLATFORM
     "Android platform"
-    "android-${ANDROID_MIN_SDK_VERSION}")
+    "android-${ANDROID_TARGET_SDK_VERSION}")
 
 _mandatory_var_env(ANDROID_STL
     ANDROID_STL
