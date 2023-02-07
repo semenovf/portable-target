@@ -81,11 +81,16 @@ function (portable_target_link_qt5_components TARGET)
 
         _portable_target_status(${TARGET} "Qt5_DIR location: ${_arg_QT5_DIR}")
 
-        set(QT_QMAKE_EXECUTABLE "${_arg_QT5_DIR}/../../../bin/qmake${CMAKE_EXECUTABLE_SUFFIX}")
+        set(QT_QMAKE_EXECUTABLE1 "${_arg_QT5_DIR}/../../../bin/qmake${CMAKE_EXECUTABLE_SUFFIX}")
+        set(QT_QMAKE_EXECUTABLE2 "${_arg_QT5_DIR}/../../bin/qmake${CMAKE_EXECUTABLE_SUFFIX}")
 
-        if (NOT EXISTS ${QT_QMAKE_EXECUTABLE})
+        if (EXISTS ${QT_QMAKE_EXECUTABLE1})
+            set(QT_QMAKE_EXECUTABLE ${QT_QMAKE_EXECUTABLE1})
+        elseif (EXISTS ${QT_QMAKE_EXECUTABLE2})
+            set(QT_QMAKE_EXECUTABLE ${QT_QMAKE_EXECUTABLE2})
+        else()
             _portable_target_error(${TARGET}
-                "Bad qmake location: '${QT_QMAKE_EXECUTABLE}', need modification of this function")
+                "Bad qmake location: neither '${QT_QMAKE_EXECUTABLE1}' nor '${QT_QMAKE_EXECUTABLE2}', need modification of this function")
         endif()
 
         _portable_target_status(${TARGET} "Qt5 qmake location: ${QT_QMAKE_EXECUTABLE}")

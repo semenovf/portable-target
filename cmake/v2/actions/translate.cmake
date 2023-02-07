@@ -351,7 +351,10 @@ function (_portable_target_translate_update PARENT_TARGET)
         # POT-file updating
         add_custom_command(
             COMMENT "Updating ${_pot_file}"
-            OUTPUT ${_pot_file}
+
+            # Need to prevent from delete generated file while
+            # `cmake --build. . --target clean`
+            OUTPUT "${_pot_file}-prevent-from-delete.tmp"
             COMMAND "${XGETTEXT_BIN}"
                 ${_xgettext_args}
                 "--output=${_pot_file}"
@@ -404,7 +407,11 @@ function (_portable_target_translate_update PARENT_TARGET)
 
             add_custom_command(
                 COMMENT "Update ${_po_file}"
-                OUTPUT "${_po_file}"
+
+                # Need to prevent from delete generated file while
+                # `cmake --build. . --target clean`
+                OUTPUT "${_po_file}-prevent-from-delete.tmp"
+
                 COMMAND "${MSGMERGE_BIN}" ${_msgmerge_args}
                     "${_po_file}"
                     "${_pot_file}"

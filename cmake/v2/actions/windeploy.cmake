@@ -122,16 +122,12 @@ function (portable_target_windeploy PRE_BUILD_TARGET)
 
     if (_arg_WINDEPLOYQT)
         if (NOT _arg_WINDEPLOYQT_EXECUTABLE)
-            _mandatory_var_env(QT5_ROOT
-                QT5_ROOT
-                "Qt5 Root directory")
+            _mandatory_var_env(QT5_DIR
+                QT5_DIR
+                "QT5_DIR directory")
 
-            _mandatory_var_env(QT5_PLATFORM
-                QT5_PLATFORM
-                "Qt5 Platform directory")
-
-            set(_arg_WINDEPLOYQT_EXECUTABLE "${QT5_ROOT}/${QT5_PLATFORM}/bin/windeployqt.exe")
-            set(QT5_BIN_DIR "${QT5_ROOT}/${QT5_PLATFORM}/bin")
+            set(QT5_BIN_DIR "${QT5_DIR}/../../bin")
+            set(_arg_WINDEPLOYQT_EXECUTABLE "${QT5_BIN_DIR}/windeployqt.exe")
         else()
             get_filename_component(QT5_BIN_DIR ${_arg_WINDEPLOYQT_EXECUTABLE} DIRECTORY)
         endif()
