@@ -28,6 +28,7 @@ set(BUILD_GRADLE_IN_FILE ${CMAKE_CURRENT_LIST_DIR}/../android/build.gradle.in)
 #       [ANDROIDDEPLOYQT_EXECUTABLE path]
 #       [PACKAGE_NAME package-name]
 #       [APP_NAME app-name]
+#       [APK_BASENAME template]
 #       [STL_PREFIX prefix]
 #       [QTDEPLOY_JSON_IN_FILE path]
 #       [VERSION_MAJOR major-version]
@@ -53,6 +54,10 @@ set(BUILD_GRADLE_IN_FILE ${CMAKE_CURRENT_LIST_DIR}/../android/build.gradle.in)
 #
 # APP_NAME app-name
 #       Android application name (label). Default is ${TARGET}.
+#
+# APK_BASENAME template
+#       Template for basename for resulting APK file path.
+#       Example: Hello_@ANDROID_APP_VERSION@_@ANDROID_ABI@
 #
 # STL_PREFIX prefix
 #       Prefix to generate path to STL library
@@ -102,6 +107,7 @@ function (portable_target_build_apk TARGET)
     set(singleparm
         ANDROIDDEPLOYQT_EXECUTABLE
         APP_NAME
+        APK_BASENAME
         STL_PREFIX
         CONFIG_CHANGES
         INSTALL
@@ -439,12 +445,19 @@ function (portable_target_build_apk TARGET)
     # to prepare the Android package
     #---------------------------------------------------------------------------
     # TODO A more precise definition is required to get TEMP_APK_PATH
+
+    if (_arg_APK_BASENAME)
+        string(CONFIGURE ${_arg_APK_BASENAME} _arg_APK_BASENAME @ONLY)
+    else()
+        set(_arg_APK_BASENAME "${_arg_APK_BASENAME}_${ANDROID_APP_VERSION}_${ANDROID_ABI}")
+    endif()
+
     if (${ANDROID_APP_IS_DEBUGGABLE} STREQUAL "true")
         set(_temp_apk_path "${CMAKE_CURRENT_BINARY_DIR}/android-build/build/outputs/apk/debug/android-build-debug.apk")
-        set(_target_apk_path "${CMAKE_BINARY_DIR}/${_arg_APP_NAME}_${ANDROID_APP_VERSION}_${ANDROID_ABI}_debug.apk")
+        set(_target_apk_path "${CMAKE_BINARY_DIR}/${_arg_APK_BASENAME}_debug.apk")
     else()
         set(_temp_apk_path "${CMAKE_CURRENT_BINARY_DIR}/android-build/build/outputs/apk/release/android-build-release-signed.apk")
-        set(_target_apk_path "${CMAKE_BINARY_DIR}/${_arg_APP_NAME}_${ANDROID_APP_VERSION}_${ANDROID_ABI}.apk")
+        set(_target_apk_path "${CMAKE_BINARY_DIR}/${_arg_APK_BASENAME}.apk")
     endif()
 
     set(_output_dir ${CMAKE_CURRENT_BINARY_DIR}/android-build/libs/${ANDROID_ABI})
