@@ -64,6 +64,8 @@ _portable_target_status(${TARGET} "CMAKE_BUILD_TYPE    : ${CMAKE_BUILD_TYPE}")
 #
 # BUILD_APK           Build Android package
 #
+# BUILD_JAR           Build Java JAR package
+#
 # WINDEPLOY           Build package for Windows (using NSIS)
 #
 function (portable_target ACTION FIRST_ARG)
@@ -141,6 +143,9 @@ function (portable_target ACTION FIRST_ARG)
     elseif (ACTION STREQUAL "BUILD_APK")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/build_apk.cmake)
         portable_target_build_apk(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
+    elseif (ACTION STREQUAL "BUILD_JAR")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/build_jar.cmake)
+        portable_target_build_jar(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
     elseif (ACTION STREQUAL "WINDEPLOY")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/windeploy.cmake)
         portable_target_windeploy(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
