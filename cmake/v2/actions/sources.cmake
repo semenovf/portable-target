@@ -15,7 +15,9 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 # Policy CMP0076 is not set: target_sources() command converts relative paths
 # to absolute.  Run "cmake --help-policy CMP0076" for policy details.  Use
 # the cmake_policy command to set the policy and suppress this warning.
-cmake_policy(SET CMP0076 NEW) # Since version 3.13.
+if (POLICY CMP0076)
+	cmake_policy(SET CMP0076 NEW) # Since version 3.13.
+endif()
 
 #
 # Usage:
