@@ -15,6 +15,8 @@ set(QTDEPLOY_JSON_IN_FILE_DIR ${CMAKE_CURRENT_LIST_DIR}/../android)
 set(QTDEPLOY_JSON_IN_FILE ${QTDEPLOY_JSON_IN_FILE_DIR}/qtdeploy.json.in)
 set(BUILD_GRADLE_IN_FILE ${CMAKE_CURRENT_LIST_DIR}/../android/build.gradle.in)
 
+find_program(ADB_BIN adb)
+
 #
 # Checked environment
 #   [OK]    Qt 5.13.2 + NDK 22.0.7026061
@@ -405,7 +407,7 @@ function (portable_target_build_apk TARGET)
     #   --reinstall (will be called `adb install -r` only).
     # Will use second method.
     if  (_arg_INSTALL)
-        set(INSTALL_OPTIONS --reinstall)
+        #set(INSTALL_OPTIONS --reinstall)
         set(INSTALL_YESNO "YES")
     else()
         set(INSTALL_YESNO "NO")
@@ -481,9 +483,27 @@ function (portable_target_build_apk TARGET)
             --input ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json
             --gradle
             --android-platform ${ANDROID_PLATFORM}
-            ${INSTALL_OPTIONS}
             ${SIGN_OPTIONS}
         COMMAND ${CMAKE_COMMAND} -E copy ${_temp_apk_path} ${_target_apk_path})
+
+    if (_arg_INSTALL)
+        if (ADB_BIN)
+            list(APPEND _adb_install_opts "-r")
+
+            if (${ANDROID_APP_IS_DEBUGGABLE} STREQUAL "true")
+                list(APPEND _adb_install_opts "-t")
+            endif()
+
+            add_custom_target(
+                ${TARGET}_apk_install
+                ALL
+                COMMAND ${ADB_BIN} install ${_adb_install_opts} ${_target_apk_path})
+
+            add_dependencies(${TARGET}_apk_install ${TARGET}_apk)
+        else()
+            _portable_apk_warn(${TARGET} "`adb` tool not found, install APK manually")
+        endif()
+    endif()
 
     if (_arg_DEPENDS)
         add_dependencies(${TARGET}_apk ${_arg_DEPENDS})
