@@ -17,7 +17,7 @@
     , "android-package-source-directory": "@ANDROID_APP_PACKAGE_SOURCE_ROOT@"
 
     , "architectures": { "@ANDROID_ABI@": "@ANDROID_ABI@" }
-    , "extraPrefixDirs": "@ANDROID_APP_EXTRA_PREFIX_DIRS@"
+    , "extraPrefixDirs": [ @ANDROID_APP_EXTRA_PREFIX_DIRS@ ]
     , "--android-extra-plugins": "@ANDROID_APP_EXTRA_PLUGINS@"
     , "android-version-name": "@ANDROID_APP_VERSION_NAME@"
     , "android-version-code": "@ANDROID_APP_VERSION_CODE@"

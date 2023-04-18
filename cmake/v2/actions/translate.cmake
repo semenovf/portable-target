@@ -73,9 +73,12 @@ endif()
 #   [OUTPUT_DIR]
 #   [BASENAME basename])
 #
+# AUX_OUTPUT_DIR
+#       Auxiliary directory to output PO-files (default is as OUTPUT_DIR).
+#
 # OUTPUT_DIR
 #       Root directory to output MO-files (default is
-#       `${CMAKE_CURRENT_BINARY_DIR}`). Resulting path will be
+#       `${CMAKE_CURRENT_BINARY_DIR}/locale`). Resulting path will be
 #       `OUTPUT_BINARY_DIR/locale/ll[_LL]/LC_MESSAGES`, where `ll_LL` is a
 #       language abbreviation.
 #
@@ -90,7 +93,7 @@ function (_portable_target_translate_amalgamate TARGET)
     endif()
 
     set(boolparm)
-    set(singleparm OUTPUT_DIR BASENAME)
+    set(singleparm AUX_OUTPUT_DIR OUTPUT_DIR BASENAME)
     set(multiparm)
 
     _portable_target_set_properties_defaults()
@@ -114,9 +117,18 @@ function (_portable_target_translate_amalgamate TARGET)
                     set(_arg_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/locale")
                 endif()
 
-                set(_amalgamated_po_file "${_arg_OUTPUT_DIR}/${_arg_BASENAME}.${_lang}.po")
+                if (NOT _arg_AUX_OUTPUT_DIR)
+                    set(_arg_AUX_OUTPUT_DIR ${_arg_OUTPUT_DIR})
+                endif()
+
+                set(_amalgamated_po_file "${_arg_AUX_OUTPUT_DIR}/${_arg_BASENAME}.${_lang}.po")
                 set(_mo_output_dir "${_arg_OUTPUT_DIR}/${_lang}/LC_MESSAGES")
                 set(_amalgamated_mo_file "${_mo_output_dir}/${_arg_BASENAME}.mo")
+
+                if (NOT EXISTS ${_arg_AUX_OUTPUT_DIR})
+                    _portable_target_trace(${TARGET} "Create auxiliary ouput directory: [${_arg_AUX_OUTPUT_DIR}]")
+                    file(MAKE_DIRECTORY ${_arg_AUX_OUTPUT_DIR})
+                endif()
 
                 if (NOT EXISTS ${_arg_OUTPUT_DIR})
                     _portable_target_trace(${TARGET} "Create directory: [${_arg_OUTPUT_DIR}]")
@@ -354,7 +366,9 @@ function (_portable_target_translate_update PARENT_TARGET)
 
             # Need to prevent from delete generated file while
             # `cmake --build. . --target clean`
-            OUTPUT "${_pot_file}-prevent-from-delete.tmp"
+            #OUTPUT "${_pot_file}-prevent-from-delete.tmp"
+            OUTPUT "${_pot_file}"
+
             COMMAND "${XGETTEXT_BIN}"
                 ${_xgettext_args}
                 "--output=${_pot_file}"
@@ -410,13 +424,17 @@ function (_portable_target_translate_update PARENT_TARGET)
 
                 # Need to prevent from delete generated file while
                 # `cmake --build. . --target clean`
-                OUTPUT "${_po_file}-prevent-from-delete.tmp"
+                #OUTPUT "${_po_file}-prevent-from-delete.tmp"
+                #OUTPUT "${_po_file}.tmp"
+                OUTPUT "${_po_file}"
 
                 COMMAND "${MSGMERGE_BIN}" ${_msgmerge_args}
+                    "--output-file=${_po_file}"
                     "${_po_file}"
                     "${_pot_file}"
-                    "--output-file=${_po_file}"
-                DEPENDS "${_pot_file}")
+                #COMMAND ${CMAKE_COMMAND} -E move "${_po_file}.tmp" "${_po_file}"
+                #DEPENDS "${_pot_file}")
+                MAIN_DEPENDENCY "${_pot_file}")
         endforeach() # foreach LANGUAGES
 
         set(TRANSLATE_TARGET "${PARENT_TARGET}-translate")
