@@ -13,7 +13,8 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 
 set(QTDEPLOY_JSON_IN_FILE_DIR ${CMAKE_CURRENT_LIST_DIR}/../android)
 set(QTDEPLOY_JSON_IN_FILE ${QTDEPLOY_JSON_IN_FILE_DIR}/qtdeploy.json.in)
-set(BUILD_GRADLE_IN_FILE ${CMAKE_CURRENT_LIST_DIR}/../android/build.gradle.in)
+set(BUILD_GRADLE_IN_FILE ${QTDEPLOY_JSON_IN_FILE_DIR}/build.gradle.in)
+set(GRADLE_WRAPPER_FILE ${QTDEPLOY_JSON_IN_FILE_DIR}/gradle-wrapper.properties)
 
 find_program(ADB_BIN adb)
 
@@ -292,15 +293,21 @@ function (portable_target_build_apk TARGET)
     #---------------------------------------------------------------------------
     # Detect latest Android SDK build-tools revision
     #---------------------------------------------------------------------------
-    set(ANDROID_SDK_BUILDTOOLS_REVISION "0.0.0")
-    file(GLOB _all_build_tools_versions RELATIVE ${ANDROID_SDK}/build-tools ${ANDROID_SDK}/build-tools/*)
+    if (DEFINED ENV{ANDROID_SDK_BUILDTOOLS_REVISION})
+        set(ANDROID_SDK_BUILDTOOLS_REVISION "$ENV{ANDROID_SDK_BUILDTOOLS_REVISION}")
+    elseif (DEFINED ENV{ANDROID_SDK_BUILDTOOLS_VERSION})
+        set(ANDROID_SDK_BUILDTOOLS_REVISION "$ENV{ANDROID_SDK_BUILDTOOLS_VERSION}")
+    else()
+        set(ANDROID_SDK_BUILDTOOLS_REVISION "0.0.0")
+        file(GLOB _all_build_tools_versions RELATIVE ${ANDROID_SDK}/build-tools ${ANDROID_SDK}/build-tools/*)
 
-    foreach(_build_tools_version ${_all_build_tools_versions})
-        # Find subfolder with greatest version
-        if (${_build_tools_version} VERSION_GREATER ${ANDROID_SDK_BUILDTOOLS_REVISION})
-            set(ANDROID_SDK_BUILDTOOLS_REVISION ${_build_tools_version})
-        endif()
-    endforeach()
+        foreach(_build_tools_version ${_all_build_tools_versions})
+            # Find subfolder with greatest version
+            if (${_build_tools_version} VERSION_GREATER ${ANDROID_SDK_BUILDTOOLS_REVISION})
+                set(ANDROID_SDK_BUILDTOOLS_REVISION ${_build_tools_version})
+            endif()
+        endforeach()
+    endif()
 
     # Used by `AndroidManifest.xml.in`
     set(ANDROID_USES_PERMISSION)
@@ -377,6 +384,8 @@ function (portable_target_build_apk TARGET)
     file(GENERATE
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/android-build/build.gradle
         INPUT ${CMAKE_CURRENT_BINARY_DIR}/build.gradle.in)
+
+    file(COPY ${GRADLE_WRAPPER_FILE} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/android-build/gradle/wrapper)
 
     # Workaround for `androiddeployqt` bug with `llvm-strip` options.
     # This bug takes places in Qt5.13.2 and older versions, but is already fixed
