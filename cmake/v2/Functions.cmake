@@ -12,6 +12,19 @@ cmake_minimum_required(VERSION 3.5)
 # _portable_target_error
 ################################################################################
 function (_portable_target_error TITLE)
+    message(WARN "`_portable_target_error` is DEPRECATED, use `_portable_target_fatal`")
+
+    if (${ARGC} GREATER 1)
+        message(FATAL_ERROR "*** ERROR: portable_target [${TITLE}]: ${ARGV1}")
+    else()
+        message(FATAL_ERROR "*** ERROR: portable_target: ${TITLE}")
+    endif()
+endfunction(_portable_target_error)
+
+################################################################################
+# _portable_target_error
+################################################################################
+function (_portable_target_fatal TITLE)
     if (${ARGC} GREATER 1)
         message(FATAL_ERROR "*** ERROR: portable_target [${TITLE}]: ${ARGV1}")
     else()
@@ -61,7 +74,10 @@ endfunction(_portable_target_trace)
 ################################################################################
 # _portable_apk_error
 ################################################################################
+# DEPRECATED use _portable_target_error
 function (_portable_apk_error TITLE)
+    message(WARN "`_portable_apk_error` is DEPRECATED, use `_portable_target_fatal`")
+
     if (${ARGC} GREATER 1)
         message(FATAL_ERROR "*** ERROR: portable_apk [${TITLE}]: ${ARGV1}")
     else()
@@ -72,7 +88,10 @@ endfunction()
 ################################################################################
 # _portable_apk_error
 ################################################################################
+# DEPRECATED use _portable_target_warn
 function (_portable_apk_warn TITLE)
+    message(WARN "`_portable_apk_warn` is DEPRECATED, use `_portable_target_warn`")
+
     if (${ARGC} GREATER 1)
         message(WARNING "*** WARN: : portable_apk [${TITLE}]: ${ARGV1}")
     else()
@@ -84,7 +103,10 @@ endfunction()
 ################################################################################
 # _portable_apk_status
 ################################################################################
+# DEPRECATED use _portable_target_status
 function (_portable_apk_status TARGET TEXT)
+    message(WARN "`_portable_apk_status` is DEPRECATED, use `_portable_target_status`")
+
     if (${ARGC} GREATER 1)
         message(STATUS "portable_apk [${TARGET}]: ${TEXT}")
     else()

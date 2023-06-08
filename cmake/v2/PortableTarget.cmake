@@ -8,6 +8,7 @@
 #      2020.09.03 Splitted into Functions.cmake, AndroidToolchain.cmake and PortableTarget.cmake.
 #      2021.03.06 Added support for extra Android SSL libraries.
 #      2021.09.07 Started version 2.
+#      2023.06.08 Added BUILD_APK2 action.
 ###############################################################################
 cmake_minimum_required(VERSION 3.11)
 
@@ -62,7 +63,8 @@ _portable_target_status(${TARGET} "CMAKE_BUILD_TYPE    : ${CMAKE_BUILD_TYPE}")
 # TRANSLATE           Add internationalization support
 # TEST                Add tests
 #
-# BUILD_APK           Build Android package
+# BUILD_APK           Build Android package (used androiddeployqt, deprecated, unsupported since )
+# BUILD_APK2          Build Android package (used Android native build tools directly)
 #
 # BUILD_JAR           Build Java JAR package
 #
@@ -143,6 +145,9 @@ function (portable_target ACTION FIRST_ARG)
     elseif (ACTION STREQUAL "BUILD_APK")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/build_apk.cmake)
         portable_target_build_apk(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
+    elseif (ACTION STREQUAL "BUILD_APK2")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/build_apk2.cmake)
+        portable_target_build_apk2(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
     elseif (ACTION STREQUAL "BUILD_JAR")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/build_jar.cmake)
         portable_target_build_jar(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})

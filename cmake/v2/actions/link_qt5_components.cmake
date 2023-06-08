@@ -144,6 +144,24 @@ function (portable_target_link_qt5_components TARGET)
         list(APPEND _private_include_directories "${Qt5${_item}_INCLUDE_DIRS}")
     endforeach()
 
+    list(REMOVE_DUPLICATES _default_libraries)
+    list(REMOVE_DUPLICATES _default_include_directories)
+    list(REMOVE_DUPLICATES _interface_libraries)
+    list(REMOVE_DUPLICATES _interface_include_directories)
+    list(REMOVE_DUPLICATES _public_libraries)
+    list(REMOVE_DUPLICATES _public_include_directories)
+    list(REMOVE_DUPLICATES _private_libraries)
+    list(REMOVE_DUPLICATES _private_include_directories)
+
+    portable_target_get_property(Qt5_COMPONENTS _qt5_components)
+    list(APPEND _qt5_components
+        ${_default_libraries}
+        ${_interface_libraries}
+        ${_public_libraries}
+        ${_private_libraries})
+    list(REMOVE_DUPLICATES _qt5_components)
+    portable_target_set_property(Qt5_COMPONENTS "${_qt5_components}")
+
     portable_target_include_directories(${TARGET}
         ${_default_include_directories}
         INTERFACE ${_interface_include_directories}
