@@ -10,6 +10,7 @@ cmake_minimum_required(VERSION 3.11)
 include(${CMAKE_CURRENT_LIST_DIR}/../Functions.cmake)
 # include(${CMAKE_CURRENT_LIST_DIR}/../android/AndroidExtraOpenSSL.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/private/qt5_androiddeploy.cmake)
 
 # set(QTDEPLOY_JSON_IN_FILE_DIR ${CMAKE_CURRENT_LIST_DIR}/../android)
 # set(QTDEPLOY_JSON_IN_FILE ${QTDEPLOY_JSON_IN_FILE_DIR}/qtdeploy.json.in)
@@ -21,17 +22,16 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 #
 # Usage:
 #
-# portable_target_build_apk(<target>
+# portable_target_build_apk2(<target>
 # #       [ANDROIDDEPLOYQT_EXECUTABLE path]
 # #       [PACKAGE_NAME package-name]
 #       [APP_NAME app-name]
 #       APP_NAMESPACE app-namespace
 # #       [APK_BASENAME template]
-# #       [STL_PREFIX prefix]
 # #       [QTDEPLOY_JSON_IN_FILE path]
-# #       [VERSION_MAJOR major-version]
-# #       [VERSION_MINOR minor-version]
-# #       [VERSION_PATCH patch-version]
+#       [VERSION_MAJOR major-version]
+#       [VERSION_MINOR minor-version]
+#       [VERSION_PATCH patch-version]
 # #       [SCREEN_ORIENTATION orientation]
 # #       [CONFIG_CHANGES config-changes ]
 # #       [PERMISSIONS permissions]
@@ -59,16 +59,16 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 # # APK_BASENAME template
 # #       Template for basename for resulting APK file path.
 # #       Example: Hello_@ANDROID_APP_VERSION@_@ANDROID_ABI@
-# #
-# # STL_PREFIX prefix
-# #       Prefix to generate path to STL library
-# #
-# # VERSION_MAJOR major-version
-# #       Android application major version number. Default is 1.
-# #
-# # VERSION_MINOR minor-version
-# #       Android application minor version number. Default is 0.
-# #
+#
+# VERSION_MAJOR major-version
+#       Android application major version number. Default is 1.
+#
+# VERSION_MINOR minor-version
+#       Android application minor version number. Default is 0.
+#
+# VERSION_PATCH
+#       Android application patch version number. Default is 0.
+#
 # # SCREEN_ORIENTATION orientation
 # #       `orientation` is one of: "unspecified", "behind", "landscape"
 # #               , "portrait", "reverseLandscape", "reversePortrait"
@@ -102,60 +102,6 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 #       Output verbocity. Default is OFF.
 #
 
-function (__qt5_jar_implementations _qt5_dir _qt5_components _result)
-    list(JOIN _qt5_components " " _qt5_components_str)
-
-    get_filename_component(_qt5_jar_dir "${_qt5_dir}/../../../jar" ABSOLUTE)
-
-    list(APPEND _deps "    implementation files('${_qt5_jar_dir}/QtAndroid.jar')\n")
-    list(APPEND _deps "    implementation files('${_qt5_jar_dir}/QtAndroidExtras.jar')\n")
-
-    if (${_qt5_components_str} MATCHES "Network")
-        list(APPEND _deps "    implementation files('${_qt5_jar_dir}/QtAndroidNetwork.jar')\n")
-    endif()
-
-    list(JOIN _deps "" _deps)
-
-    set(${_result} ${_deps} PARENT_SCOPE)
-endfunction(__qt5_jar_implementations)
-
-function (__begin_libs_xml _xml_file)
-    file(WRITE  ${_xml_file} "<resources>\n")
-endfunction()
-
-function (__end_libs_xml _xml_file)
-    file(APPEND ${_xml_file} "</resources>\n")
-endfunction()
-
-function (__add_bundled_libs_xml _xml_file _target _deps)
-    file(APPEND ${_xml_file} "    <array name=\"bundled_libs\">\n")
-    file(APPEND ${_xml_file} "        <item>${ANDROID_ABI};${_target}</item>\n")
-
-    foreach (_dep ${_deps})
-        file(APPEND ${_xml_file} "        <item>${ANDROID_ABI};${_dep}</item>\n")
-    endforeach()
-
-    file(APPEND ${_xml_file} "    </array>\n\n")
-endfunction(__add_bundled_libs_xml)
-
-function (__add_qt5_libs_xml _xml_file _qt5_components)
-    file(APPEND ${_xml_file} "    <array name=\"qt_libs\">\n")
-    file(APPEND ${_xml_file} "        <item>${ANDROID_ABI};c++_shared</item>\n")
-
-    foreach (_qt_comp ${_qt5_components})
-        string(SUBSTRING ${_qt_comp} 5 -1 _qt_comp)
-        file(APPEND ${_xml_file} "        <item>${ANDROID_ABI};Qt5${_qt_comp}_${ANDROID_ABI}</item>\n")
-    endforeach()
-
-    file(APPEND ${_xml_file} "    </array>\n\n")
-
-    file(APPEND ${_xml_file} "    <array name=\"load_local_libs\">\n")
-# # <!--        <item>x86;libplugins_platforms_qtforandroid_x86.so</item>-->
-# #         <item>x86;libplugins_platforms_qtforandroid_x86.so:libplugins_bearer_qandroidbearer_x86.so:libplugins_mediaservice_qtmedia_android_x86.so:libQt5MultimediaQuick_x86.so:libplugins_position_qtposition_android_x86.so:libplugins_sensors_qtsensors_android_x86.so:libplugins_webview_qtwebview_android_x86.so</item>
-
-    file(APPEND ${_xml_file} "    </array>\n")
-endfunction(__add_qt5_libs_xml)
-
 ################################################################################
 # portable_target_build_apk2
 ################################################################################
@@ -168,19 +114,19 @@ function (portable_target_build_apk2 TARGET)
         APP_NAME
         APP_NAMESPACE
 #         APK_BASENAME
-#         STL_PREFIX
+        STL_PREFIX
 #         CONFIG_CHANGES
 #         INSTALL
 #         KEYSTORE_PASSWORD
 #         PACKAGE_NAME
 #         QTDEPLOY_JSON_IN_FILE
+        QT_RCC_BUNDLE
 #         SCREEN_ORIENTATION
 #         SSL_ROOT
 #         VERBOSE
-#         VERSION_MAJOR
-#         VERSION_MINOR
-#         VERSION_PATCH
-)
+        VERSION_MAJOR
+        VERSION_MINOR
+        VERSION_PATCH)
 
     set(multiparm
         DEPENDS
@@ -209,9 +155,24 @@ function (portable_target_build_apk2 TARGET)
         set(ANDROID_APP_LIB_NAME ${TARGET})
     endif()
 
+    if (NOT _arg_VERSION_MAJOR)
+        set(_arg_VERSION_MAJOR 1)
+    endif()
+
+    if (NOT _arg_VERSION_MINOR)
+        set(_arg_VERSION_MINOR 0)
+    endif()
+
+    if (NOT _arg_VERSION_PATCH)
+        set(_arg_VERSION_PATCH 0)
+    endif()
+
     if (NOT _arg_APP_NAMESPACE)
         _portable_target_fatal(${TARGET} "`APP_NAMESPACE` paramater is mandatory.")
     endif()
+
+    math(EXPR ANDROID_APP_VERSION_CODE "${_arg_VERSION_MAJOR} * 1000000 + ${_arg_VERSION_MINOR} * 10000 + ${_arg_VERSION_PATCH}")
+    set(ANDROID_APP_VERSION_NAME "${_arg_VERSION_MAJOR}.${_arg_VERSION_MINOR}.${_arg_VERSION_PATCH}")
 
     set(_android_src_dir ${CMAKE_SOURCE_DIR}/Android)
     set(_android_build_dir ${CMAKE_CURRENT_BINARY_DIR}/Android)
@@ -235,7 +196,7 @@ function (portable_target_build_apk2 TARGET)
         get_filename_component(ANDROID_APP_QT_JAVA_DIR "${_qt5_dir}/../../../src/android/java/src" ABSOLUTE)
         get_filename_component(ANDROID_APP_QT_RES_DIR "${_qt5_dir}/../../../src/android/java/res" ABSOLUTE)
 
-        __qt5_jar_implementations(${_qt5_dir} "${_qt5_components}" ANDROID_APP_DEPENDENCIES)
+        qt5a_jar_implementations(${_qt5_dir} "${_qt5_components}" ANDROID_APP_DEPENDENCIES)
     endif()
 
     file(GLOB_RECURSE _android_sources
@@ -285,7 +246,7 @@ function (portable_target_build_apk2 TARGET)
                     #_portable_target_trace(${TARGET} ${_src})
 
                     if (NOT EXISTS "${_android_build_dir}/src/${_src}")
-                        # NOTE Not work properly with symbolic links
+                        # NOTE Gradle not work properly with symbolic links?
                         # file(CREATE_LINK
                         #     "${_android_src_dir}/${_src}"
                         #     "${_android_build_dir}/src/${_src}"
@@ -300,19 +261,76 @@ function (portable_target_build_apk2 TARGET)
         endif()
     endforeach()
 
-    #
-    # Generate Qt for Android required files.
-    #
-    set(_libs_xml "${_android_build_dir}/src/app/src/main/res/values/libs.xml")
-    __begin_libs_xml(${_libs_xml})
-
-    __add_bundled_libs_xml(${_libs_xml} ${TARGET} "${_arg_DEPENDS}")
-
-    if (_qt5_components)
-        __add_qt5_libs_xml(${_libs_xml} "${_qt5_components}")
+    if (NOT EXISTS "${_android_build_dir}/assets")
+        file(MAKE_DIRECTORY "${_android_build_dir}/assets")
     endif()
 
-    __end_libs_xml(${_libs_xml})
+    set(_assets_dir "${_android_build_dir}/src/app/src/main/assets")
+    file(MAKE_DIRECTORY "${_assets_dir}")
+
+    set(_jni_libs_dir "${_android_build_dir}/src/app/src/main/jniLibs/${ANDROID_ABI}")
+    file(MAKE_DIRECTORY "${_jni_libs_dir}")
+
+    #
+    # C++ standard library.
+    #
+    # ANDROID_NDK, ANDROID_STL is global predefined variables
+    # (see AndroidToolchain.cmake)
+    #
+
+    set(_cxx_shared_lib_filename "lib${ANDROID_STL}.so")
+
+    # Old placement of C++ library
+    set(_cxx_shared_lib "${ANDROID_NDK}/sources/cxx-stl/llvm-libc++/libs/${ANDROID_ABI}/${_cxx_shared_lib_filename}")
+
+    if (NOT EXISTS ${_cxx_shared_lib})
+        set(_cxx_shared_lib_base_dir "${ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib")
+
+        if (EXISTS ${_cxx_shared_lib_base_dir})
+            if (ANDROID_ABI STREQUAL "x86")
+                set(_cxx_shared_lib "${_cxx_shared_lib_base_dir}/i686-linux-android/${_cxx_shared_lib_filename}")
+            elseif(ANDROID_ABI STREQUAL "x86_64")
+                set(_cxx_shared_lib "${_cxx_shared_lib_base_dir}/x86_64-linux-android/${_cxx_shared_lib_filename}")
+            elseif(ANDROID_ABI STREQUAL "arm64-v8a")
+                set(_cxx_shared_lib "${_cxx_shared_lib_base_dir}/aarch64-linux-android/${_cxx_shared_lib_filename}")
+            elseif(ANDROID_ABI STREQUAL "armeabi-v7a")
+                set(_cxx_shared_lib "${_cxx_shared_lib_base_dir}/arm-linux-androideabi/${_cxx_shared_lib_filename}")
+            else()
+                _portable_target_fatal(${TARGET} "Bad ANDROID_ABI: ${ANDROID_ABI}")
+            endif()
+        endif()
+
+        if (NOT EXISTS ${_cxx_shared_lib_base_dir})
+            _portable_target_fatal(${TARGET} "Android C++ library not found")
+        endif()
+    endif()
+
+    file(CREATE_LINK
+        ${_cxx_shared_lib}
+        "${_jni_libs_dir}/${_cxx_shared_lib_filename}"
+        SYMBOLIC)
+
+    _portable_target_status(${TARGET} "Android C++ library: ${_cxx_shared_lib}")
+
+    #
+    # Generate/copy Qt for Android required files.
+    #
+    set(_libs_xml "${_android_build_dir}/src/app/src/main/res/values/libs.xml")
+
+    qt5a_begin_libs_xml(${_libs_xml})
+
+    qt5a_add_bundled_libs_xml(${_libs_xml} ${TARGET} "${_arg_DEPENDS}")
+
+    if (_qt5_components)
+        qt5a_add_qt5_libs_xml(${_libs_xml} "${_qt5_components}")
+    endif()
+
+    qt5a_end_libs_xml(${_libs_xml})
+
+    if (_qt5_components)
+        qt5a_copy_qt5_libs(${_qt5_dir} ${_jni_libs_dir} "${_qt5_components}")
+        qt5a_copy_qt5_plugins(${_qt5_dir} ${_jni_libs_dir} "${_qt5_components}")
+    endif()
 
     #
     # Build APK with gredlew
@@ -324,9 +342,44 @@ function (portable_target_build_apk2 TARGET)
         _portable_target_fatal(${TARGET} "`gradlew` executable not found: ${GRADLEW_COMMAND}")
     endif()
 
-#     set(ANDROID_APP_PATH "$<TARGET_FILE:${TARGET}>")
-#     set(ANDROID_APP_BASENAME "$<TARGET_FILE_BASE_NAME:${TARGET}>")
-#
+    set(_build_apk_script "${_android_build_dir}/build_apk.cmake")
+    string(TIMESTAMP _current_time)
+    file(WRITE ${_build_apk_script}.in "### AUTOMATICALLY GENERATED AT ${_current_time} ###\n\n")
+    file(APPEND ${_build_apk_script}.in "file(CREATE_LINK \"$<TARGET_FILE:${TARGET}>\" \"${_jni_libs_dir}/$<TARGET_FILE_NAME:${TARGET}>\" SYMBOLIC)\n")
+
+    # Set the list of dependant libraries
+    if (_arg_DEPENDS)
+        foreach (_lib ${_arg_DEPENDS})
+            if (TARGET ${_lib})
+                # item is a CMake target, extract the library path
+                #set(_lib "$<TARGET_FILE:${_lib}>")
+                file(APPEND ${_build_apk_script}.in "file(CREATE_LINK \"$<TARGET_FILE:${_lib}>\" \"${_jni_libs_dir}/$<TARGET_FILE_NAME:${_lib}>\" SYMBOLIC)\n")
+            endif()
+
+            # if (_bundled_libs)
+            #     set(_bundled_libs "${_bundled_libs},${_lib}")
+            # else()
+            #     set(_bundled_libs "${_lib}")
+            # endif()
+        endforeach()
+
+#         #set(ANDROID_APP_EXTRA_LIBS "\"android-extra-libs\": \"${_extra_libs}\",")
+#         set(ANDROID_APP_EXTRA_LIBS ${_extra_libs})
+    endif()
+
+    if (_arg_QT_RCC_BUNDLE)
+        if (NOT EXISTS ${_arg_QT_RCC_BUNDLE})
+            _portable_target_fatal(${TARGET} "Qt assets (Android RCC bundle) not found: ${_arg_QT_RCC_BUNDLE}")
+        endif()
+
+        get_filename_component(_qt5_rcc_bundle_filename ${_arg_QT_RCC_BUNDLE} NAME)
+
+        file(CREATE_LINK
+            "${_arg_QT_RCC_BUNDLE}"
+            "${_assets_dir}/${_qt5_rcc_bundle_filename}"
+            SYMBOLIC)
+    endif()
+
 #     if (_arg_APP_NAME OR _arg_VERSION_MAJOR OR _arg_VERSION_MINOR)
 #         if (NOT _arg_PACKAGE_NAME)
 #             _portable_apk_error(${TARGET} "PACKAGE_NAME must be specified")
@@ -337,17 +390,6 @@ function (portable_target_build_apk2 TARGET)
 #         set(_arg_APP_NAME ${TARGET})
 #     endif()
 #
-#     if (NOT _arg_VERSION_MAJOR)
-#         set(_arg_VERSION_MAJOR 1)
-#     endif()
-#
-#     if (NOT _arg_VERSION_MINOR)
-#         set(_arg_VERSION_MINOR 0)
-#     endif()
-#
-#     if (NOT _arg_VERSION_PATCH)
-#         set(_arg_VERSION_PATCH 0)
-#     endif()
 #
 #     if (NOT _arg_SCREEN_ORIENTATION)
 #         set(_arg_SCREEN_ORIENTATION "unspecified")
@@ -355,54 +397,6 @@ function (portable_target_build_apk2 TARGET)
 #
 #     if (NOT _arg_CONFIG_CHANGES)
 #         set(_arg_CONFIG_CHANGES "")
-#     endif()
-#
-#     if (NOT _arg_QTDEPLOY_JSON_IN_FILE)
-#         set(_arg_QTDEPLOY_JSON_IN_FILE ${QTDEPLOY_JSON_IN_FILE})
-#     endif()
-#
-#     # Check if QTDEPLOY_JSON_IN_FILE is path or filename
-#     get_filename_component(_json_in_file ${_arg_QTDEPLOY_JSON_IN_FILE} NAME)
-#
-#     if (${_json_in_file} STREQUAL ${_arg_QTDEPLOY_JSON_IN_FILE})
-#         set(_arg_QTDEPLOY_JSON_IN_FILE "${QTDEPLOY_JSON_IN_FILE_DIR}/${_json_in_file}")
-#     endif()
-#
-#     if (_qt5_dir)
-#         if (NOT _arg_ANDROIDDEPLOYQT_EXECUTABLE)
-#             get_filename_component(_arg_ANDROIDDEPLOYQT_EXECUTABLE "${_qt5_dir}/../../../bin/androiddeployqt" ABSOLUTE)
-#         endif()
-#
-#         if (NOT EXISTS ${_arg_ANDROIDDEPLOYQT_EXECUTABLE})
-#             _portable_apk_error(${TARGET} "androiddeployqt not found at: ${_arg_ANDROIDDEPLOYQT_EXECUTABLE}")
-#         endif()
-#
-#         # Used by `qtdeploy.json.in`
-#         get_filename_component(ANDROID_QT_ROOT "${_arg_ANDROIDDEPLOYQT_EXECUTABLE}/../.." ABSOLUTE)
-#     endif()
-#
-#
-#     if (NOT _arg_STL_PREFIX)
-#         if (${ANDROID_STL} MATCHES "^[ ]*c\\+\\+_shared[ ]*$")
-#             set(_arg_STL_PREFIX "llvm-libc++")
-#         else()
-#             _portable_target_error("Unable to deduce STL_PREFIX, STL_PREFIX must be specified")
-#         endif()
-#     endif()
-#
-#     # Used by `qtdeploy.json.in`
-#     if (${_qt5_version} VERSION_GREATER_EQUAL 5.14)
-#         set(ANDROID_STL_DIR "${ANDROID_NDK}/sources/cxx-stl/${_arg_STL_PREFIX}/libs")
-#
-#         if (NOT EXISTS ${ANDROID_STL_DIR})
-#             _portable_target_error("Android STL dir not found: ${ANDROID_STL_DIR}")
-#         endif()
-#     else()
-#         set(ANDROID_STL_PATH "${ANDROID_NDK}/sources/cxx-stl/${_arg_STL_PREFIX}/libs/${ANDROID_ABI}/lib${ANDROID_STL}.so")
-#
-#         if (NOT EXISTS ${ANDROID_STL_PATH})
-#             _portable_target_error("Android STL path not found: ${ANDROID_STL_PATH}")
-#         endif()
 #     endif()
 #
 #     if (NOT _arg_INSTALL)
@@ -432,10 +426,6 @@ function (portable_target_build_apk2 TARGET)
 #     # Used by `qtdeploy.json.in` and `AndroidManifest.xml.in`
 #     set(ANDROID_PACKAGE_NAME ${_arg_PACKAGE_NAME})
 #     set(ANDROID_APP_NAME ${_arg_APP_NAME})
-#
-#     # Used by `AndroidManifest.xml.in`
-#     set(ANDROID_APP_VERSION "${_arg_VERSION_MAJOR}.${_arg_VERSION_MINOR}.${_arg_VERSION_PATCH}")
-#     math(EXPR ANDROID_APP_VERSION_CODE "${_arg_VERSION_MAJOR} * 1000000 + ${_arg_VERSION_MINOR} * 1000 + ${_arg_VERSION_PATCH}")
 #
 #     # Whether your application's processes should be created with a large Dalvik
 #     # heap (see https://developer.android.com/guide/topics/manifest/application-element#largeHeap for details).
@@ -636,8 +626,8 @@ function (portable_target_build_apk2 TARGET)
 #     _portable_apk_status(${TARGET} "Target basename         : ${ANDROID_APP_BASENAME}")
 #     _portable_apk_status(${TARGET} "Package name            : ${ANDROID_PACKAGE_NAME}")
 #     _portable_apk_status(${TARGET} "Application name        : \"${ANDROID_APP_NAME}\"")
-#     _portable_apk_status(${TARGET} "Application version     : ${ANDROID_APP_VERSION}")
-#     _portable_apk_status(${TARGET} "Application version code: ${ANDROID_APP_VERSION_CODE}")
+    _portable_target_status(${TARGET} "Application version code: ${ANDROID_APP_VERSION_CODE}")
+    _portable_target_status(${TARGET} "Application version     : ${ANDROID_APP_VERSION_NAME}")
 #     _portable_apk_status(${TARGET} "Verbosity output        : ${VERBOSITY_YESNO}")
 #     _portable_apk_status(${TARGET} "Install APK             : ${INSTALL_YESNO}")
 #
@@ -679,10 +669,17 @@ function (portable_target_build_apk2 TARGET)
         set(_gradlew_args "${_gradlew_args} --info")
     endif()
 
+    # Evaluate generator expressions at build time
+    file(GENERATE OUTPUT ${_build_apk_script} INPUT ${_build_apk_script}.in)
+
     add_custom_target(
         ${TARGET}_apk
         ALL
+        #COMMAND cd "${_android_build_dir}/src"
+        #COMMAND ${CMAKE_COMMAND} -P ${_build_apk_script}
+        COMMAND ${CMAKE_COMMAND} -E chdir "${_android_build_dir}/src" ${CMAKE_COMMAND} -P ${_build_apk_script}
         COMMAND ${CMAKE_COMMAND} -E chdir "${_android_build_dir}/src" ${GRADLEW_COMMAND} ${_gradlew_args}
+
 #         COMMAND ${CMAKE_COMMAND} -E remove_directory ${_output_dir} # it seems that recompiled libraries are not copied if we don't remove them first
 #         COMMAND ${CMAKE_COMMAND} -E make_directory ${_output_dir}
 #         COMMAND ${CMAKE_COMMAND} -E copy ${ANDROID_APP_PATH} ${_android_app_output_path}
