@@ -26,9 +26,9 @@ endfunction(_portable_target_error)
 ################################################################################
 function (_portable_target_fatal TITLE)
     if (${ARGC} GREATER 1)
-        message(FATAL_ERROR "*** ERROR: portable_target [${TITLE}]: ${ARGV1}")
+        message(FATAL_ERROR "*** FATAL: portable_target [${TITLE}]: ${ARGV1}")
     else()
-        message(FATAL_ERROR "*** ERROR: portable_target: ${TITLE}")
+        message(FATAL_ERROR "*** FATAL: portable_target: ${TITLE}")
     endif()
 endfunction(_portable_target_error)
 

@@ -136,7 +136,7 @@ function (portable_target_build_apk TARGET)
 
     if (_arg_APP_NAME OR _arg_VERSION_MAJOR OR _arg_VERSION_MINOR)
         if (NOT _arg_PACKAGE_NAME)
-            _portable_apk_error(${TARGET} "PACKAGE_NAME must be specified")
+            _portable_target_fatal(${TARGET} "PACKAGE_NAME must be specified")
         endif()
     endif()
 
@@ -184,7 +184,7 @@ function (portable_target_build_apk TARGET)
         endif()
 
         if (NOT EXISTS ${_arg_ANDROIDDEPLOYQT_EXECUTABLE})
-            _portable_apk_error(${TARGET} "androiddeployqt not found at: ${_arg_ANDROIDDEPLOYQT_EXECUTABLE}")
+            _portable_target_fatal(${TARGET} "androiddeployqt not found at: ${_arg_ANDROIDDEPLOYQT_EXECUTABLE}")
         endif()
 
         # Used by `qtdeploy.json.in`
@@ -196,7 +196,7 @@ function (portable_target_build_apk TARGET)
         if (${ANDROID_STL} MATCHES "^[ ]*c\\+\\+_shared[ ]*$")
             set(_arg_STL_PREFIX "llvm-libc++")
         else()
-            _portable_target_error("Unable to deduce STL_PREFIX, STL_PREFIX must be specified")
+            _portable_target_fatal(${TARGET} "Unable to deduce STL_PREFIX, STL_PREFIX must be specified")
         endif()
     endif()
 
@@ -205,13 +205,13 @@ function (portable_target_build_apk TARGET)
         set(ANDROID_STL_DIR "${ANDROID_NDK}/sources/cxx-stl/${_arg_STL_PREFIX}/libs")
 
         if (NOT EXISTS ${ANDROID_STL_DIR})
-            _portable_target_error("Android STL dir not found: ${ANDROID_STL_DIR}")
+            _portable_target_fatal(${TARGET} "Android STL dir not found: ${ANDROID_STL_DIR}")
         endif()
     else()
         set(ANDROID_STL_PATH "${ANDROID_NDK}/sources/cxx-stl/${_arg_STL_PREFIX}/libs/${ANDROID_ABI}/lib${ANDROID_STL}.so")
 
         if (NOT EXISTS ${ANDROID_STL_PATH})
-            _portable_target_error("Android STL path not found: ${ANDROID_STL_PATH}")
+            _portable_target_fatal(${TARGET} "Android STL path not found: ${ANDROID_STL_PATH}")
         endif()
     endif()
 
@@ -224,18 +224,18 @@ function (portable_target_build_apk TARGET)
 
     if (NOT _arg_PERMISSIONS)
         set(_arg_PERMISSIONS WAKE_LOCK)
-        _portable_apk_warn(${TARGET} "Android permissions are not defined, only 'WAKE_LOCK' set by default")
+        _portable_target_warn(${TARGET} "Android permissions are not defined, only 'WAKE_LOCK' set by default")
     endif()
 
     # FIXME
     if (_arg_SSL_ROOT)
-#         _portable_apk_status(${TARGET} "Android SSL extra libraries root: ${_arg_SSL_ROOT}")
+#         _portable_target_status(${TARGET} "Android SSL extra libraries root: ${_arg_SSL_ROOT}")
 #         _portable_android_openssl(
 #             ${_arg_SSL_ROOT}
 #             ${Qt5Core_VERSION}
 #             ${ANDROID_ABI}
 #             _android_ssl_extra_libs)
-#         _portable_apk_status("Android SSL extra libraries: ${_android_ssl_extra_libs}")
+#         _portable_target_status("Android SSL extra libraries: ${_android_ssl_extra_libs}")
     endif()
 
 
@@ -260,7 +260,7 @@ function (portable_target_build_apk TARGET)
         # TODO Check for older versions. It depends on androiddeployqt version
         if (${_qt5_version} VERSION_GREATER_EQUAL 5.14)
             if (_arg_KEYSTORE AND _arg_KEYSTORE_PASSWORD)
-                set(SIGN_OPTIONS --sign ${_arg_KEYSTORE} release --storepass
+                set(SIGN_OPTIONS --release --sign ${_arg_KEYSTORE} release --storepass
                     ${_arg_KEYSTORE_PASSWORD} --keypass ${_arg_KEYSTORE_PASSWORD})
                 set(ANDROID_APP_IS_DEBUGGABLE "false")
             else()
@@ -331,10 +331,10 @@ function (portable_target_build_apk TARGET)
     endforeach()
 
     if (NOT EXISTS ${_android_sources_dir}/${_AndroidManifest_xml_in})
-        _portable_apk_error(${TARGET} "${_AndroidManifest_xml_in} not found at: ${_android_sources_dir}"
+        _portable_target_fatal(${TARGET} "${_AndroidManifest_xml_in} not found at: ${_android_sources_dir}"
             "\n\tAndroidManifest.xml.in can be copied from portable_target/android directory")
     else()
-        _portable_apk_status(${TARGET} "${_AndroidManifest_xml_in} found at: ${_android_sources_dir}")
+        _portable_target_status(${TARGET} "${_AndroidManifest_xml_in} found at: ${_android_sources_dir}")
     endif()
 
     # Create a subdirectory for the extra package sources
@@ -365,7 +365,7 @@ function (portable_target_build_apk TARGET)
             set(ANDROID_TOOLCHAIN_VERSION)
             set(ANDROID_USE_LLVM "true")
         else()
-            _portable_apk_error(${TARGET}
+            _portable_target_fatal(${TARGET}
                 "Failed to parse ANDROID_TOOLCHAIN_ROOT (${ANDROID_TOOLCHAIN_ROOT}) to get toolchain prefix and version")
         endif()
     endif()
@@ -429,27 +429,27 @@ function (portable_target_build_apk TARGET)
         set(VERBOSITY_YESNO "NO")
     endif()
 
-    _portable_apk_status(${TARGET} "Android Min SDK version: ${ANDROID_MIN_SDK_VERSION}")
-    _portable_apk_status(${TARGET} "Android Target SDK version: ${ANDROID_TARGET_SDK_VERSION}")
-    _portable_apk_status(${TARGET} "Android SDK build tools revision: ${ANDROID_SDK_BUILDTOOLS_REVISION}")
-    _portable_apk_status(${TARGET} "Android Qt root         : ${ANDROID_QT_ROOT}")
+    _portable_target_status(${TARGET} "Android Min SDK version: ${ANDROID_MIN_SDK_VERSION}")
+    _portable_target_status(${TARGET} "Android Target SDK version: ${ANDROID_TARGET_SDK_VERSION}")
+    _portable_target_status(${TARGET} "Android SDK build tools revision: ${ANDROID_SDK_BUILDTOOLS_REVISION}")
+    _portable_target_status(${TARGET} "Android Qt root         : ${ANDROID_QT_ROOT}")
 
     if (${_qt5_version} VERSION_GREATER_EQUAL 5.14)
-        _portable_apk_status(${TARGET} "Android STL dir         : ${ANDROID_STL_DIR}")
+        _portable_target_status(${TARGET} "Android STL dir         : ${ANDROID_STL_DIR}")
     else()
-        _portable_apk_status(${TARGET} "Android STL path        : ${ANDROID_STL_PATH}")
+        _portable_target_status(${TARGET} "Android STL path        : ${ANDROID_STL_PATH}")
     endif()
 
-    _portable_apk_status(${TARGET} "androiddeployqt path    : ${_arg_ANDROIDDEPLOYQT_EXECUTABLE}")
-    _portable_apk_status(${TARGET} "Qt deploy JSON template : ${_arg_QTDEPLOY_JSON_IN_FILE}")
-    _portable_apk_status(${TARGET} "Target path             : ${ANDROID_APP_PATH}")
-    _portable_apk_status(${TARGET} "Target basename         : ${ANDROID_APP_BASENAME}")
-    _portable_apk_status(${TARGET} "Package name            : ${ANDROID_PACKAGE_NAME}")
-    _portable_apk_status(${TARGET} "Application name        : \"${ANDROID_APP_NAME}\"")
-    _portable_apk_status(${TARGET} "Application version     : ${ANDROID_APP_VERSION}")
-    _portable_apk_status(${TARGET} "Application version code: ${ANDROID_APP_VERSION_CODE}")
-    _portable_apk_status(${TARGET} "Verbosity output        : ${VERBOSITY_YESNO}")
-    _portable_apk_status(${TARGET} "Install APK             : ${INSTALL_YESNO}")
+    _portable_target_status(${TARGET} "androiddeployqt path    : ${_arg_ANDROIDDEPLOYQT_EXECUTABLE}")
+    _portable_target_status(${TARGET} "Qt deploy JSON template : ${_arg_QTDEPLOY_JSON_IN_FILE}")
+    _portable_target_status(${TARGET} "Target path             : ${ANDROID_APP_PATH}")
+    _portable_target_status(${TARGET} "Target basename         : ${ANDROID_APP_BASENAME}")
+    _portable_target_status(${TARGET} "Package name            : ${ANDROID_PACKAGE_NAME}")
+    _portable_target_status(${TARGET} "Application name        : \"${ANDROID_APP_NAME}\"")
+    _portable_target_status(${TARGET} "Application version     : ${ANDROID_APP_VERSION}")
+    _portable_target_status(${TARGET} "Application version code: ${ANDROID_APP_VERSION_CODE}")
+    _portable_target_status(${TARGET} "Verbosity output        : ${VERBOSITY_YESNO}")
+    _portable_target_status(${TARGET} "Install APK             : ${INSTALL_YESNO}")
 
     #---------------------------------------------------------------------------
     # Create a custom command that will run the androiddeployqt utility
@@ -510,7 +510,7 @@ function (portable_target_build_apk TARGET)
 
             add_dependencies(${TARGET}_apk_install ${TARGET}_apk)
         else()
-            _portable_apk_warn(${TARGET} "`adb` tool not found, install APK manually")
+            _portable_target_warn(${TARGET} "`adb` tool not found, install APK manually")
         endif()
     endif()
 

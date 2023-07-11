@@ -17,7 +17,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/private/qt5_androiddeploy.cmake)
 # set(BUILD_GRADLE_IN_FILE ${QTDEPLOY_JSON_IN_FILE_DIR}/build.gradle.in)
 # set(GRADLE_WRAPPER_FILE ${QTDEPLOY_JSON_IN_FILE_DIR}/gradle-wrapper.properties)
 
-# find_program(ADB_BIN adb)
+find_program(ADB_BIN adb)
 
 #
 # Usage:
@@ -27,8 +27,12 @@ include(${CMAKE_CURRENT_LIST_DIR}/private/qt5_androiddeploy.cmake)
 # #       [PACKAGE_NAME package-name]
 #       [APP_NAME app-name]
 #       APP_NAMESPACE app-namespace
-# #       [APK_BASENAME template]
-# #       [QTDEPLOY_JSON_IN_FILE path]
+#       [APK_BASENAME template]
+#       [KEYSTORE]
+#       [KEYSTORE_PASSWORD]
+#       [KEYSTORE_ALIAS]
+#       [QT_RCC_BUNDLE path]
+#       [SRC_DIR dir]
 #       [VERSION_MAJOR major-version]
 #       [VERSION_MINOR minor-version]
 #       [VERSION_PATCH patch-version]
@@ -37,15 +41,9 @@ include(${CMAKE_CURRENT_LIST_DIR}/private/qt5_androiddeploy.cmake)
 # #       [PERMISSIONS permissions]
 # #       [DEPENDS dependencies]
 # #       [SSL_ROOT dir]
-# #       [INSTALL ON|OFF]
+#       [INSTALL ON|OFF]
 #       [VERBOSE ON|OFF])
 #
-# # USE_ANDROIDDEPLOYQT
-# #       If set and ANDROIDDEPLOYQT_EXECUTABLE is not
-# #
-# # ANDROIDDEPLOYQT_EXECUTABLE path
-# #       Path to `androiddeployqt` executable. Set according to to default Qt5
-# #       location if not specified.
 # #
 # # PACKAGE_NAME <package-name>
 # #       Android package name
@@ -56,9 +54,15 @@ include(${CMAKE_CURRENT_LIST_DIR}/private/qt5_androiddeploy.cmake)
 # APP_NAMESPACE app-namespace
 #       Android application namespace (see build.gradle.in).
 #
-# # APK_BASENAME template
-# #       Template for basename for resulting APK file path.
-# #       Example: Hello_@ANDROID_APP_VERSION@_@ANDROID_ABI@
+# APK_BASENAME template
+#       Template for basename for resulting APK file path.
+#       Example: Hello_@ANDROID_APP_VERSION@_@ANDROID_ABI@
+#
+# QT_RCC_BUNDLE path
+#       Path to Qt resources bundle
+#
+# SRC_DIR dir
+#       Directory where Android sources are located. Default is ${CMAKE_SOURCE_DIR}/Android
 #
 # VERSION_MAJOR major-version
 #       Android application major version number. Default is 1.
@@ -93,10 +97,16 @@ include(${CMAKE_CURRENT_LIST_DIR}/private/qt5_androiddeploy.cmake)
 # #
 # # SSL_ROOT dir
 # #       SSL libraries root directory (not implemented yet).
-# #
-# # INSTALL ON|OFF
-# #       Install Android APK on device. Default is OFF. Can be set by
-# #       PORTABLE_TARGET_ANDROID_INSTALL environment variable.
+#
+# INSTALL ON|OFF
+#       Install Android APK on device. Default is OFF. Can be set by
+#       PORTABLE_TARGET_ANDROID_INSTALL environment variable.
+#
+# KEYSTORE
+#
+# KEYSTORE_PASSWORD
+#
+# KEYSTORE_ALIAS
 #
 # VERBOSE ON|OFF
 #       Output verbocity. Default is OFF.
@@ -110,17 +120,19 @@ function (portable_target_build_apk2 TARGET)
     set(boolparm)
 
     set(singleparm
-#         ANDROIDDEPLOYQT_EXECUTABLE
         APP_NAME
         APP_NAMESPACE
-#         APK_BASENAME
+        APK_BASENAME
         STL_PREFIX
 #         CONFIG_CHANGES
-#         INSTALL
-#         KEYSTORE_PASSWORD
+        INSTALL
+        KEYSTORE
+        KEYSTORE_PASSWORD
+        KEYSTORE_ALIAS
 #         PACKAGE_NAME
 #         QTDEPLOY_JSON_IN_FILE
         QT_RCC_BUNDLE
+        SRC_DIR
 #         SCREEN_ORIENTATION
 #         SSL_ROOT
 #         VERBOSE
@@ -130,7 +142,6 @@ function (portable_target_build_apk2 TARGET)
 
     set(multiparm
         DEPENDS
-#         KEYSTORE
 #         PERMISSIONS
     )
 
@@ -150,9 +161,9 @@ function (portable_target_build_apk2 TARGET)
 
     # Used in AndroidManifest.xml.in
     if (_arg_APP_NAME)
-        set(ANDROID_APP_LIB_NAME ${_arg_APP_NAME})
+        set(ANDROID_APP_NAME ${_arg_APP_NAME})
     else ()
-        set(ANDROID_APP_LIB_NAME ${TARGET})
+        set(ANDROID_APP_NAME ${TARGET})
     endif()
 
     if (NOT _arg_VERSION_MAJOR)
@@ -172,14 +183,47 @@ function (portable_target_build_apk2 TARGET)
     endif()
 
     math(EXPR ANDROID_APP_VERSION_CODE "${_arg_VERSION_MAJOR} * 1000000 + ${_arg_VERSION_MINOR} * 10000 + ${_arg_VERSION_PATCH}")
-    set(ANDROID_APP_VERSION_NAME "${_arg_VERSION_MAJOR}.${_arg_VERSION_MINOR}.${_arg_VERSION_PATCH}")
+    set(ANDROID_APP_VERSION "${_arg_VERSION_MAJOR}.${_arg_VERSION_MINOR}.${_arg_VERSION_PATCH}")
 
-    set(_android_src_dir ${CMAKE_SOURCE_DIR}/Android)
+    if (NOT _arg_SRC_DIR)
+        set(_arg_SRC_DIR ${CMAKE_SOURCE_DIR}/Android)
+    endif()
+
+    if (NOT EXISTS ${_arg_SRC_DIR}/gradlew)
+        _portable_target_fatal(${TARGET} "Bad Android source directory: ${_arg_SRC_DIR}")
+    endif()
+
+    set(_android_src_dir ${_arg_SRC_DIR})
     set(_android_build_dir ${CMAKE_CURRENT_BINARY_DIR}/Android)
+
+    _portable_target_status(${TARGET} "Android source directory: ${_android_src_dir}")
+    _portable_target_status(${TARGET} "Android build directory : ${_android_build_dir}")
 
     # Used in build.gradle.in
     set(ANDROID_BUILD_DIR ${_android_build_dir}/build)
     set(ANDROID_APP_NAMESPACE ${_arg_APP_NAMESPACE})
+
+    # Used by and `AndroidManifest.xml.in`
+    set(ANDROID_APP_LIBNAME ${TARGET})
+
+    if (${CMAKE_BUILD_TYPE} MATCHES "[Dd][Ee][Bb][Uu][Gg]"
+            OR ${CMAKE_BUILD_TYPE} MATCHES "[Rr][Ee][Ll][Ww][Ii][Tt][Hh][Dd][Ee][Bb][Ii][Nn][Ff][Oo]")
+        set(ANDROID_APP_IS_DEBUGGABLE ON)
+    else ()
+        set(ANDROID_APP_IS_DEBUGGABLE OFF)
+    endif()
+
+    if (_arg_KEYSTORE AND _arg_KEYSTORE_PASSWORD)
+        if (NOT _arg_KEYSTORE_ALIAS)
+            set(_arg_KEYSTORE_ALIAS release)
+        endif()
+
+        get_filename_component(_arg_KEYSTORE "${_arg_KEYSTORE}" ABSOLUTE)
+
+        set(ANDROID_RELEASE_KEYSTORE ${_arg_KEYSTORE})
+        set(ANDROID_RELEASE_KEYSTORE_ALIAS ${_arg_KEYSTORE_ALIAS})
+        set(ANDROID_RELEASE_KEYSTORE_PASSWORD ${_arg_KEYSTORE_PASSWORD})
+    endif()
 
     portable_target_get_property(Qt5_DIR _qt5_dir)
     portable_target_get_property(Qt5_VERSION _qt5_version)
@@ -329,7 +373,7 @@ function (portable_target_build_apk2 TARGET)
 
     if (_qt5_components)
         qt5a_copy_qt5_libs(${_qt5_dir} ${_jni_libs_dir} "${_qt5_components}")
-        qt5a_copy_qt5_plugins(${_qt5_dir} ${_jni_libs_dir} "${_qt5_components}")
+        qt5a_copy_qt5_plugins(${_qt5_dir} ${_jni_libs_dir} "${_qt5_components}" ${ANDROID_APP_IS_DEBUGGABLE})
     endif()
 
     #
@@ -398,14 +442,14 @@ function (portable_target_build_apk2 TARGET)
 #     if (NOT _arg_CONFIG_CHANGES)
 #         set(_arg_CONFIG_CHANGES "")
 #     endif()
-#
-#     if (NOT _arg_INSTALL)
-#         _optional_var_env(_arg_INSTALL
-#             ANDROID_INSTALL
-#             "Install APK"
-#             OFF)
-#     endif()
-#
+
+    if (NOT _arg_INSTALL)
+        _optional_var_env(_arg_INSTALL
+            ANDROID_INSTALL
+            "Install APK"
+            OFF)
+    endif()
+
 #     if (NOT _arg_PERMISSIONS)
 #         set(_arg_PERMISSIONS WAKE_LOCK)
 #         _portable_apk_warn(${TARGET} "Android permissions are not defined, only 'WAKE_LOCK' set by default")
@@ -423,33 +467,12 @@ function (portable_target_build_apk2 TARGET)
 #     endif()
 #
 #
-#     # Used by `qtdeploy.json.in` and `AndroidManifest.xml.in`
-#     set(ANDROID_PACKAGE_NAME ${_arg_PACKAGE_NAME})
-#     set(ANDROID_APP_NAME ${_arg_APP_NAME})
-#
 #     # Whether your application's processes should be created with a large Dalvik
 #     # heap (see https://developer.android.com/guide/topics/manifest/application-element#largeHeap for details).
 #     set(ANDROID_APP_LARGE_HEAP "true")
 #     set(ANDROID_APP_SCREEN_ORIENTATION "${_arg_SCREEN_ORIENTATION}")
 #     set(ANDROID_APP_CONFIG_CHANGES "${_arg_CONFIG_CHANGES}")
-#
-#     if (${CMAKE_BUILD_TYPE} MATCHES "[Dd][Ee][Bb][Uu][Gg]"
-#             OR ${CMAKE_BUILD_TYPE} MATCHES "[Rr][Ee][Ll][Ww][Ii][Tt][Hh][Dd][Ee][Bb][Ii][Nn][Ff][Oo]")
-#         set(ANDROID_APP_IS_DEBUGGABLE "true")
-#     else()
-#         # TODO Check for older versions. It depends on androiddeployqt version
-#         if (${_qt5_version} VERSION_GREATER_EQUAL 5.14)
-#             if (_arg_KEYSTORE AND _arg_KEYSTORE_PASSWORD)
-#                 set(SIGN_OPTIONS --sign ${_arg_KEYSTORE} release --storepass
-#                     ${_arg_KEYSTORE_PASSWORD} --keypass ${_arg_KEYSTORE_PASSWORD})
-#                 set(ANDROID_APP_IS_DEBUGGABLE "false")
-#             else()
-#                 set(ANDROID_APP_IS_DEBUGGABLE "true")
-#             endif()
-#         else()
-#             set(ANDROID_APP_IS_DEBUGGABLE "true")
-#         endif()
-#     endif()
+
 #
 #     # Set the list of dependant libraries
 #     if (_arg_DEPENDS OR _android_ssl_extra_libs)
@@ -609,11 +632,10 @@ function (portable_target_build_apk2 TARGET)
 #         set(VERBOSITY_YESNO "NO")
 #     endif()
 #
-#     _portable_apk_status(${TARGET} "Android Min SDK version: ${ANDROID_MIN_SDK_VERSION}")
-#     _portable_apk_status(${TARGET} "Android Target SDK version: ${ANDROID_TARGET_SDK_VERSION}")
-#     _portable_apk_status(${TARGET} "Android SDK build tools revision: ${ANDROID_SDK_BUILDTOOLS_REVISION}")
-#     _portable_apk_status(${TARGET} "Android Qt root         : ${ANDROID_QT_ROOT}")
-#
+    _portable_target_status(${TARGET} "Android Min SDK version: ${ANDROID_MIN_SDK_VERSION}")
+    _portable_target_status(${TARGET} "Android Target SDK version: ${ANDROID_TARGET_SDK_VERSION}")
+    _portable_target_status(${TARGET} "Android SDK build tools revision: ${ANDROID_SDK_BUILDTOOLS_REVISION}")
+
 #     if (${_qt5_version} VERSION_GREATER_EQUAL 5.14)
 #         _portable_apk_status(${TARGET} "Android STL dir         : ${ANDROID_STL_DIR}")
 #     else()
@@ -627,7 +649,7 @@ function (portable_target_build_apk2 TARGET)
 #     _portable_apk_status(${TARGET} "Package name            : ${ANDROID_PACKAGE_NAME}")
 #     _portable_apk_status(${TARGET} "Application name        : \"${ANDROID_APP_NAME}\"")
     _portable_target_status(${TARGET} "Application version code: ${ANDROID_APP_VERSION_CODE}")
-    _portable_target_status(${TARGET} "Application version     : ${ANDROID_APP_VERSION_NAME}")
+    _portable_target_status(${TARGET} "Application version     : ${ANDROID_APP_VERSION}")
 #     _portable_apk_status(${TARGET} "Verbosity output        : ${VERBOSITY_YESNO}")
 #     _portable_apk_status(${TARGET} "Install APK             : ${INSTALL_YESNO}")
 #
@@ -636,21 +658,21 @@ function (portable_target_build_apk2 TARGET)
 #     # to prepare the Android package
 #     #---------------------------------------------------------------------------
 #     # TODO A more precise definition is required to get TEMP_APK_PATH
-#
-#     if (_arg_APK_BASENAME)
-#         string(CONFIGURE ${_arg_APK_BASENAME} _arg_APK_BASENAME @ONLY)
-#     else()
-#         set(_arg_APK_BASENAME "${_arg_APK_BASENAME}_${ANDROID_APP_VERSION}_${ANDROID_ABI}")
-#     endif()
-#
-#     if (${ANDROID_APP_IS_DEBUGGABLE} STREQUAL "true")
-#         set(_temp_apk_path "${CMAKE_CURRENT_BINARY_DIR}/android-build/build/outputs/apk/debug/android-build-debug.apk")
-#         set(_target_apk_path "${CMAKE_BINARY_DIR}/${_arg_APK_BASENAME}_debug.apk")
-#     else()
-#         set(_temp_apk_path "${CMAKE_CURRENT_BINARY_DIR}/android-build/build/outputs/apk/release/android-build-release-signed.apk")
-#         set(_target_apk_path "${CMAKE_BINARY_DIR}/${_arg_APK_BASENAME}.apk")
-#     endif()
-#
+
+    if (_arg_APK_BASENAME)
+        string(CONFIGURE ${_arg_APK_BASENAME} _arg_APK_BASENAME @ONLY)
+    else()
+        set(_arg_APK_BASENAME "${_arg_APK_BASENAME}_${ANDROID_APP_VERSION}_${ANDROID_ABI}")
+    endif()
+
+    if (${ANDROID_APP_IS_DEBUGGABLE})
+        set(_temp_apk_path "${CMAKE_CURRENT_BINARY_DIR}/Android/build/outputs/apk/debug/app-debug.apk")
+        set(_target_apk_path "${CMAKE_BINARY_DIR}/${_arg_APK_BASENAME}-debug.apk")
+    else()
+        set(_temp_apk_path "${CMAKE_CURRENT_BINARY_DIR}/Android/build/outputs/apk/release/app-release.apk")
+        set(_target_apk_path "${CMAKE_BINARY_DIR}/${_arg_APK_BASENAME}.apk")
+    endif()
+
 #     set(_output_dir ${CMAKE_CURRENT_BINARY_DIR}/android-build/libs/${ANDROID_ABI})
 #
 #     if (${_qt5_version} VERSION_GREATER_EQUAL 5.14)
@@ -672,8 +694,7 @@ function (portable_target_build_apk2 TARGET)
     # Evaluate generator expressions at build time
     file(GENERATE OUTPUT ${_build_apk_script} INPUT ${_build_apk_script}.in)
 
-    add_custom_target(
-        ${TARGET}_apk
+    add_custom_target(${TARGET}_apk
         ALL
         #COMMAND cd "${_android_build_dir}/src"
         #COMMAND ${CMAKE_COMMAND} -P ${_build_apk_script}
@@ -691,30 +712,29 @@ function (portable_target_build_apk2 TARGET)
 #             --gradle
 #             --android-platform ${ANDROID_PLATFORM}
 #             ${SIGN_OPTIONS}
-#         COMMAND ${CMAKE_COMMAND} -E copy ${_temp_apk_path} ${_target_apk_path}
-    )
+        COMMAND ${CMAKE_COMMAND} -E copy ${_temp_apk_path} ${_target_apk_path})
 
-#     if (_arg_INSTALL)
-#         if (ADB_BIN)
-#             list(APPEND _adb_install_opts "-r")
-#
-#             if (${ANDROID_APP_IS_DEBUGGABLE} STREQUAL "true")
-#                 list(APPEND _adb_install_opts "-t")
-#             endif()
-#
-#             add_custom_target(
-#                 ${TARGET}_apk_install
-#                 ALL
-#                 COMMAND ${ADB_BIN} install ${_adb_install_opts} ${_target_apk_path})
-#
-#             add_dependencies(${TARGET}_apk_install ${TARGET}_apk)
-#         else()
-#             _portable_apk_warn(${TARGET} "`adb` tool not found, install APK manually")
-#         endif()
-#     endif()
-#
-#     if (_arg_DEPENDS)
-#         add_dependencies(${TARGET}_apk ${_arg_DEPENDS})
-#     endif()
+    if (_arg_INSTALL)
+        if (ADB_BIN)
+            list(APPEND _adb_install_opts "-r")
+
+            if (${ANDROID_APP_IS_DEBUGGABLE})
+                list(APPEND _adb_install_opts "-t")
+            endif()
+
+            add_custom_target(
+                ${TARGET}_apk_install
+                ALL
+                COMMAND ${ADB_BIN} install ${_adb_install_opts} ${_target_apk_path})
+
+            add_dependencies(${TARGET}_apk_install ${TARGET}_apk)
+        else()
+            _portable_target_warn(${TARGET} "`adb` tool not found, install APK manually")
+        endif()
+    endif()
+
+    if (_arg_DEPENDS)
+        add_dependencies(${TARGET}_apk ${_arg_DEPENDS})
+    endif()
 endfunction(portable_target_build_apk2)
 
