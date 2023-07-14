@@ -141,7 +141,7 @@ function (_portable_apk TARGET SOURCE_TARGET)
     else()
         set(ANDROID_APP_IS_DEBUGGABLE "false")
         #set(SIGN_OPTIONS --release)
-        #set(SIGN_OPTIONS --release --jarsigner --sign /home/wladt/TacticalPad2Cert.keystore --storepass 12345678 --keypass 12345678)
+        #set(SIGN_OPTIONS --release --jarsigner --sign /path/to/keystore --storepass 12345678 --keypass 12345678)
     endif()
 
     # TODO check if the apk must be signed

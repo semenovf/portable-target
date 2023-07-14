@@ -106,7 +106,7 @@ function (portable_windeploy PRE_BUILD_TARGET)
     #
     # windeployqt --qmldir . --release --force --gui --network --qml --quick --webchannel
     #   --webengine --webenginewidgets --widgets --positioning --sql --serialport
-    #   --multimedia TacticalPad2Bin.exe
+    #   --multimedia app.exe
     #
 
     if (_arg_WINDEPLOYQT_EXECUTABLE
