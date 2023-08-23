@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright (c) 2019-2021 Vladislav Trifochkin
+# Copyright (c) 2019-2023 Vladislav Trifochkin
 #
 # This file is part of `portable-target`.
 #
@@ -30,7 +30,7 @@ function (_portable_target_fatal TITLE)
     else()
         message(FATAL_ERROR "*** FATAL: portable_target: ${TITLE}")
     endif()
-endfunction(_portable_target_error)
+endfunction(_portable_target_fatal)
 
 ################################################################################
 # _portable_target_warn
@@ -86,7 +86,7 @@ function (_portable_apk_error TITLE)
 endfunction()
 
 ################################################################################
-# _portable_apk_error
+# _portable_apk_warn
 ################################################################################
 # DEPRECATED use _portable_target_warn
 function (_portable_apk_warn TITLE)
