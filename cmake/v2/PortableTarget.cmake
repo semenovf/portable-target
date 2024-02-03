@@ -44,6 +44,7 @@ _portable_target_status(${TARGET} "CMAKE_BUILD_TYPE    : ${CMAKE_BUILD_TYPE}")
 #
 # LINK                Link with specified libraries.
 # LINK_QT5_COMPONENTS Link with Qt5 components.
+# LINK_QT6_COMPONENTS Link with Qt6 components.
 # LINK_PROTOBUF       Genarate sources and link with PROTOBUF library.
 # LINK_GRPC           Genarate sources and link with gRPC library.
 
@@ -127,6 +128,9 @@ function (portable_target ACTION FIRST_ARG)
     elseif (ACTION STREQUAL "LINK_QT5_COMPONENTS")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/link_qt5_components.cmake)
         portable_target_link_qt5_components(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
+    elseif (ACTION STREQUAL "LINK_QT6_COMPONENTS")
+        include(${_PORTABLE_TARGET_ROOT_DIR}/actions/link_qt6_components.cmake)
+        portable_target_link_qt6_components(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
     elseif (ACTION STREQUAL "LINK_PROTOBUF")
         include(${_PORTABLE_TARGET_ROOT_DIR}/actions/link_protobuf.cmake)
         portable_target_link_protobuf(${FIRST_ARG} ${_arg_UNPARSED_ARGUMENTS})
