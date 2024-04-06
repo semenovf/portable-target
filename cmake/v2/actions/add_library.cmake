@@ -22,10 +22,10 @@ include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
 #       [NO_BIGOBJ]
 #       [NO_NOMINMAX]
 #       [ALIAS alias]
-#       [BIND_STATIC static_target [STATIC_ALIAS static_alias] [STATIC_EXPORTS export_def]]
 #       [EXPORTS export_def]
 #       [OUTPUT dir]
 #       [COMPONENT name])
+#       # [BIND_STATIC static_target [STATIC_ALIAS static_alias] [STATIC_EXPORTS export_def]]
 #
 # NO_UNICODE (MSVC specific option)
 #       Disable UNICODE support.
@@ -64,7 +64,7 @@ function (portable_target_add_library TARGET)
     _portable_target_set_properties_defaults()
 
     set(boolparm SHARED STATIC INTERFACE NO_UNICODE NO_BIGOBJ NO_NOMINMAX)
-    set(singleparm ALIAS OUTPUT COMPONENT BIND_STATIC STATIC_ALIAS EXPORTS STATIC_EXPORTS)
+    set(singleparm ALIAS OUTPUT COMPONENT STATIC_ALIAS EXPORTS STATIC_EXPORTS)
     set(multiparm CATEGORIES)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
@@ -117,41 +117,49 @@ function (portable_target_add_library TARGET)
         add_library(${_arg_ALIAS} ALIAS ${TARGET})
     endif()
 
-    if (_arg_BIND_STATIC AND (_arg_STATIC OR _arg_INTERFACE))
-        _portable_target_error(${TARGET} "Only SHARED library accepts BIND_STATIC")
-    endif()
+#    if (_arg_BIND_STATIC AND (_arg_STATIC OR _arg_INTERFACE))
+#        _portable_target_error(${TARGET} "Only SHARED library accepts BIND_STATIC")
+#    endif()
 
     # Bind static library
-    if (_arg_BIND_STATIC)
-        add_library(${_arg_BIND_STATIC} STATIC)
+#    if (_arg_BIND_STATIC)
+#        add_library(${_arg_BIND_STATIC} STATIC)
+#
+#        if (_arg_STATIC_ALIAS)
+#            add_library(${_arg_STATIC_ALIAS} ALIAS ${_arg_BIND_STATIC})
+#        endif()
+#
+#        set_target_properties(${TARGET} PROPERTIES BIND_STATIC ${_arg_BIND_STATIC})
+#    endif()
 
-        if (_arg_STATIC_ALIAS)
-            add_library(${_arg_STATIC_ALIAS} ALIAS ${_arg_BIND_STATIC})
-        endif()
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_UNICODE)
+        target_compile_definitions(${TARGET} INTERFACE _UNICODE UNICODE)
+    endif()
 
-        set_target_properties(${TARGET} PROPERTIES BIND_STATIC ${_arg_BIND_STATIC})
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_NOMINMAX)
+        target_compile_definitions(${TARGET} INTERFACE NOMINMAX)
     endif()
 
     if (NOT _arg_INTERFACE)
         if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_BIGOBJ)
             target_compile_options(${TARGET} PRIVATE "/bigobj")
-            if (_arg_BIND_STATIC)
-                target_compile_options(${_arg_BIND_STATIC} PRIVATE "/bigobj")
-            endif()
+            #if (_arg_BIND_STATIC)
+            #    target_compile_options(${_arg_BIND_STATIC} PRIVATE "/bigobj")
+            #endif()
         endif()
 
         if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_UNICODE)
             target_compile_definitions(${TARGET} PRIVATE _UNICODE UNICODE)
-            if (_arg_BIND_STATIC)
-                target_compile_definitions(${_arg_BIND_STATIC} PRIVATE _UNICODE UNICODE)
-            endif()
+            #if (_arg_BIND_STATIC)
+            #    target_compile_definitions(${_arg_BIND_STATIC} PRIVATE _UNICODE UNICODE)
+            #endif()
         endif()
 
         if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_NOMINMAX)
             target_compile_definitions(${TARGET} PRIVATE NOMINMAX)
-            if (_arg_BIND_STATIC)
-                target_compile_definitions(${_arg_BIND_STATIC} PRIVATE NOMINMAX)
-            endif()
+            #if (_arg_BIND_STATIC)
+            #    target_compile_definitions(${_arg_BIND_STATIC} PRIVATE NOMINMAX)
+            #endif()
         endif()
 
         # XXX_OUTPUT_DIRECTORY properties not applicable for INTERFACE library.
@@ -162,12 +170,12 @@ function (portable_target_add_library TARGET)
                 ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${_arg_OUTPUT}")
         endif()
 
-        if (_arg_OUTPUT AND _arg_BIND_STATIC)
-            _portable_target_trace(${_arg_BIND_STATIC} "Archive output directory: [${_arg_OUTPUT}]")
-            set_target_properties(${_arg_BIND_STATIC} PROPERTIES
-                ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${_arg_OUTPUT}"
-                ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${_arg_OUTPUT}")
-        endif()
+        #if (_arg_OUTPUT AND _arg_BIND_STATIC)
+        #    _portable_target_trace(${_arg_BIND_STATIC} "Archive output directory: [${_arg_OUTPUT}]")
+        #    set_target_properties(${_arg_BIND_STATIC} PROPERTIES
+        #        ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${_arg_OUTPUT}"
+        #        ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${_arg_OUTPUT}")
+        #endif()
 
         if (_arg_OUTPUT AND _arg_SHARED)
             _portable_target_trace(${TARGET} "Library output directory: [${_arg_OUTPUT}]")
@@ -186,9 +194,9 @@ function (portable_target_add_library TARGET)
             target_compile_definitions(${TARGET} PRIVATE "ANDROID=1")
         endif()
 
-        if (_arg_BIND_STATIC)
-            target_compile_definitions(${_arg_BIND_STATIC} PRIVATE "ANDROID=1")
-        endif()
+        #if (_arg_BIND_STATIC)
+        #    target_compile_definitions(${_arg_BIND_STATIC} PRIVATE "ANDROID=1")
+        #endif()
     endif()
 
     if (_arg_EXPORTS AND MSVC)
@@ -200,12 +208,12 @@ function (portable_target_add_library TARGET)
             target_compile_definitions(${TARGET} PUBLIC ${_arg_EXPORTS})
         endif()
 
-        if(_arg_BIND_STATIC)
-            if (_arg_STATIC_EXPORTS)
-                _portable_target_trace(${_arg_BIND_STATIC} "Exports: [${_arg_STATIC_EXPORTS}]")
-                target_compile_definitions(${_arg_BIND_STATIC} PUBLIC ${_arg_STATIC_EXPORTS})
-            endif()
-        endif()
+        #if(_arg_BIND_STATIC)
+        #    if (_arg_STATIC_EXPORTS)
+        #        _portable_target_trace(${_arg_BIND_STATIC} "Exports: [${_arg_STATIC_EXPORTS}]")
+        #        target_compile_definitions(${_arg_BIND_STATIC} PUBLIC ${_arg_STATIC_EXPORTS})
+        #    endif()
+        #endif()
     endif()
 
     # For link custom shared libraries with static library
@@ -214,9 +222,9 @@ function (portable_target_add_library TARGET)
             target_compile_options(${TARGET} PRIVATE "-fPIC")
         endif()
 
-        if (_arg_BIND_STATIC)
-            target_compile_options(${_arg_BIND_STATIC} PRIVATE "-fPIC")
-        endif()
+        #if (_arg_BIND_STATIC)
+        #    target_compile_options(${_arg_BIND_STATIC} PRIVATE "-fPIC")
+        #endif()
     endif()
 
     if (_arg_CATEGORIES)

@@ -78,11 +78,11 @@ function (portable_target_add_executable TARGET)
     endif()
 
     if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_UNICODE)
-        target_compile_definitions(${TARGET} PRIVATE "/D_UNICODE /DUNICODE")
+        target_compile_definitions(${TARGET} PRIVATE _UNICODE UNICODE)
     endif()
 
     if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_NOMINMAX)
-        target_compile_definitions(${TARGET} PRIVATE "/DNOMINMAX")
+        target_compile_definitions(${TARGET} PRIVATE NOMINMAX)
     endif()
 
     if (_arg_OUTPUT)
