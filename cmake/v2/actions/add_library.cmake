@@ -148,20 +148,6 @@ function (portable_target_add_library TARGET)
             #endif()
         endif()
 
-        if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_UNICODE)
-            target_compile_definitions(${TARGET} PRIVATE _UNICODE UNICODE)
-            #if (_arg_BIND_STATIC)
-            #    target_compile_definitions(${_arg_BIND_STATIC} PRIVATE _UNICODE UNICODE)
-            #endif()
-        endif()
-
-        if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_NOMINMAX)
-            target_compile_definitions(${TARGET} PRIVATE NOMINMAX)
-            #if (_arg_BIND_STATIC)
-            #    target_compile_definitions(${_arg_BIND_STATIC} PRIVATE NOMINMAX)
-            #endif()
-        endif()
-
         # XXX_OUTPUT_DIRECTORY properties not applicable for INTERFACE library.
         if (_arg_OUTPUT AND _arg_STATIC)
             _portable_target_trace(${TARGET} "Archive output directory: [${_arg_OUTPUT}]")
