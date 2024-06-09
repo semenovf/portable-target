@@ -48,6 +48,58 @@ $ echo export ANDROID_NDK=${ANDROID_SDK}/ndk/22.1.xxx >> ~/.profile
 5. Modify `PATH` in `~/.profile`:
 `PATH="$ANDROID_SDK/tools:$ANDROID_SDK/tools/bin:$ANDROID_SDK/platform-tools:$PATH"`
 
+### Windows
+
+See 
+* [Command-line tools](https://developer.android.com/tools) 
+* [sdkmanager](https://developer.android.com/tools/sdkmanager)
+* [Jetifier](https://developer.android.com/tools/jetifier)
+
+1. Download JDK (e.g. from https://learn.microsoft.com/en-us/java/openjdk/download#openjdk-17).
+   Other OpenJDK resources: https://www.openlogic.com/openjdk-downloads, https://jdk.java.net.
+2. Download `Command line tools only` from site https://developer.android.com/studio.
+3. Download `Jetifier` (https://developer.android.com/tools/jetifier). Optional.
+4. Create `android-sdk` directory and unzip archive into it.
+5. Cd into `android-sdk\cmdline-tools`, create `latest` subdirectory and move all files and 
+   subdirectories into it.
+6. Create `env.bat` file to run command line interpreter with environment required for Android 
+   development.
+
+```cmd
+@echo off
+set ANDROID_HOME=c:\android-sdk
+set JAVA_HOME=C:\android-sdk\jdk-17.0.11+9
+set PATH=C:\Windows\System32;%ANDROID_HOME%\cmdline-tools\latest\bin;%ANDROID_HOME%\tools;%ANDROID_HOME%\tools\bin;%ANDROID_HOME%\platform-tools;%ANDROID_HOME%\jetifier-standalone\bin
+cmd /Q
+```
+
+7. Run `env.bat`
+8. Install build tools: `sdkmanager "build-tools;33.0.3"`. Will be downloaded into`%ANDROID_HOME%/build-tools/33.0.3`.
+9. Install platform tools: `sdkmanager "platform-tools"`. Will be downloaded into `%ANDROID_HOME%/platform-tools`.
+10. Install SDK tools for API level e.g. 33: `sdkmanager "platforms;android-33"`. Will be downloaded into `%ANDROID_HOME%/platforms/android-33`
+11. Install NDK: `sdkmanager "ndk;26.3.11579264"`. Will be downloaded into `%ANDROID_HOME%/ndk/26.3.11579264`.
+12. Install `cmake`: `sdkmanager "cmake;3.22.1"`. Will be downloaded into `%ANDROID_HOME%/cmake/3.22.1`. 
+
+#### Other useful sdkmanager commands
+* List all installed and available packages
+```cmd
+sdkmanager --list  
+```
+
+* List all installed packages
+```cmd
+sdkmanager --list_installed  
+
+Installed packages:
+  Path                 | Version       | Description                      | Location
+  -------              | -------       | -------                          | -------
+  build-tools;33.0.3   | 33.0.3        | Android SDK Build-Tools 33.0.3   | build-tools\33.0.3
+  cmake;3.22.1         | 3.22.1        | CMake 3.22.1                     | cmake\3.22.1
+  ndk;26.3.11579264    | 26.3.11579264 | NDK (Side by side) 26.3.11579264 | ndk\26.3.11579264
+  platform-tools       | 35.0.1        | Android SDK Platform-Tools       | platform-tools
+  platforms;android-33 | 3             | Android SDK Platform 33          | platforms\android-33
+```
+
 ## Building package
 
 ### Ubuntu/Debian
