@@ -68,7 +68,8 @@ function (portable_target_add_executable TARGET)
         # Avoid error: undefined reference to '__android_log_write'
         target_link_libraries(${TARGET} PRIVATE log)
 
-        set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME ${TARGET}_${ANDROID_ABI})
+        #set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME ${TARGET}_${ANDROID_ABI})
+        #set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME ${TARGET})
     else()
         add_executable(${TARGET})
     endif()
