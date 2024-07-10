@@ -204,9 +204,14 @@ function (portable_target_build_apk TARGET)
     if (${_qt5_version} VERSION_GREATER_EQUAL 5.14)
         set(ANDROID_STL_DIR "${ANDROID_NDK}/sources/cxx-stl/${_arg_STL_PREFIX}/libs")
 
-        if (NOT EXISTS ${ANDROID_STL_DIR})
-            _portable_target_fatal(${TARGET} "Android STL dir not found: ${ANDROID_STL_DIR}")
-        endif()
+        # if (NOT EXISTS ${ANDROID_STL_DIR})
+        #     # FIXME------------------------------------------------------------------v
+        #     set(ANDROID_STL_DIR "${ANDROID_TOOLCHAIN_ROOT}/sysroot/usr/lib/aarch64-linux-android")
+
+            if (NOT EXISTS ${ANDROID_STL_DIR})
+                _portable_target_fatal(${TARGET} "Android STL dir not found: ${ANDROID_STL_DIR}")
+            endif()
+        # endif()
     else()
         set(ANDROID_STL_PATH "${ANDROID_NDK}/sources/cxx-stl/${_arg_STL_PREFIX}/libs/${ANDROID_ABI}/lib${ANDROID_STL}.so")
 
