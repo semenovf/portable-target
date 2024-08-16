@@ -131,6 +131,18 @@ function (portable_target_build_apk TARGET)
 
     cmake_parse_arguments(_arg "${boolparm}" "${singleparm}" "${multiparm}" ${ARGN})
 
+    if (NOT ANDROID_MIN_SDK_VERSION)
+        _portable_target_fatal(${TARGET} "`ANDROID_MIN_SDK_VERSION` not set.")
+    endif()
+
+    if (NOT ANDROID_TARGET_SDK_VERSION)
+        _portable_target_fatal(${TARGET} "`ANDROID_TARGET_SDK_VERSION` not set.")
+    endif()
+
+    if (NOT ANDROID_COMPILE_SDK_VERSION)
+        set(ANDROID_COMPILE_SDK_VERSION ${ANDROID_TARGET_SDK_VERSION})
+    endif()
+
     set(ANDROID_APP_PATH "$<TARGET_FILE:${TARGET}>")
     set(ANDROID_APP_BASENAME "$<TARGET_FILE_BASE_NAME:${TARGET}>")
 
@@ -436,6 +448,7 @@ function (portable_target_build_apk TARGET)
 
     _portable_target_status(${TARGET} "Android Min SDK version: ${ANDROID_MIN_SDK_VERSION}")
     _portable_target_status(${TARGET} "Android Target SDK version: ${ANDROID_TARGET_SDK_VERSION}")
+    _portable_target_status(${TARGET} "Android Compile SDK version: ${ANDROID_COMPILE_SDK_VERSION}")
     _portable_target_status(${TARGET} "Android SDK build tools revision: ${ANDROID_SDK_BUILDTOOLS_REVISION}")
     _portable_target_status(${TARGET} "Android Qt root         : ${ANDROID_QT_ROOT}")
 
@@ -484,6 +497,7 @@ function (portable_target_build_apk TARGET)
         set(_android_app_output_path ${_output_dir}/lib${ANDROID_APP_BASENAME}.so)
     endif()
 
+    # ANDROID_PLATFORM <- from toolchain cmake
     add_custom_target(
         ${TARGET}_apk
         ALL

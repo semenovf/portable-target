@@ -108,7 +108,7 @@ _mandatory_var_env(ANDROID_ABI
 _mandatory_var_env(ANDROID_MIN_SDK_VERSION
     ANDROID_MIN_SDK_VERSION
     "Android min SDK version"
-    21)
+    25)
 
 # The API Level that the application targets.
 # If not set, the default value equals that given to minSdkVersion.

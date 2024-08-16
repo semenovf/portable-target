@@ -42,7 +42,7 @@ android {
 
     compileSdkVersion androidCompileSdkVersion.toInteger()
 
-    buildToolsVersion androidBuildToolsVersion
+    // buildToolsVersion androidBuildToolsVersion
 
     sourceSets {
         main {
