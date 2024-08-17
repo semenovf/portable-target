@@ -41,6 +41,7 @@ find_program(ADB_BIN adb)
 #       [CONFIG_CHANGES config-changes ]
 #       [PERMISSIONS permissions]
 #       [DEPENDS dependencies]
+#       [PLUGINS plugins]
 #       [SSL_ROOT dir]
 #       [INSTALL ON|OFF]
 #       [VERBOSE ON|OFF])
@@ -90,6 +91,8 @@ find_program(ADB_BIN adb)
 #
 # DEPENDS dependencies
 #
+# PLUGINS plugins
+#
 # PERMISSIONS permissions
 #       Set Android application permissions. Default is WAKE_LOCK.
 #
@@ -126,6 +129,7 @@ function (portable_target_build_apk TARGET)
 
     set(multiparm
         DEPENDS
+        PLUGINS
         KEYSTORE
         PERMISSIONS)
 
@@ -305,6 +309,36 @@ function (portable_target_build_apk TARGET)
 
         #set(ANDROID_APP_EXTRA_LIBS "\"android-extra-libs\": \"${_extra_libs}\",")
         set(ANDROID_APP_EXTRA_LIBS ${_extra_libs})
+    endif()
+
+    if (_arg_PLUGINS)
+        foreach (_t ${_arg_PLUGINS})
+            if (TARGET ${_t})
+                # item is a CMake target, extract the library path
+                list(APPEND _plugin_dirs "$<TARGET_FILE_DIR:${_t}>")
+            else()
+                _portable_target_warn(${TARGET} "Plugin must be a target: ${_t}")
+                continue()
+            endif()
+
+            if (_plugins)
+                set(_plugins "${_plugins},${_lib}")
+            else ()
+                set(_plugins "${_lib}")
+            endif()
+        endforeach()
+
+        if (_plugin_dirs)
+            list(REMOVE_DUPLICATES _plugin_dirs)
+        endif()
+    endif()
+
+    if (_plugin_dirs)
+        list(JOIN _plugin_dirs "," _plugin_dirs)
+
+        set(ANDROID_APP_EXTRA_PLUGINS "\"android-extra-plugins\": \"${_plugin_dirs}\"")
+    else ()
+        set(ANDROID_APP_EXTRA_PLUGINS "\"--android-extra-plugins\": \"\"")
     endif()
 
     #---------------------------------------------------------------------------

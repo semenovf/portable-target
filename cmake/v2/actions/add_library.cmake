@@ -156,13 +156,6 @@ function (portable_target_add_library TARGET)
                 ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${_arg_OUTPUT}")
         endif()
 
-        #if (_arg_OUTPUT AND _arg_BIND_STATIC)
-        #    _portable_target_trace(${_arg_BIND_STATIC} "Archive output directory: [${_arg_OUTPUT}]")
-        #    set_target_properties(${_arg_BIND_STATIC} PROPERTIES
-        #        ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${_arg_OUTPUT}"
-        #        ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${_arg_OUTPUT}")
-        #endif()
-
         if (_arg_OUTPUT AND _arg_SHARED)
             _portable_target_trace(${TARGET} "Library output directory: [${_arg_OUTPUT}]")
             set_target_properties(${TARGET} PROPERTIES

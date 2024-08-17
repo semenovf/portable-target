@@ -1,5 +1,10 @@
 {
- "description": "This file is to be read by androiddeployqt for Qt 5.14 or greater"
+      "description": "
+        This file is to be read by androiddeployqt for Qt 5.14 or greater.
+        ATTENTION! Empty string for 'android-extra-plugins' causes an error of 'androiddeployqt'.
+                   Comment this key (if no android extra plugins specified) to avoid error
+                   (e.g. prefix the key by '--').
+      "
     , "application-binary": "@ANDROID_APP_BASENAME@"
     , "ndk": "@ANDROID_NDK@"
     , "ndk-host": "@ANDROID_NDK_HOST_SYSTEM_NAME@"
@@ -18,7 +23,7 @@
 
     , "architectures": { "@ANDROID_ABI@": "@ANDROID_ABI@" }
     , "extraPrefixDirs": [ @ANDROID_APP_EXTRA_PREFIX_DIRS@ ]
-    , "--android-extra-plugins": "@ANDROID_APP_EXTRA_PLUGINS@"
+    , @ANDROID_APP_EXTRA_PLUGINS@
     , "android-version-name": "@ANDROID_APP_VERSION_NAME@"
     , "android-version-code": "@ANDROID_APP_VERSION_CODE@"
     , "--qml-import-paths": "@ANDROID_APP_QML_IMPORT_PATH@"

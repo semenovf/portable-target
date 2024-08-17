@@ -87,12 +87,18 @@ function (portable_target_add_executable TARGET)
     endif()
 
     if (_arg_OUTPUT)
-        _portable_target_trace(${TARGET} "Runtime output directory: [${_arg_OUTPUT}]")
-
-        set_target_properties(${TARGET}
-            PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY_DEBUG "${_arg_OUTPUT}"
-            RUNTIME_OUTPUT_DIRECTORY_RELEASE "${_arg_OUTPUT}")
+        if (CMAKE_SYSTEM_NAME STREQUAL "Android")
+            _portable_target_trace(${TARGET} "Library output directory: [${_arg_OUTPUT}]")
+            set_target_properties(${TARGET} PROPERTIES
+                LIBRARY_OUTPUT_DIRECTORY_DEBUG "${_arg_OUTPUT}"
+                LIBRARY_OUTPUT_DIRECTORY_RELEASE "${_arg_OUTPUT}")
+        else()
+            _portable_target_trace(${TARGET} "Runtime output directory: [${_arg_OUTPUT}]")
+            set_target_properties(${TARGET}
+                PROPERTIES
+                RUNTIME_OUTPUT_DIRECTORY_DEBUG "${_arg_OUTPUT}"
+                RUNTIME_OUTPUT_DIRECTORY_RELEASE "${_arg_OUTPUT}")
+        endif()
     endif(_arg_OUTPUT)
 
     if (_arg_CATEGORIES)
