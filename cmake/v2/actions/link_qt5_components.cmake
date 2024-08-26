@@ -71,15 +71,18 @@ function (portable_target_link_qt5_components TARGET)
     endif()
 
     if (_arg_QT5_DIR)
+        if (NOT EXISTS ${_arg_QT5_DIR})
+            _portable_target_error(${TARGET} "Bad Qt5_DIR location: '${_arg_QT5_DIR}'")
+        endif()
+
+        if (NOT EXISTS ${_arg_QT5_DIR})
+            _portable_target_error(${TARGET} "Qt5_DIR location must contains Qt5Config.cmake in: '${_arg_QT5_DIR}'")
+        endif()
+
         set(Qt5_DIR ${_arg_QT5_DIR} CACHE STRING "" FORCE)
         portable_target_set_property(Qt5_DIR ${Qt5_DIR})
 
-        if (NOT EXISTS ${Qt5_DIR})
-            _portable_target_error(${TARGET}
-                "Bad Qt5_DIR location: '${Qt5_DIR}'")
-        endif()
-
-        _portable_target_status(${TARGET} "Qt5_DIR location: ${_arg_QT5_DIR}")
+        _portable_target_status(${TARGET} "Qt5_DIR location: ${Qt5_DIR}")
 
         set(QT_QMAKE_EXECUTABLE1 "${_arg_QT5_DIR}/../../../bin/qmake${CMAKE_EXECUTABLE_SUFFIX}")
         set(QT_QMAKE_EXECUTABLE2 "${_arg_QT5_DIR}/../../bin/qmake${CMAKE_EXECUTABLE_SUFFIX}")
