@@ -20,35 +20,19 @@ function (_include_directories_helper TARGET)
 
     get_target_property(_target_type ${TARGET} TYPE)
     
-    if (_target_type STREQUAL "SHARED_LIBRARY")
-        get_target_property(_BIND_STATIC ${TARGET} BIND_STATIC)
-    endif()
-
     if (_arg_INTERFACE)
         _portable_target_trace(${TARGET} "INTERFACE include dirs: [${_arg_INTERFACE}]")
         target_include_directories(${TARGET} INTERFACE ${_arg_INTERFACE})
-
-        if (_BIND_STATIC)
-            target_include_directories(${_BIND_STATIC} INTERFACE ${_arg_INTERFACE})
-        endif()
     endif()
 
     if (_arg_PUBLIC)
         _portable_target_trace(${TARGET} "PUBLIC include dirs: [${_arg_PUBLIC}]")
         target_include_directories(${TARGET} PUBLIC ${_arg_PUBLIC})
-
-        if (_BIND_STATIC)
-            target_include_directories(${_BIND_STATIC} PUBLIC ${_arg_PUBLIC})
-        endif()
     endif()
 
     if (_arg_PRIVATE)
         _portable_target_trace(${TARGET} "PRIVATE include dirs: [${_arg_PRIVATE}]")
         target_include_directories(${TARGET} PRIVATE ${_arg_PRIVATE})
-
-        if (_BIND_STATIC)
-            target_include_directories(${_BIND_STATIC} PRIVATE ${_arg_PRIVATE})
-        endif()
     endif()
 endfunction(_include_directories_helper)
 

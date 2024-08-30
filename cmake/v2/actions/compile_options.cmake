@@ -63,8 +63,6 @@ function (portable_target_compile_options TARGET)
 
     _portable_target_trace(${TARGET} "Aggressive compiler check: [${_arg_AGGRESSIVE_CHECK}]")
 
-    get_target_property(_BIND_STATIC ${TARGET} BIND_STATIC)
-    
     if (_arg_AGGRESSIVE_CHECK)
         if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
             #
@@ -115,10 +113,6 @@ function (portable_target_compile_options TARGET)
             list(APPEND _arg_PRIVATE ${_aggressive_check_flags})
 
             portable_target_link_libraries(${TARGET} PRIVATE ${_link_flags} ${_link_libraries})
-
-            if (_BIND_STATIC)
-                portable_target_link_libraries(${_BIND_STATIC} PRIVATE ${_link_flags} ${_link_libraries})
-            endif()
         else()
             _portable_target_trace(${TARGET} "Aggressive compiler check: supported for GCC only at the moment")
         endif()

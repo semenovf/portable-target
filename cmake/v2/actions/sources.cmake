@@ -39,11 +39,4 @@ function (portable_target_sources TARGET)
 
     _portable_target_trace(${TARGET} "Sources: [${_arg_UNPARSED_ARGUMENTS}]")
     target_sources(${TARGET} PRIVATE ${_arg_UNPARSED_ARGUMENTS})
-
-    get_target_property(_BIND_STATIC ${TARGET} BIND_STATIC)
-
-    if (_BIND_STATIC)
-        target_sources(${_BIND_STATIC} PRIVATE ${_arg_UNPARSED_ARGUMENTS})
-    endif()
-
 endfunction(portable_target_sources)
