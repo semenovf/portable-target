@@ -10,6 +10,7 @@ cmake_minimum_required(VERSION 3.11)
 include(${CMAKE_CURRENT_LIST_DIR}/../Functions.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/category.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/private/cxx_standard.cmake)
 
 #
 # Usage:
@@ -74,16 +75,20 @@ function (portable_target_add_executable TARGET)
         add_executable(${TARGET})
     endif()
 
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_BIGOBJ)
-        target_compile_options(${TARGET} PRIVATE "/bigobj")
-    endif()
+    _portable_target_cxx_standardize(${TARGET})
 
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_UNICODE)
-        target_compile_definitions(${TARGET} PRIVATE _UNICODE UNICODE)
-    endif()
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        if (NOT _arg_NO_BIGOBJ)
+            target_compile_options(${TARGET} PRIVATE "/bigobj")
+        endif()
 
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_NOMINMAX)
-        target_compile_definitions(${TARGET} PRIVATE NOMINMAX)
+        if (NOT _arg_NO_UNICODE)
+            target_compile_definitions(${TARGET} PRIVATE _UNICODE UNICODE)
+        endif()
+
+        if (NOT _arg_NO_NOMINMAX)
+            target_compile_definitions(${TARGET} PRIVATE NOMINMAX)
+        endif()
     endif()
 
     if (_arg_OUTPUT)

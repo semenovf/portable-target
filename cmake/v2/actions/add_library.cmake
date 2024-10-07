@@ -11,6 +11,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/../Functions.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/category.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/compile_options.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/properties.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/private/cxx_standard.cmake)
 
 #
 # Usage:
@@ -113,19 +114,23 @@ function (portable_target_add_library TARGET)
         add_library(${_arg_ALIAS} ALIAS ${TARGET})
     endif()
 
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_UNICODE)
-        target_compile_definitions(${TARGET} INTERFACE _UNICODE UNICODE)
-    endif()
+    _portable_target_cxx_standardize(${TARGET})
 
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_NOMINMAX)
-        target_compile_definitions(${TARGET} INTERFACE NOMINMAX)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        if (NOT _arg_NO_UNICODE)
+            target_compile_definitions(${TARGET} INTERFACE _UNICODE UNICODE)
+        endif()
+
+        if (NOT _arg_NO_NOMINMAX)
+            target_compile_definitions(${TARGET} INTERFACE NOMINMAX)
+        endif()
+
+        if (NOT _arg_INTERFACE AND NOT _arg_NO_BIGOBJ)
+            target_compile_options(${TARGET} PRIVATE "/bigobj")
+        endif()
     endif()
 
     if (NOT _arg_INTERFACE)
-        if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND NOT _arg_NO_BIGOBJ)
-            target_compile_options(${TARGET} PRIVATE "/bigobj")
-        endif()
-
         # XXX_OUTPUT_DIRECTORY properties not applicable for INTERFACE library.
         if (_arg_OUTPUT AND _arg_STATIC)
             _portable_target_trace(${TARGET} "Archive output directory: [${_arg_OUTPUT}]")
